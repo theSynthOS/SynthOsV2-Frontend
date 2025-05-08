@@ -3,6 +3,7 @@ import "@/app/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import type { Metadata } from "next"
+import { ThirdwebProvider } from "../components/ThirdwebProvider"
 
 export const metadata: Metadata = {
   title: "DeFi Protocol Tracker",
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-icon-180x180.png", sizes: "180x180", type: "image/png" }],
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -44,10 +45,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" />
       </head>
       <body className="bg-[#0f0b22] text-white">
-        <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <ThirdwebProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark">
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </ThirdwebProvider>
       </body>
     </html>
   )

@@ -1,11 +1,35 @@
+"use client"
+
 import { Search } from "lucide-react"
 import ProtocolSpotlight from "@/components/protocol-spotlight"
 import TopYielders from "@/components/top-yielders"
 import TrendingProtocols from "@/components/trending-protocols"
 import MobileNavigation from "@/components/mobile-navigation"
 import PWAInstaller from "@/components/pwa-installer"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { ConnectButton } from "thirdweb/react"
+import { client, scrollSepolia } from "@/lib/thirdweb"
+import { isLoggedIn, login, generatePayload, logout } from "./actions/login"
 
 export default function Home() {
+  const [isConnected, setIsConnected] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const loggedIn = await isLoggedIn()
+      if (!loggedIn) {
+        router.replace("/create-wallet")
+      } else {
+        setIsConnected(true)
+      }
+    }
+    checkLogin()
+  }, [router])
+
+  if (!isConnected) return null
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Status Bar - Simplified */}

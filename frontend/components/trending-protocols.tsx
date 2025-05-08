@@ -6,9 +6,9 @@ import Link from "next/link"
 
 export default function TrendingProtocols() {
   const trendingProtocols = [
-    { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave-logo.png", isUp: true },
-    { id: "fx", name: "FX Protocol", apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png", isUp: true },
-    { id: "quill", name: "Quill Finance", apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true },
+    { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave-logo.png", isUp: true, change: 1.27 },
+    { id: "fx", name: "FX Protocol", apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png", isUp: true, change: 2.32 },
+    { id: "quill", name: "Quill Finance", apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true, change: 3.15 },
   ]
 
   return (
@@ -33,7 +33,7 @@ export default function TrendingProtocols() {
                 <div
                   className={`text-sm ${protocol.isUp ? "text-green-400" : "text-red-400"} flex items-center justify-end`}
                 >
-                  {protocol.isUp ? "▲" : "▼"} {(Math.random() * 2 + 0.5).toFixed(2)}%
+                  {protocol.isUp ? "▲" : "▼"} {protocol.change.toFixed(2)}%
                 </div>
               </div>
             </div>
