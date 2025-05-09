@@ -1,1 +1,0 @@
-# SynthOsV2-Frontend
