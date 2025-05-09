@@ -4,11 +4,11 @@ import { useState } from "react"
 import { ArrowLeft, Star, Share2, PieChart, Activity, Users, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import ProtocolChart from "@/components/protocol-chart"
-import MobileNavigation from "@/components/mobile-navigation"
-import UserPosition from "@/components/user-position"
-import AvailablePools from "@/components/available-pools"
-import DepositModal from "@/components/deposit-modal"
+import ProtocolChart from "@/components/features/protocol-chart"
+import Navbar from "@/components/features/navigation"
+import UserPosition from "@/components/features/user-position"
+import AvailablePools from "@/components/features/available-pools"
+import DepositModal from "@/components/features/deposit-modal"
 
 interface ProtocolPageProps {
   params: {
@@ -16,72 +16,74 @@ interface ProtocolPageProps {
   }
 }
 
+// Protocol data mapping
+const protocolsData = {
+  aave: {
+    name: "AAVE",
+    logo: "/aave-logo.png",
+    currentApy: 6.13,
+    change: 0.0619,
+    changePercent: 6.05,
+    tvl: "$1.1B",
+    volume: "$246M",
+    users: "155K",
+    totalSupply: "999M",
+    created: "6mo ago",
+    pools: [
+      { id: 1, name: "ETH Lending", apy: 5.2, tvl: "$320M", risk: "Low" },
+      { id: 2, name: "USDC Lending", apy: 6.8, tvl: "$450M", risk: "Low" },
+      { id: 3, name: "BTC Lending", apy: 4.5, tvl: "$180M", risk: "Low" },
+      { id: 4, name: "DAI Lending", apy: 7.1, tvl: "$150M", risk: "Low" },
+    ],
+  },
+  fx: {
+    name: "FX Protocol",
+    logo: "/fx-protocol-logo.png",
+    currentApy: 9.86,
+    change: 0.0786,
+    changePercent: 8.65,
+    tvl: "$463M",
+    volume: "$98M",
+    users: "42K",
+    totalSupply: "500M",
+    created: "1yr ago",
+    pools: [
+      { id: 1, name: "ETH/USDC LP", apy: 8.9, tvl: "$120M", risk: "Medium" },
+      { id: 2, name: "BTC/USDC LP", apy: 9.2, tvl: "$95M", risk: "Medium" },
+      { id: 3, name: "FX Staking", apy: 12.5, tvl: "$85M", risk: "Medium" },
+      { id: 4, name: "Stability Pool", apy: 7.8, tvl: "$163M", risk: "Low" },
+    ],
+  },
+  quill: {
+    name: "Quill Finance",
+    logo: "/quill-finance-logo.png",
+    currentApy: 12.19,
+    change: 0.1219,
+    changePercent: 11.12,
+    tvl: "$262M",
+    volume: "$75M",
+    users: "28K",
+    totalSupply: "250M",
+    created: "3mo ago",
+    pools: [
+      { id: 1, name: "Quill Vault V1", apy: 11.5, tvl: "$75M", risk: "Medium" },
+      { id: 2, name: "ETH Yield Vault", apy: 14.2, tvl: "$62M", risk: "High" },
+      { id: 3, name: "Stablecoin Vault", apy: 9.8, tvl: "$105M", risk: "Low" },
+      { id: 4, name: "BTC Yield Vault", apy: 13.3, tvl: "$20M", risk: "High" },
+    ],
+  },
+};
+
 export default function ProtocolPage({ params }: ProtocolPageProps) {
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [showDepositModal, setShowDepositModal] = useState(false)
-
-  // Protocol data mapping
-  const protocolsData = {
-    aave: {
-      name: "AAVE",
-      logo: "/aave-logo.png",
-      currentApy: 6.13,
-      change: 0.0619,
-      changePercent: 6.05,
-      tvl: "$1.1B",
-      volume: "$246M",
-      users: "155K",
-      totalSupply: "999M",
-      created: "6mo ago",
-      pools: [
-        { id: 1, name: "ETH Lending", apy: 5.2, tvl: "$320M", risk: "Low" },
-        { id: 2, name: "USDC Lending", apy: 6.8, tvl: "$450M", risk: "Low" },
-        { id: 3, name: "BTC Lending", apy: 4.5, tvl: "$180M", risk: "Low" },
-        { id: 4, name: "DAI Lending", apy: 7.1, tvl: "$150M", risk: "Low" },
-      ],
-    },
-    fx: {
-      name: "FX Protocol",
-      logo: "/fx-protocol-logo.png",
-      currentApy: 9.86,
-      change: 0.0786,
-      changePercent: 8.65,
-      tvl: "$463M",
-      volume: "$98M",
-      users: "42K",
-      totalSupply: "500M",
-      created: "1yr ago",
-      pools: [
-        { id: 1, name: "ETH/USDC LP", apy: 8.9, tvl: "$120M", risk: "Medium" },
-        { id: 2, name: "BTC/USDC LP", apy: 9.2, tvl: "$95M", risk: "Medium" },
-        { id: 3, name: "FX Staking", apy: 12.5, tvl: "$85M", risk: "Medium" },
-        { id: 4, name: "Stability Pool", apy: 7.8, tvl: "$163M", risk: "Low" },
-      ],
-    },
-    quill: {
-      name: "Quill Finance",
-      logo: "/quill-finance-logo.png",
-      currentApy: 12.19,
-      change: 0.1219,
-      changePercent: 11.12,
-      tvl: "$262M",
-      volume: "$75M",
-      users: "28K",
-      totalSupply: "250M",
-      created: "3mo ago",
-      pools: [
-        { id: 1, name: "Quill Vault V1", apy: 11.5, tvl: "$75M", risk: "Medium" },
-        { id: 2, name: "ETH Yield Vault", apy: 14.2, tvl: "$62M", risk: "High" },
-        { id: 3, name: "Stablecoin Vault", apy: 9.8, tvl: "$105M", risk: "Low" },
-        { id: 4, name: "BTC Yield Vault", apy: 13.3, tvl: "$20M", risk: "High" },
-      ],
-    },
-  }
-
-  const protocolData = protocolsData[params.id as keyof typeof protocolsData] || protocolsData.aave
+  const protocolId = params.id as string;
+  
+  // Get protocol data or default to aave
+  const protocolData = protocolsData[protocolId as keyof typeof protocolsData] || protocolsData.aave;
 
   // Example user positions - empty for now
-  const userPositions = []
+  const userPositions: any[] = [];
 
   const handleSelectPool = (pool: any) => {
     setSelectedPool(pool?.id === selectedPool?.id ? null : pool)
@@ -96,8 +98,21 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Status Bar - Simplified */}
-      <div className="h-6"></div>
-
+      <div className="flex justify-between">
+        {/* history */}
+        <div>
+          
+        </div>
+        {/* Search */}
+        <div>
+          
+        </div>
+        {/* setting */}
+        <div>
+          
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between">
         <Link href="/" className="w-8 h-8 flex items-center justify-center">
@@ -132,7 +147,7 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
 
       {/* Chart */}
       <div className="px-4 py-2">
-        <ProtocolChart protocolId={params.id} />
+        <ProtocolChart protocolId={protocolId} />
       </div>
 
       {/* Time Filters */}
@@ -216,7 +231,7 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
       </div>
 
       {/* Navigation */}
-      <MobileNavigation />
+      <Navbar />
 
       {/* Deposit Modal */}
       {showDepositModal && <DepositModal pool={selectedPool} onClose={() => setShowDepositModal(false)} />}
