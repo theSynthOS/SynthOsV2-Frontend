@@ -9,10 +9,25 @@ import Navbar from "@/components/features/navigation"
 import PWAInstaller from "@/components/features/pwa-installer"
 import { wallets } from "../WalletProvider"
 import { client, scrollSepolia } from "@/client"
-import { ConnectButton } from "thirdweb/react"
+import { ConnectButton, useActiveAccount } from "thirdweb/react"
+import { useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Home() {
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  
+  // Redirect to root if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    }
+  }, [isAuthenticated, router])
+
+  // Don't render anything if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
   
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">

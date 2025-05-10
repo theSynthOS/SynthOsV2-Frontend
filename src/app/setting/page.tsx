@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle } from "lucide-react";
+import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SettingPage() {
-  const [userAddress, setUserAddress] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const account = useActiveAccount();
+  const wallet = useActiveWallet();
+  const { disconnect } = useDisconnect();
   const router = useRouter();
-
-  
-
-
-
+  const { isAuthenticated } = useAuth();
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -21,13 +20,38 @@ export default function SettingPage() {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
+  const handleAuth = () => {
+    if (isAuthenticated) {
+      // Handle logout
+      // You'll need to implement the actual logout logic here
+      router.push("/");
+    } else {
+      // Redirect to root page for login
+      router.push("/");
+    }
+  };
+
+  const handleGoBack = () => {
+    if (account && account.address) {
+      router.push("/home");
+    } else {
+      router.push("/");
+    }
+  };
+
+  // Protection in case user directly navigates to this page
+  useEffect(() => {
+    // Nothing to do, we allow both authenticated and unauthenticated users
+    // to access the settings page, but with different options
+  }, [account]);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Header */}
       <div className="px-4 py-6 flex items-center justify-between">
-        <Link href="/" className="w-8 h-8 flex items-center justify-center">
+        <button onClick={handleGoBack} className="w-8 h-8 flex items-center justify-center">
           <ArrowLeft className="h-6 w-6" />
-        </Link>
+        </button>
         <h1 className="text-xl font-bold">Profile</h1>
         <div className="w-8 h-8"></div>
       </div>
@@ -40,7 +64,7 @@ export default function SettingPage() {
         <div className="flex-1">
           <h2 className="text-lg font-semibold">Wallet User</h2>
           <p className="text-sm text-gray-400 truncate">
-            {formatAddress(userAddress)}
+            {account && account.address ? formatAddress(account.address) : "Not connected"}
           </p>
         </div>
       </div>
@@ -78,11 +102,20 @@ export default function SettingPage() {
         </div>
         
         <button 
-          //onClick={handleLogout}
+          onClick={handleAuth}
           className="w-full flex items-center p-3 bg-gray-800/50 rounded-lg text-red-400"
         >
-          <LogOut className="h-5 w-5 mr-3" />
-          <span>Log Out</span>
+          {isAuthenticated ? (
+            <>
+              <LogOut className="h-5 w-5 mr-3" />
+              <span>Log Out</span>
+            </>
+          ) : (
+            <>
+              <LogIn className="h-5 w-5 mr-3" />
+              <span>Log In</span>
+            </>
+          )}
         </button>
       </div>
       
