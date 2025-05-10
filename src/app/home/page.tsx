@@ -1,6 +1,7 @@
 "use client"
 
 import { Search, Settings, History } from "lucide-react"
+import { useRouter } from "next/navigation"
 import ProtocolSpotlight from "@/components/features/protocol-spotlight"
 import TopYielders from "@/components/features/top-yielders"
 import TrendingProtocols from "@/components/features/trending-protocols"
@@ -11,6 +12,8 @@ import { client, scrollSepolia } from "@/client"
 import { ConnectButton } from "thirdweb/react"
 
 export default function Home() {
+  const router = useRouter()
+  
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Status Bar with history, search, settings */}
@@ -28,7 +31,11 @@ export default function Home() {
             className="w-full bg-gray-800/50 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none"
           />
         </div>
-        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+        
+        <button 
+          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center"
+          onClick={() => router.push("/setting")}
+        >
           <Settings className="h-4 w-4 text-gray-400" />
         </button>
       </div>
