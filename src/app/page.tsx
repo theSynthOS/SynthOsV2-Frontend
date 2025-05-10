@@ -24,7 +24,7 @@ export default function Home() {
     }
   }, [isAuthenticated, router, address])
   
-  // If authenticated, don't render the login page content
+  // If authenticated, return null to prevent flash of content
   if (isAuthenticated) {
     return null
   }

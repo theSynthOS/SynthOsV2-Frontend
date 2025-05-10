@@ -26,6 +26,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { disconnect } = useDisconnect()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [address, setAddress] = useState<string | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
+
+  // Initial hydration check
+  useEffect(() => {
+    // This effect runs only once on component mount
+    // and will be replaced by the account change effect below
+    // once account data is available
+    
+    // We'll set a short timeout to give Thirdweb time to restore session
+    const timer = setTimeout(() => {
+      setIsInitializing(false)
+    }, 500)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   // Handle account changes
   useEffect(() => {
@@ -41,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Setting authenticated with address:", account.address)
         setIsAuthenticated(true)
         setAddress(account.address)
+        setIsInitializing(false) // No longer initializing once we have account
       } else {
         console.log("No valid account found, setting unauthenticated")
         setIsAuthenticated(false)
@@ -54,6 +70,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // No interval needed - React will re-run this effect when dependencies change
   }, [account, wallet])
 
+  // Return loading state during initialization
+  if (isInitializing) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0f0b22]">
+        <div className="text-white text-2xl">Loading...</div>
+      </div>
+    )
+  }
+
   const logout = async () => {
     try {
       if (wallet) {
@@ -66,8 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Logout error:", error)
     }
   }
-
-
 
   return (
     <AuthContext.Provider value={{ 

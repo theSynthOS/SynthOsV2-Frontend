@@ -12,7 +12,7 @@ export default function SettingPage() {
   const wallet = useActiveWallet();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -22,9 +22,8 @@ export default function SettingPage() {
 
   const handleAuth = () => {
     if (isAuthenticated) {
-      // Handle logout
-      // You'll need to implement the actual logout logic here
-      router.push("/");
+      // Use the logout function from AuthContext
+      logout();
     } else {
       // Redirect to root page for login
       router.push("/");
@@ -62,7 +61,7 @@ export default function SettingPage() {
           <User className="h-8 w-8 text-gray-400" />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold">Wallet User</h2>
+          <h2 className="text-lg font-semibold">Wallet User - gmail</h2>
           <p className="text-sm text-gray-400 truncate">
             {account && account.address ? formatAddress(account.address) : "Not connected"}
           </p>
@@ -107,13 +106,17 @@ export default function SettingPage() {
         >
           {isAuthenticated ? (
             <>
-              <LogOut className="h-5 w-5 mr-3" />
-              <span>Log Out</span>
+
+                <LogOut className="h-5 w-5 mr-3" />
+                <span>Log Out</span>
+
             </>
           ) : (
             <>
-              <LogIn className="h-5 w-5 mr-3" />
-              <span>Log In</span>
+              <Link href="/">
+                <LogIn className="h-5 w-5 mr-3" />
+                <span>Log In</span>
+              </Link>
             </>
           )}
         </button>
