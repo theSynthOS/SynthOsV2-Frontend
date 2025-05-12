@@ -4,7 +4,6 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext"
 import { ThirdwebProvider } from "thirdweb/react";
 import { client, scrollSepolia } from "@/client";
-import { wallets } from "./WalletProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
