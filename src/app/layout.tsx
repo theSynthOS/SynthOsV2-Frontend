@@ -5,6 +5,8 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import { ThirdwebProvider } from "thirdweb/react";
 import { client, scrollSepolia } from "@/client";
 import { wallets } from "./WalletProvider";
+import Navbar from "@/components/features/navigation"
+import Header from "@/components/features/header"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,11 +48,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <div className="fixed top-0 left-0 right-0">
+          <Header />
+        </div>
         <ThirdwebProvider>
           <AuthProvider>
             {children}
           </AuthProvider>
         </ThirdwebProvider>
+        <div className="fixed bottom-0 left-0 right-0">
+          <Navbar />
+        </div>
       </body>
     </html>
   );

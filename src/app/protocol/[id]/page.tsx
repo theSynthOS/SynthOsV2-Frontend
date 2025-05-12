@@ -229,10 +229,6 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
           {selectedPool ? `Deposit into ${selectedPool.name}` : "Select a pool to deposit"}
         </button>
       </div>
-
-      {/* Navigation */}
-      <Navbar />
-
       {/* Deposit Modal */}
       {showDepositModal && <DepositModal pool={selectedPool} onClose={() => setShowDepositModal(false)} />}
     </div>

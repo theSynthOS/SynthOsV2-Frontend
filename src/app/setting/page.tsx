@@ -47,7 +47,7 @@ export default function SettingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Header */}
-      <div className="px-4 py-6 flex items-center justify-between">
+      <div className="px-4 pb-6 pt-2  flex items-center justify-between">
         <button onClick={handleGoBack} className="w-8 h-8 flex items-center justify-center">
           <ArrowLeft className="h-6 w-6" />
         </button>
