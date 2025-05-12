@@ -36,7 +36,7 @@ export default function Home() {
         SynthOS
       </div>
 
-      <div className="text-2xl font-bold text-white mb-8">
+      <div className="text-2xl font-bold text-white mb-8 flex text-center">
         Your gateway to the future of DeFi
       </div>
 
