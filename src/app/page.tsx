@@ -6,6 +6,7 @@ import { wallets } from "./WalletProvider"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
+import CustomConnectWallet from "@/components/CustomConnectWallet"
 
 export default function Home() {
   const router = useRouter()
@@ -30,26 +31,17 @@ export default function Home() {
   }
   
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="text-4xl font-bold">
+    <div className="flex flex-col items-center justify-center h-screen bg-[#0f0b22] p-4">
+      <div className="text-4xl font-bold text-white mb-2">
         SynthOS
       </div>
 
-      <div className="text-2xl font-bold">
+      <div className="text-2xl font-bold text-white mb-8">
         Your gateway to the future of DeFi
       </div>
 
-      <div className="w-20">
-        <ConnectButton
-          client={client}
-          wallets={wallets}
-          connectModal={{ size: "compact" }}
-          accountAbstraction={{
-            chain: scrollSepolia,
-            sponsorGas: true,
-          }}
-        />
-      </div>
+      {/* Custom Connect Wallet Component */}
+      <CustomConnectWallet />
     </div>
   )
 }

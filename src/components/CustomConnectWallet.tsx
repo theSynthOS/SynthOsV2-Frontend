@@ -1,0 +1,428 @@
+"use client";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useConnect } from "thirdweb/react";
+import { createWallet, inAppWallet, type Wallet } from "thirdweb/wallets";
+import { client } from "@/client";
+import { scrollSepolia } from "@/client";
+import { ChevronRight, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+
+type WalletOption = {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+};
+
+type OAuthProvider = "google" | "apple" | "email" | "passkey" | "x" | "telegram";
+
+export default function ConnectWalletButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, address } = useAuth();
+  
+  // Open the modal
+  const openModal = () => setIsOpen(true);
+  
+  // Close the modal
+  const closeModal = () => setIsOpen(false);
+  
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEsc);
+    
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+  
+  return (
+    <div>
+      {/* Connect Wallet Button */}
+      <button 
+        onClick={openModal}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+      >
+        {isAuthenticated && address 
+          ? `${address.slice(0, 6)}...${address.slice(-4)}`
+          : "Connect Wallet"
+        }
+      </button>
+      
+      {/* Modal Overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={closeModal}
+          ></div>
+          
+          {/* Modal Content */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up">
+            {/* Drag Handle */}
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
+            
+            {/* Close Button */}
+            <button 
+              onClick={closeModal} 
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            {/* Wallet Connection UI */}
+            <WalletConnectionUI onClose={closeModal} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Separate component for the wallet connection UI
+function WalletConnectionUI({ onClose }: { onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<"wallets" | "social" | "passkey">("wallets");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [currentWallet, setCurrentWallet] = useState<string>("");
+  const [currentAuth, setCurrentAuth] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  
+  const { login, isAuthenticated, address, logout } = useAuth();
+  const { connect } = useConnect();
+  
+  const wallets: WalletOption[] = [
+    { id: "io.metamask", name: "MetaMask", icon: <span className="text-2xl">🦊</span> },
+    { id: "com.coinbase.wallet", name: "Coinbase Wallet", icon: <Image src="/icons/coinbase.png" alt="Google" width={100} height={100} /> },
+    { id: "me.rainbow", name: "Rainbow", icon: <span className="text-2xl">🌈</span> },
+    { id: "walletconnect", name: "WalletConnect", icon: <span className="text-2xl">🔗</span> },
+  ];
+  
+  const socialOptions: { id: OAuthProvider; name: string; icon: React.ReactNode }[] = [
+    { id: "google", name: "Google", icon: <Image src="/icons/google.png" alt="Google" width={100} height={1001} /> },
+    { id: "apple", name: "Apple", icon: <Image src="/icons/apple.png" alt="Apple" width={100} height={100} /> },
+    { id: "x", name: "X", icon: <Image src="/icons/x.jpg" alt="X" width={100} height={100} /> },
+    { id: "telegram", name: "Telegram", icon: <Image src="/icons/telegram.png" alt="Telegram" width={100} height={100} /> },
+  ];
+  
+  // Connect wallet function
+  const handleConnectWallet = async (walletId: string) => {
+    try {
+      setIsConnecting(true);
+      setCurrentWallet(walletId);
+      setCurrentAuth("");
+      setError("");
+      
+      await connect(async () => {
+        // Create wallet instance using the correct wallet ID
+        const wallet = createWallet(walletId as any);
+        
+        // Connect the wallet
+        const account = await wallet.connect({
+          client,
+        });
+        
+        // If connection is successful, store in auth context
+        if (account) {
+          login(account.address, walletId);
+        }
+        
+        // Return the connected wallet
+        return wallet;
+      });
+      
+      // Close the modal after successful connection
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+      
+    } catch (err: any) {
+      setError(err.message || "Failed to connect wallet");
+      console.error("Failed to connect wallet:", err);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+  
+  // Connect with social auth (using in-app wallet)
+  const handleConnectWithSocial = async (provider: OAuthProvider) => {
+    try {
+      setIsConnecting(true);
+      setCurrentAuth(provider);
+      setCurrentWallet("");
+      setError("");
+      
+      await connect(async () => {
+        // Create in-app wallet with the specified auth strategy
+        const wallet = inAppWallet({
+          auth: {
+            options: [provider],
+            mode: "popup", // Explicitly set the mode
+            redirectUrl: window.location.href,
+          },
+          smartAccount: {
+            chain: scrollSepolia,
+            sponsorGas: true,
+          }
+        });
+        
+        // Connect the wallet to the client with the specific strategy
+        // Each strategy requires different connection options
+        if (provider === "google" || provider === "apple" || provider === "x") {
+          const account = await wallet.connect({
+            client,
+            strategy: provider,
+          });
+          
+          // If connection is successful, store in auth context
+          if (account) {
+            login(account.address, undefined, provider);
+          }
+        } else if (provider === "email") {
+          // For email, we would need to implement the email verification flow
+          // This is a simplified example
+          setError("Email authentication requires verification code. Not implemented in this demo.");
+          throw new Error("Email authentication not implemented");
+        }
+        
+        // Return the connected wallet
+        return wallet;
+      });
+      
+      // Close the modal after successful connection
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+      
+    } catch (err: any) {
+      setError(err.message || `Failed to connect with ${provider}`);
+      console.error(`Failed to connect with ${provider}:`, err);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+  
+  // Connect with passkey
+  const handleConnectWithPasskey = async () => {
+    try {
+      setIsConnecting(true);
+      setCurrentAuth("passkey");
+      setCurrentWallet("");
+      setError("");
+      
+      // Check if user has used passkey before
+      const hasPasskey = localStorage.getItem("hasPasskey") === "true";
+      
+      await connect(async () => {
+        // Create in-app wallet with passkey auth
+        const wallet = inAppWallet({
+          auth: {
+            options: ["passkey"],
+            mode: "popup",
+          },
+          smartAccount: {
+            chain: scrollSepolia,
+            sponsorGas: true,
+          }
+        });
+        
+        // Connect with passkey strategy
+        const account = await wallet.connect({
+          client,
+          strategy: "passkey",
+          type: hasPasskey ? "sign-in" : "sign-up", // Required for passkey strategy
+          passkeyName: "SynthOS Wallet", // Optional name for the passkey
+        });
+        
+        // If connection is successful, store in auth context
+        if (account) {
+          login(account.address, undefined, "passkey");
+          localStorage.setItem("hasPasskey", "true");
+        }
+        
+        // Return the connected wallet
+        return wallet;
+      });
+      
+      // Close the modal after successful connection
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+      
+    } catch (err: any) {
+      setError(err.message || "Failed to connect with passkey");
+      console.error("Failed to connect with passkey:", err);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+  
+  // Disconnect wallet function
+  const handleDisconnect = () => {
+    logout();
+  };
+
+  return (
+    <div className="p-6 w-full max-w-md mx-auto text-black">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">Connect to Continue</h2>
+        <p className="text-gray-500 text-lg">Choose your preferred authentication method</p>
+      </div>
+      
+      {/* Tabs */}
+      <div className="flex mb-6 border-b">
+        <button
+          className={`flex-1 py-3 px-4 text-lg font-medium ${
+            activeTab === "wallets" 
+              ? "text-red-500 border-b-2 border-red-500" 
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("wallets")}
+        >
+          Wallets
+        </button>
+        <button
+          className={`flex-1 py-3 px-4 text-lg font-medium ${
+            activeTab === "social" 
+              ? "text-red-500 border-b-2 border-red-500" 
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("social")}
+        >
+          Social
+        </button>
+        <button
+          className={`flex-1 py-3 px-4 text-lg font-medium ${
+            activeTab === "passkey" 
+              ? "text-red-500 border-b-2 border-red-500" 
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("passkey")}
+        >
+          Passkey
+        </button>
+      </div>
+      
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+          {error}
+        </div>
+      )}
+      
+      {/* Connected Account Info */}
+      {isAuthenticated && address && (
+        <div className="mb-6 p-4 bg-gray-100 border border-gray-200 rounded-lg">
+          <p className="text-sm text-gray-500">Connected with:</p>
+          <p className="font-mono text-sm truncate">
+            {address}
+          </p>
+          <button
+            onClick={handleDisconnect}
+            className="mt-2 text-sm text-blue-600 hover:underline"
+          >
+            Disconnect
+          </button>
+        </div>
+      )}
+      
+      {/* Wallet Options */}
+      {activeTab === "wallets" && (
+        <div className="space-y-4">
+          {wallets.map((wallet) => (
+            <button 
+              key={wallet.id}
+              onClick={() => handleConnectWallet(wallet.id)}
+              disabled={isConnecting && currentWallet === wallet.id}
+              className={`flex items-center justify-between w-full p-4 border rounded-xl hover:bg-gray-50 ${
+                isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="w-8 h-8 flex items-center justify-center mr-3">
+                  {wallet.icon}
+                </div>
+                <span className="text-lg font-medium">{wallet.name}</span>
+              </div>
+              
+              {isConnecting && currentWallet === wallet.id ? (
+                <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              ) : (
+                <ChevronRight className="h-6 w-6 text-gray-400" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {/* Social Login Options */}
+      {activeTab === "social" && (
+        <div className="space-y-4">
+          {socialOptions.map((option) => (
+            <button 
+              key={option.id}
+              onClick={() => handleConnectWithSocial(option.id)}
+              disabled={isConnecting && currentAuth === option.id}
+              className={`flex items-center justify-between w-full p-4 border rounded-xl hover:bg-gray-50 ${
+                isConnecting && currentAuth !== option.id ? "opacity-50" : ""
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="w-8 h-8 flex items-center justify-center mr-3">
+                  {option.icon}
+                </div>
+                <span className="text-lg font-medium">Continue with {option.name}</span>
+              </div>
+              
+              {isConnecting && currentAuth === option.id ? (
+                <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              ) : (
+                <ChevronRight className="h-6 w-6 text-gray-400" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {/* Passkey Options */}
+      {activeTab === "passkey" && (
+        <div className="text-center p-4">
+          <div className="h-16 w-16 mx-auto mb-4 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 mb-4">
+            Connect securely using a passkey - a more secure alternative to
+            passwords that lets you sign in using your device's authentication
+            methods like fingerprint, face recognition, or screen lock.
+          </p>
+          <button
+            onClick={handleConnectWithPasskey}
+            disabled={isConnecting && currentAuth === "passkey"}
+            className={`w-full flex items-center justify-center p-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium ${
+              isConnecting && currentAuth === "passkey" ? "opacity-70" : ""
+            }`}
+          >
+            {isConnecting && currentAuth === "passkey" && (
+              <span className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+            )}
+            <span>
+              {isConnecting && currentAuth === "passkey" ? "Connecting..." : "Continue with Passkey"}
+            </span>
+          </button>
+        </div>
+      )}
+      
+      <div className="mt-8 text-center text-xs text-gray-500">
+        By continuing, you agree to our Terms of Service and Privacy Policy
+      </div>
+    </div>
+  );
+} 

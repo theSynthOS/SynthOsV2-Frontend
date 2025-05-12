@@ -1,107 +1,112 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react"
-import type { Account } from "thirdweb/wallets"
+import React, { createContext, useContext, useState, useEffect } from "react"
+import { createWallet } from "thirdweb/wallets"
+import { client } from "@/client"
+
+type AuthData = {
+  address: string
+  walletId?: string
+  walletType?: string
+}
 
 interface AuthContextType {
   isAuthenticated: boolean
-  account: Account | null
   address: string | null
+  login: (address: string, walletId?: string, walletType?: string) => void
   logout: () => void
 }
 
-const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  account: null,
-  address: null,
-  logout: () => {},
-})
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const account = useActiveAccount()
-  const wallet = useActiveWallet()
-  const { disconnect } = useDisconnect()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [address, setAddress] = useState<string | null>(null)
-  const [isInitializing, setIsInitializing] = useState(true)
+  const [authData, setAuthData] = useState<AuthData | null>(null)
 
-  // Initial hydration check
+  // Get address from auth data
+  const address = authData?.address || null
+
+  // Function to store auth data in localStorage
+  const login = (address: string, walletId?: string, walletType?: string) => {
+    const data: AuthData = { address, walletId, walletType }
+    
+    // Store in state
+    setAuthData(data)
+    setIsAuthenticated(true)
+    
+    // Store in localStorage
+    localStorage.setItem("user_auth", JSON.stringify(data))
+    
+    // Store passkey info if applicable
+    if (walletType === "passkey") {
+      localStorage.setItem("hasPasskey", "true")
+    }
+    
+    console.log("Logged in with address:", address)
+  }
+
+  // Function to clear auth data
+  const logout = () => {
+    setAuthData(null)
+    setIsAuthenticated(false)
+    localStorage.removeItem("user_auth")
+    console.log("Logged out")
+  }
+
+  // Auto-login on component mount if we have stored auth data
   useEffect(() => {
-    // This effect runs only once on component mount
-    // and will be replaced by the account change effect below
-    // once account data is available
-    
-    // We'll set a short timeout to give Thirdweb time to restore session
-    const timer = setTimeout(() => {
-      setIsInitializing(false)
-    }, 500)
-    
-    return () => clearTimeout(timer)
+    const autoLogin = async () => {
+      try {
+        // Get stored auth data
+        const storedAuth = localStorage.getItem("user_auth")
+        if (!storedAuth) return
+        
+        const authData: AuthData = JSON.parse(storedAuth)
+        
+        // Attempt to reconnect based on stored data
+        if (authData.walletId) {
+          try {
+            // Try to reconnect with the wallet
+            const wallet = createWallet(authData.walletId as any)
+            const account = await wallet.getAccount()
+            
+            if (account) {
+              setAuthData(authData)
+              setIsAuthenticated(true)
+              console.log("Auto-reconnected to wallet:", authData.walletId)
+            }
+          } catch (e) {
+            console.log("Could not auto-reconnect wallet, using address only", e)
+            // Fall back to just using the address
+            setAuthData(authData)
+            setIsAuthenticated(true)
+          }
+        } else if (authData.address) {
+          // Just use the stored address
+          setAuthData(authData)
+          setIsAuthenticated(true)
+          console.log("Using stored address:", authData.address)
+        }
+      } catch (error) {
+        console.error("Auto-login failed:", error)
+        logout() // Clear invalid auth data
+      }
+    }
+
+    autoLogin()
   }, [])
 
-  // Handle account changes
-  useEffect(() => {
-    const updateAuth = () => {
-      // Log the raw account data
-      console.log("Raw account data:", {
-        hasAccount: Boolean(account),
-        accountAddress: account?.address,
-        hasWallet: Boolean(wallet)
-      })
-
-      if (account && account.address) {
-        console.log("Setting authenticated with address:", account.address)
-        setIsAuthenticated(true)
-        setAddress(account.address)
-        setIsInitializing(false) // No longer initializing once we have account
-      } else {
-        console.log("No valid account found, setting unauthenticated")
-        setIsAuthenticated(false)
-        setAddress(null)
-      }
-    }
-
-    // Call immediately when account or wallet changes
-    updateAuth()
-    
-    // No interval needed - React will re-run this effect when dependencies change
-  }, [account, wallet])
-
-  // Return loading state during initialization
-  if (isInitializing) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0f0b22]">
-        <div className="text-white text-2xl">Loading...</div>
-      </div>
-    )
-  }
-
-  const logout = async () => {
-    try {
-      if (wallet) {
-        await disconnect(wallet)
-      }
-      setIsAuthenticated(false)
-      setAddress(null)
-      router.push("/")
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
-  }
-
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      account: account || null, 
-      address,
-      logout
-    }}>
+    <AuthContext.Provider value={{ isAuthenticated, address, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => useContext(AuthContext) 
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+} 
