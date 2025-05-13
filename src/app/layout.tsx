@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext"
 import { ThirdwebProvider } from "thirdweb/react";
 import { client, scrollSepolia } from "@/client";
+import Navbar from "@/components/features/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,13 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeFi Protocol Tracker",
-  description: "Track DeFi protocols and their APY/APR rates",
+  title: "SynthOS V2",
+  description: "SynthOS V2 - Your gateway to the future of DeFi",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "DeFi Tracker",
+    title: "SynthOS",
   },
 };
 
@@ -40,14 +41,19 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" />
+        <link rel="apple-touch-icon" href="/SynthOS-tranparent.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThirdwebProvider>
           <AuthProvider>
-            {children}
+            <div className="flex flex-col min-h-screen">
+                {children}
+              <div className="fixed bottom-0 left-0 right-0 z-10">
+                <Navbar />
+              </div>
+            </div>
           </AuthProvider>
         </ThirdwebProvider>
       </body>
