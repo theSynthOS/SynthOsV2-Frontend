@@ -27,13 +27,19 @@ export default function DynamicFeatures() {
   return (
     <>
       {/* Spotlight */}
-      <ProtocolSpotlight />
+      <div className="border-b border-gray-800">
+        <ProtocolSpotlight />
+      </div>
 
       {/* Top Yielders */}
-      <TopYielders />
+      <div className="border-b border-gray-800">
+        <TopYielders />
+      </div>
 
       {/* Trending */}
-      <TrendingProtocols />
+      <div>
+        <TrendingProtocols />
+      </div>
 
       {/* PWA Installer */}
       <PWAInstaller />

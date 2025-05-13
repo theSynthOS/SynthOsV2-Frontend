@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle, LogIn } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,17 +105,13 @@ export default function SettingPage() {
         >
           {isAuthenticated ? (
             <>
-
-                <LogOut className="h-5 w-5 mr-3" />
-                <span>Log Out</span>
-
+              <LogOut className="h-5 w-5 mr-3" />
+              <span>Log Out</span>
             </>
           ) : (
             <>
-              <Link href="/">
-                <LogIn className="h-5 w-5 mr-3" />
-                <span>Log In</span>
-              </Link>
+              <LogIn className="h-5 w-5 mr-3" />
+              <span>Log In</span>
             </>
           )}
         </button>

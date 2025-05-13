@@ -146,7 +146,7 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
       </div>
 
       {/* Chart */}
-      <div className="px-4 py-2">
+      <div className="px-4 py-6">
         <ProtocolChart protocolId={protocolId} />
       </div>
 

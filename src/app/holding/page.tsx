@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -25,9 +24,12 @@ export default function ProfilePage() {
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Header */}
       <div className="px-4 pb-6 pt-2 flex items-center justify-between">
-        <Link href="/" className="w-8 h-8 flex items-center justify-center">
+        <button 
+          onClick={() => router.push("/")} 
+          className="w-8 h-8 flex items-center justify-center"
+        >
           <ArrowLeft className="h-6 w-6" />
-        </Link>
+        </button>
         <h1 className="text-xl font-bold">Profile</h1>
         <div className="w-8 h-8"></div>
       </div>

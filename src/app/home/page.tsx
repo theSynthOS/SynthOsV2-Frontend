@@ -28,7 +28,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
       {/* Balance */}
-      <div className="px-4 py-6 pt-[68px]">
+      <div className="px-4 py-6 pt-[75px] border-b border-gray-800">
         <div className="text-gray-400 text-sm">Total balance</div>
         <div className="flex items-center">
           <div className="text-4xl font-bold">$0.00</div>
