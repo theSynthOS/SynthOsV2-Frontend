@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext"
-import { ThirdwebProvider } from "thirdweb/react";
-import { client, scrollSepolia } from "@/client";
-import { wallets } from "./WalletProvider";
-import Navbar from "@/components/features/navigation"
-import Header from "@/components/features/header"
+import DynamicProviders from "@/components/providers/dynamic-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -48,17 +45,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="fixed top-0 left-0 right-0">
-          <Header />
-        </div>
-        <ThirdwebProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ThirdwebProvider>
-        <div className="fixed bottom-0 left-0 right-0">
-          <Navbar />
-        </div>
+        <DynamicProviders>
+          {children}
+        </DynamicProviders>
       </body>
     </html>
   );

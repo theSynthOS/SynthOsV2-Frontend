@@ -2,7 +2,7 @@
 import { createThirdwebClient, defineChain } from "thirdweb";
 
 // Define Scroll Sepolia chain
-const scrollSepolia = defineChain({
+export const scrollSepolia = defineChain({
   id: 534_351,
   name: "Scroll Sepolia",
   nativeCurrency: {
@@ -29,8 +29,5 @@ const scrollSepolia = defineChain({
 
 // Create thirdweb client
 export const client = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || '',
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || ''
 });
-
-// Export the Scroll Sepolia chain for use in other parts of the application
-export { scrollSepolia };

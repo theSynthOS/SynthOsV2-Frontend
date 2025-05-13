@@ -1,8 +1,4 @@
 "use client"
-import { scrollSepolia } from "@/client"
-import { client } from "@/client"
-import { ConnectButton } from "thirdweb/react"
-import { wallets } from "./WalletProvider"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"

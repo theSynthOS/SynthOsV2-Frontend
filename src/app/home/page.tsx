@@ -1,16 +1,9 @@
 "use client"
 
-import { Search, Settings, History } from "lucide-react"
 import { useRouter } from "next/navigation"
-import ProtocolSpotlight from "@/components/features/protocol-spotlight"
-import TopYielders from "@/components/features/top-yielders"
-import TrendingProtocols from "@/components/features/trending-protocols"
-import PWAInstaller from "@/components/features/pwa-installer"
-import { wallets } from "../WalletProvider"
-import { client, scrollSepolia } from "@/client"
-import { ConnectButton, useActiveAccount } from "thirdweb/react"
 import { useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import DynamicFeatures from "@/components/home/dynamic-features"
 
 export default function Home() {
   const router = useRouter()
@@ -19,13 +12,17 @@ export default function Home() {
   // Redirect to root if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/")
+      router.replace("/")
     }
   }, [isAuthenticated, router])
 
-  // Don't render anything if not authenticated
+  // Show loading state while checking authentication
   if (!isAuthenticated) {
-    return null
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0f0b22]">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    )
   }
   
   return (
@@ -39,17 +36,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Spotlight */}
-      <ProtocolSpotlight />
-
-      {/* Top Yielders */}
-      <TopYielders />
-
-      {/* Trending */}
-      <TrendingProtocols />
-
-      {/* PWA Installer */}
-      <PWAInstaller />
+      {/* Dynamic Features */}
+      <DynamicFeatures />
     </div>
   )
 }

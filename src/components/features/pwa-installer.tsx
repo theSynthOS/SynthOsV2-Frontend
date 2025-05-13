@@ -8,9 +8,9 @@ export default function PWAInstaller() {
   const [showInstallButton, setShowInstallButton] = useState(false)
 
   useEffect(() => {
-    // Register service worker
+    // Register service worker with a delay to not block initial render
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
+      setTimeout(() => {
         navigator.serviceWorker.register("/sw.js").then(
           (registration) => {
             console.log("Service Worker registration successful with scope: ", registration.scope)
@@ -19,7 +19,7 @@ export default function PWAInstaller() {
             console.log("Service Worker registration failed: ", err)
           },
         )
-      })
+      }, 2000) // Delay registration by 2 seconds
     }
 
     // Handle install prompt
