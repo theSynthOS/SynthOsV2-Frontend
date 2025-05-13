@@ -18,7 +18,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50" onClick={(e) => e.stopPropagation()}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -26,7 +26,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
       ></div>
       
       {/* Modal Content */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50`}>
+      <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50 overflow-hidden`}>
         {/* Drag Handle */}
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
         
@@ -38,8 +38,8 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
           <X className="h-6 w-6" />
         </button>
         
-        {/* Modal Content */}
-        <div className="p-6 pb-20">
+        {/* Modal Content - Scrollable Area */}
+        <div className="p-6 pb-20 h-full overflow-y-auto">
           <h2 className="text-2xl font-bold mb-6">Withdraw Funds</h2>
           
           <div className="bg-gray-50 rounded-lg p-6 text-center">
