@@ -15,11 +15,11 @@ export default function TrendingProtocols() {
 
   return (
     <div className="px-4 py-6">
-      <div className="flex items-center mb-2">
+      <div className="flex items-center mb-6">
         <Flame className="w-5 h-5 mr-2 text-white" />
-        <h2 className="text-xl font-bold">Trending</h2>
+        <h2 className="text-2xl font-bold">Trending</h2>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-6">
         {trendingProtocols.map((protocol) => (
           <div 
             key={protocol.id}
@@ -36,9 +36,9 @@ export default function TrendingProtocols() {
             <div className="text-right">
               <div className="font-semibold">{protocol.apy.toFixed(2)}%</div>
               <div
-                className={`text-sm ${protocol.isUp ? "text-green-400" : "text-red-400"} flex items-center justify-end`}
+                className={`text-[12px] ${protocol.isUp ? "text-green-400" : "text-red-400"} flex items-center justify-end`}
               >
-                {protocol.isUp ? "▲" : "▼"} {protocol.change.toFixed(2)}%
+                {protocol.isUp ? "▲" : "▼"}{protocol.change.toFixed(2)}%
               </div>
             </div>
           </div>

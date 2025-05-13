@@ -14,9 +14,9 @@ export default function TopYielders() {
 
   return (
     <div className="px-4 py-6">
-      <div className="flex items-center mb-2">
+      <div className="flex items-center mb-6">
         <TrendingUp className="w-5 h-5 mr-2 text-white" />
-        <h2 className="text-xl font-bold">Top Yielders</h2>
+        <h2 className="text-2xl font-bold">Top Yielders</h2>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {topYielders.map((protocol) => (
@@ -31,7 +31,7 @@ export default function TopYielders() {
               </div>
               <div className="flex-1">
                 <div className="text-lg font-semibold truncate">{protocol.name}</div>
-                <div className="text-green-400 flex items-center text-sm">▲ {protocol.apy.toFixed(2)}%</div>
+                <div className="text-green-400 flex items-center text-sm">▲{protocol.apy.toFixed(2)}%</div>
               </div>
             </div>
           </div>

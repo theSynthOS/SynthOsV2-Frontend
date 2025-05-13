@@ -37,7 +37,7 @@ export default function DynamicFeatures() {
       </div>
 
       {/* Trending */}
-      <div>
+      <div className="mb-[80px]">
         <TrendingProtocols />
       </div>
 
