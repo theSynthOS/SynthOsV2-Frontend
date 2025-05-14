@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle, LogIn } from "lucide-react";
+import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle, LogIn, Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "next-themes";
 
 export default function SettingPage() {
   const account = useActiveAccount();
@@ -12,6 +13,12 @@ export default function SettingPage() {
   const { disconnect } = useDisconnect();
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -69,6 +76,23 @@ export default function SettingPage() {
 
       {/* Menu Items */}
       <div className="px-4 py-4 space-y-4">
+        <button 
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-full flex items-center p-3 bg-gray-800/50 rounded-lg"
+        >
+          {mounted && theme === "dark" ? (
+            <>
+              <Sun className="h-5 w-5 mr-3 text-gray-400" />
+              <span>Light Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon className="h-5 w-5 mr-3 text-gray-400" />
+              <span>Dark Mode</span>
+            </>
+          )}
+        </button>
+
         <div className="flex items-center p-3 bg-gray-800/50 rounded-lg">
           <Settings className="h-5 w-5 mr-3 text-gray-400" />
           <span>Settings</span>
