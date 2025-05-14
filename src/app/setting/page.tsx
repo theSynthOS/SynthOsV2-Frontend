@@ -12,9 +12,10 @@ export default function SettingPage() {
   const wallet = useActiveWallet();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, address, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -98,7 +99,7 @@ export default function SettingPage() {
         <div className="flex-1">
           <h2 className="text-lg font-semibold">Wallet User - gmail</h2>
           <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-            {account && account.address ? formatAddress(account.address) : "Not connected"}
+            {displayAddress ? formatAddress(displayAddress) : "Not connected"}
           </p>
         </div>
       </div>
