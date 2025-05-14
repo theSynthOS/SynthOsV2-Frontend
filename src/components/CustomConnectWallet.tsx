@@ -7,6 +7,7 @@ import { client } from "@/client";
 import { scrollSepolia } from "@/client";
 import { ChevronRight, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 type WalletOption = {
   id: string;
@@ -87,6 +88,7 @@ export default function ConnectWalletButton() {
 
 // Separate component for the wallet connection UI
 function WalletConnectionUI({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"wallets" | "social" | "passkey">("wallets");
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
@@ -130,16 +132,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         // If connection is successful, store in auth context
         if (account) {
           login(account.address, walletId);
+          // Close modal and redirect to home
+          onClose();
+          router.push("/home");
         }
         
         // Return the connected wallet
         return wallet;
       });
-      
-      // Close the modal after successful connection
-      setTimeout(() => {
-        onClose();
-      }, 1000);
       
     } catch (err: any) {
       setError(err.message || "Failed to connect wallet");
@@ -182,6 +182,9 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           // If connection is successful, store in auth context
           if (account) {
             login(account.address, undefined, provider);
+            // Close modal and redirect to home
+            onClose();
+            router.push("/home");
           }
         } else if (provider === "email") {
           // For email, we would need to implement the email verification flow
@@ -193,11 +196,6 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         // Return the connected wallet
         return wallet;
       });
-      
-      // Close the modal after successful connection
-      setTimeout(() => {
-        onClose();
-      }, 1000);
       
     } catch (err: any) {
       setError(err.message || `Failed to connect with ${provider}`);
@@ -243,16 +241,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         if (account) {
           login(account.address, undefined, "passkey");
           localStorage.setItem("hasPasskey", "true");
+          // Close modal and redirect to home
+          onClose();
+          router.push("/home");
         }
         
         // Return the connected wallet
         return wallet;
       });
-      
-      // Close the modal after successful connection
-      setTimeout(() => {
-        onClose();
-      }, 1000);
       
     } catch (err: any) {
       setError(err.message || "Failed to connect with passkey");

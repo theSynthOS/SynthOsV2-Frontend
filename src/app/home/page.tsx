@@ -1,20 +1,15 @@
 "use client"
 
-import { Search, Settings, History } from "lucide-react"
 import { useRouter } from "next/navigation"
-import ProtocolSpotlight from "@/components/features/protocol-spotlight"
-import TopYielders from "@/components/features/top-yielders"
-import TrendingProtocols from "@/components/features/trending-protocols"
-import Navbar from "@/components/features/navigation"
-import PWAInstaller from "@/components/features/pwa-installer"
-import { client, scrollSepolia } from "@/client"
-import { ConnectButton, useActiveAccount } from "thirdweb/react"
 import { useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import DynamicFeatures from "@/components/home/dynamic-features"
+import { useTheme } from "next-themes"
 
 export default function Home() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
+  const { theme } = useTheme()
   
   // Redirect to root if not authenticated
   useEffect(() => {
@@ -23,62 +18,30 @@ export default function Home() {
     }
   }, [isAuthenticated, router])
 
-  // Show loading while checking authentication
+  // Show loading state while checking authentication
   if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 bg-[#0f0b22] flex items-center justify-center">
-        <div className="text-white">Checking authentication...</div>
+      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'}`}>
+        <div className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Loading...</div>
       </div>
     )
   }
   
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
-      {/* Status Bar with history, search, settings */}
-      <div className="flex justify-between items-center p-4">
-        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-          <History className="h-4 w-4 text-gray-400" />
-        </button>
-        <div className="relative flex-1 mx-4">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+    <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'}`}>
+      <div className="flex flex-col min-h-screen">
+        {/* Balance */}
+        <div className={`px-4 py-6 pt-[80px] border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Total balance</div>
+          <div className="flex items-center">
+            <div className="text-4xl font-bold">$0.00</div>
+            <div className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>▶</div>
           </div>
-          <input
-            type="text"
-            placeholder="Search protocols"
-            className="w-full bg-gray-800/50 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none"
-          />
         </div>
-        
-        <button 
-          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center"
-          onClick={() => router.push("/setting")}
-        >
-          <Settings className="h-4 w-4 text-gray-400" />
-        </button>
+
+        {/* Dynamic Features */}
+        <DynamicFeatures />
       </div>
-
-      {/* Balance */}
-      <div className="px-4 py-6">
-        <div className="text-gray-400 text-sm">Total balance</div>
-        <div className="flex items-center">
-          <div className="text-4xl font-bold">$0.00</div>
-          <div className="ml-2 text-gray-400">▶</div>
-        </div>
-      </div>
-
-      {/* Spotlight */}
-      <ProtocolSpotlight />
-
-      {/* Top Yielders */}
-      <TopYielders />
-
-      {/* Trending */}
-      <TrendingProtocols />
-
-      {/* PWA Installer */}
-      <PWAInstaller />
-      
     </div>
   )
 }
