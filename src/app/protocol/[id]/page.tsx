@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { ArrowLeft, Star, Share2, PieChart, Activity, Users, Clock } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
 import ProtocolChart from "@/components/features/protocol-chart"
 import Navbar from "@/components/features/navigation"
 import UserPosition from "@/components/features/user-position"
 import AvailablePools from "@/components/features/available-pools"
 import DepositModal from "@/components/features/deposit-modal"
+import { useRouter } from "next/navigation"
 
 interface ProtocolPageProps {
   params: {
@@ -78,7 +78,8 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const protocolId = params.id as string;
-  
+  const router = useRouter()
+
   // Get protocol data or default to aave
   const protocolData = protocolsData[protocolId as keyof typeof protocolsData] || protocolsData.aave;
 
@@ -115,9 +116,12 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
       
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between">
-        <Link href="/" className="w-8 h-8 flex items-center justify-center">
+        <button 
+          onClick={() => router.back()} 
+          className="w-8 h-8 flex items-center justify-center"
+        >
           <ArrowLeft className="h-6 w-6" />
-        </Link>
+        </button>
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
             <Image src={protocolData.logo || "/placeholder.svg"} alt={protocolData.name} width={32} height={32} />

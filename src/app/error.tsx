@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
 import { useEffect } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function Error({
   error,
@@ -10,6 +10,7 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const router = useRouter()
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error)
@@ -28,12 +29,12 @@ export default function Error({
         >
           Try again
         </button>
-        <Link
-          href="/"
+        <button
+          onClick={() => router.push('/')}
           className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
         >
           Return Home
-        </Link>
+        </button>
       </div>
     </div>
   )

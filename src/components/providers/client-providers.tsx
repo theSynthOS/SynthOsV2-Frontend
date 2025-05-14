@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { ReactNode, useState } from 'react'
 import PullToRefresh from "@/components/features/pull-to-refresh"
 import { useRouter } from 'next/navigation'
+import { ThemeProvider } from 'next-themes'
 
 // Lazy load components that aren't needed immediately
 const AuthProvider = dynamic(() => import("@/contexts/AuthContext").then(mod => mod.AuthProvider), {
@@ -37,7 +38,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   }
   
   return (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
         <Header />
       </div>
@@ -49,6 +50,6 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
       <div className="fixed bottom-0 left-0 right-0">
         <Navbar />
       </div>
-    </>
+    </ThemeProvider>
   )
 } 
