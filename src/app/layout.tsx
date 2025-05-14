@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import DynamicProviders from "@/components/providers/dynamic-providers";
@@ -38,6 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <title>SynthOS V2</title>
+        <meta name="description" content="SynthOS V2 - Your gateway to the future of DeFi" />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}

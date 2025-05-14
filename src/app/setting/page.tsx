@@ -46,9 +46,19 @@ export default function SettingPage() {
 
   // Protection in case user directly navigates to this page
   useEffect(() => {
-    // Nothing to do, we allow both authenticated and unauthenticated users
-    // to access the settings page, but with different options
-  }, [account]);
+    if (!isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
+
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="fixed inset-0 bg-[#0f0b22] flex items-center justify-center">
+        <div className="text-white">Checking authentication...</div>
+      </div>
+    )
+  }
 
   return (
     <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'} pt-[80px]`}>
