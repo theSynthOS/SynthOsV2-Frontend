@@ -19,13 +19,17 @@ export default function Home() {
   // Redirect to root if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/")
+      router.replace("/")
     }
   }, [isAuthenticated, router])
 
-  // Don't render anything if not authenticated
+  // Show loading while checking authentication
   if (!isAuthenticated) {
-    return null
+    return (
+      <div className="fixed inset-0 bg-[#0f0b22] flex items-center justify-center">
+        <div className="text-white">Checking authentication...</div>
+      </div>
+    )
   }
   
   return (
