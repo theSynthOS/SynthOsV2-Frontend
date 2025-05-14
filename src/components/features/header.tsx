@@ -1,7 +1,6 @@
 "use client"
 
 import { Home, Award, Wallet, Settings, Search, History } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 

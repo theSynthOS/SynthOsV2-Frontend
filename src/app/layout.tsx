@@ -1,6 +1,5 @@
-"use client";
-
 import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 import DynamicProviders from "@/components/providers/dynamic-providers";
 
