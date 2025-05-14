@@ -12,13 +12,33 @@ export default function SettingPage() {
   const wallet = useActiveWallet();
   const { disconnect } = useDisconnect();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, address, logout } = useAuth();
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
     if (!address) return "Connect your wallet";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
+
+  // Update display address whenever account or auth address changes
+  useEffect(() => {
+    // First priority: use account from thirdweb if available
+    if (account && account.address) {
+      console.log("Setting page: Using account address from thirdweb:", account.address);
+      setDisplayAddress(account.address);
+    } 
+    // Second priority: use address from auth context
+    else if (address) {
+      console.log("Setting page: Using address from auth context:", address);
+      setDisplayAddress(address);
+    } 
+    // If neither is available, clear the display address
+    else {
+      console.log("Setting page: No address available");
+      setDisplayAddress(null);
+    }
+  }, [account, address]);
 
   const handleAuth = () => {
     if (isAuthenticated) {
@@ -31,7 +51,7 @@ export default function SettingPage() {
   };
 
   const handleGoBack = () => {
-    if (account && account.address) {
+    if (displayAddress) {
       router.push("/home");
     } else {
       router.push("/");
@@ -73,7 +93,7 @@ export default function SettingPage() {
         <div className="flex-1">
           <h2 className="text-lg font-semibold">Wallet User - gmail</h2>
           <p className="text-sm text-gray-400 truncate">
-            {account && account.address ? formatAddress(account.address) : "Not connected"}
+            {displayAddress ? formatAddress(displayAddress) : "Not connected"}
           </p>
         </div>
       </div>
