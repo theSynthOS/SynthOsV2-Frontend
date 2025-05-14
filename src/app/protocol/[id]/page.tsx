@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { useTheme } from "next-themes"
+import { use } from "react"
+import ProtocolChart from "@/components/features/protocol-chart"
 import { ArrowLeft, Star, Share2, PieChart, Activity, Users, Clock } from "lucide-react"
 import Image from "next/image"
-import ProtocolChart from "@/components/features/protocol-chart"
 import Navbar from "@/components/features/navigation"
 import UserPosition from "@/components/features/user-position"
 import AvailablePools from "@/components/features/available-pools"
 import DepositModal from "@/components/features/deposit-modal"
-import { useRouter } from "next/navigation"
 
 interface ProtocolPageProps {
   params: {
@@ -75,11 +78,29 @@ const protocolsData = {
 };
 
 export default function ProtocolPage({ params }: ProtocolPageProps) {
+  const protocolId = use(Promise.resolve(params.id))
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  const { theme } = useTheme()
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [showDepositModal, setShowDepositModal] = useState(false)
-  const protocolId = params.id as string;
-  const router = useRouter()
+  
+  // Redirect to root if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/")
+    }
+  }, [isAuthenticated, router])
 
+  // Show loading state while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'}`}>
+        <div className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Loading...</div>
+      </div>
+    )
+  }
+  
   // Get protocol data or default to aave
   const protocolData = protocolsData[protocolId as keyof typeof protocolsData] || protocolsData.aave;
 
@@ -97,7 +118,14 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0b22] text-white">
+    <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'}`}>
+      <div className="flex flex-col pt-[80px]">
+        <div className="px-4 py-6">
+          <h1 className="text-2xl font-bold mb-4">Protocol: {protocolId}</h1>
+          <ProtocolChart protocolId={protocolId} />
+        </div>
+      </div>
+
       {/* Status Bar - Simplified */}
       <div className="flex justify-between">
         {/* history */}
@@ -147,11 +175,6 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
           </span>
           <span className="text-gray-400 ml-2">Past day</span>
         </div>
-      </div>
-
-      {/* Chart */}
-      <div className="px-4 py-6">
-        <ProtocolChart protocolId={protocolId} />
       </div>
 
       {/* Time Filters */}

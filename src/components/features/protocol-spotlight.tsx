@@ -9,6 +9,10 @@ export default function ProtocolSpotlight() {
   const router = useRouter()
   const { theme } = useTheme()
   
+  const handleProtocolClick = () => {
+    router.push("/protocol/aave")
+  }
+  
   return (
     <div className="px-4 py-6">
       <div className="flex items-center mb-6">
@@ -16,8 +20,8 @@ export default function ProtocolSpotlight() {
         <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Spotlight</h2>
       </div>
       <div 
-        className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'} rounded-xl p-4 cursor-pointer`} 
-        onClick={() => router.push("/protocol/aave")}
+        className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'} rounded-xl p-4 cursor-pointer hover:opacity-90 transition-opacity`} 
+        onClick={handleProtocolClick}
       >
         <div className="flex items-center">
           <div className="w-12 h-12 rounded-full overflow-hidden mr-3">

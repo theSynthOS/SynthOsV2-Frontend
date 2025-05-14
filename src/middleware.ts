@@ -24,6 +24,7 @@ export function middleware(request: NextRequest) {
     '/home',
     '/setting',
     '/holding',
+    '/protocol'
   ];
   
   const isAllowedPath = allowedPaths.some(allowedPath => 

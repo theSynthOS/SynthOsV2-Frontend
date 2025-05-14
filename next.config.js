@@ -11,14 +11,6 @@ const nextConfig = {
     unoptimized: true, // Disable image optimization in development
   },
 
-  // Turbopack configuration (for development)
-  turbo: {
-    // Turbopack-specific configurations
-    resolveAlias: {
-      recharts: false, // Exclude recharts from client bundle
-    },
-  },
-
   // Webpack configuration (for production build)
   webpack: (config, { dev, isServer }) => {
     // Optimize only in production
@@ -43,14 +35,6 @@ const nextConfig = {
             reuseExistingChunk: true,
           },
         },
-      };
-    }
-
-    // Exclude heavy dependencies from client bundle
-    if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        recharts: false, // Exclude recharts from client bundle
       };
     }
 
