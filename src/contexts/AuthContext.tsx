@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import { createWallet } from "thirdweb/wallets"
 import { client } from "@/client"
+import { useRouter } from "next/navigation"
 
 type AuthData = {
   address: string
@@ -20,6 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authData, setAuthData] = useState<AuthData | null>(null)
 
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthData(null)
     setIsAuthenticated(false)
     localStorage.removeItem("user_auth")
+    router.push("/")
     console.log("Logged out")
   }
 
@@ -68,11 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             // Try to reconnect with the wallet
             const wallet = createWallet(authData.walletId as any)
-            const account = await wallet.getAccount()
+            const account = await wallet.connect({
+              client
+            })
             
             if (account) {
               setAuthData(authData)
               setIsAuthenticated(true)
+              // Redirect to home if we're on the login page
+              if (window.location.pathname === "/") {
+                router.push("/home")
+              }
               console.log("Auto-reconnected to wallet:", authData.walletId)
             }
           } catch (e) {
@@ -80,11 +89,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Fall back to just using the address
             setAuthData(authData)
             setIsAuthenticated(true)
+            // Redirect to home if we're on the login page
+            if (window.location.pathname === "/") {
+              router.push("/home")
+            }
           }
         } else if (authData.address) {
           // Just use the stored address
           setAuthData(authData)
           setIsAuthenticated(true)
+          // Redirect to home if we're on the login page
+          if (window.location.pathname === "/") {
+            router.push("/home")
+          }
           console.log("Using stored address:", authData.address)
         }
       } catch (error) {
@@ -94,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     autoLogin()
-  }, [])
+  }, [router])
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, address, login, logout }}>

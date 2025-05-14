@@ -1,21 +1,34 @@
-"use client";
-
 import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext"
-import { ThirdwebProvider } from "thirdweb/react";
-import { client, scrollSepolia } from "@/client";
-import Navbar from "@/components/features/navigation";
+import DynamicProviders from "@/components/providers/dynamic-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap',
 });
+
+export const metadata: Metadata = {
+  title: "DeFi Protocol Tracker",
+  description: "Track DeFi protocols and their APY/APR rates",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DeFi Tracker",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0f0b22",
+};
 
 export default function RootLayout({
   children,
@@ -30,25 +43,14 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#0f0b22" />
-        <link rel="apple-touch-icon" href="/SynthOS-tranparent.png" />
+        {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f0b22]`}
       >
-        <ThirdwebProvider>
-          <AuthProvider>
-            <div className="flex flex-col min-h-screen">
-              <main className="flex-grow pb-16">
-                {children}
-              </main>
-              <div className="fixed bottom-0 left-0 right-0 z-10">
-                <Navbar />
-              </div>
-            </div>
-          </AuthProvider>
-        </ThirdwebProvider>
+        <DynamicProviders>
+            {children}
+        </DynamicProviders>
       </body>
     </html>
   );

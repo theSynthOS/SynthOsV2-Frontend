@@ -1,48 +1,40 @@
 "use client"
 
 import { Home, Award, Wallet } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const router = useRouter()
+  const [isScrolled, setIsScrolled] = useState(false)
+  const { theme } = useTheme()
   
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      setIsScrolled(scrollPosition > 0)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
   
   return (
-    <div className="border-t border-gray-800 bg-[#0f0b22] shadow-lg">
-      <div className="flex justify-around py-4 max-w-md mx-auto">
-        <Link 
-          href="/" 
-          className={`flex flex-col items-center ${isActive('/home') ? 'text-white' : 'text-gray-500'}`}
-        >
-          <div className={`${isActive('/home') ? 'bg-purple-600/20  rounded-full' : ''}`}>
-            <Home className={`h-6 w-6 ${isActive('/home') ? 'text-purple-500' : ''}`} />
-          </div>
-          <span className="text-xs mt-1">Home</span>
-        </Link>
-        
-        <Link 
-          href="/rewards" 
-          className={`flex flex-col items-center ${isActive('/rewards') ? 'text-white' : 'text-gray-500'}`}
-        >
-          <div className={`${isActive('/rewards') ? 'bg-purple-600/20  rounded-full' : ''}`}>
-            <Award className={`h-6 w-6 ${isActive('/rewards') ? 'text-purple-500' : ''}`} />
-          </div>
-          <span className="text-xs mt-1">Feeds</span>
-        </Link>
-        
-        <Link 
-          href="/holding" 
-          className={`flex flex-col items-center ${isActive('/holding') ? 'text-white' : 'text-gray-500'}`}
-        >
-          <div className={`${isActive('/holding') ? 'bg-purple-600/20  rounded-full' : ''}`}>
-            <Wallet className={`h-6 w-6 ${isActive('/holding') ? 'text-purple-500' : ''}`} />
-          </div>
-          <span className="text-xs mt-1">Holdings</span>
-        </Link>
+    <div className={`border-t ${theme === 'dark' ? 'border-gray-800 bg-[#0f0b22]' : 'border-gray-200 bg-white'} transition-all duration-200 ${isScrolled ? 'shadow-lg' : ''}`}>
+      <div className="flex justify-around py-4">
+        <button onClick={() => router.push('/')} className="flex flex-col items-center">
+          <Home className={`h-6 w-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
+          <span className={`text-sm mt-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Home</span>
+        </button>
+        <button onClick={() => router.push('/rewards')} className="flex flex-col items-center">
+          <Award className={`h-6 w-6 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+          <span className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Feeds</span>
+        </button>
+        <button onClick={() => router.push('/holding')} className="flex flex-col items-center">
+          <Wallet className={`h-6 w-6 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+          <span className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Holdings</span>
+        </button>
       </div>
     </div>
   )
