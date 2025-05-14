@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext"
@@ -16,21 +17,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "SynthOS V2",
-  description: "SynthOS V2 - Your gateway to the future of DeFi",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "SynthOS",
-  },
-};
-
-export const viewport = {
-  themeColor: "#0f0b22",
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -39,17 +25,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <title>SynthOS V2</title>
+        <meta name="description" content="SynthOS V2 - Your gateway to the future of DeFi" />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#0f0b22" />
         <link rel="apple-touch-icon" href="/SynthOS-tranparent.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ThirdwebProvider>
           <AuthProvider>
             <div className="flex flex-col min-h-screen">
+              <main className="flex-grow pb-16">
                 {children}
+              </main>
               <div className="fixed bottom-0 left-0 right-0 z-10">
                 <Navbar />
               </div>
