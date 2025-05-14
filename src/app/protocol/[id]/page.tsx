@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useTheme } from "next-themes"
-import { use } from "react"
 import ProtocolChart from "@/components/features/protocol-chart"
 import { ArrowLeft, Star, Share2, PieChart, Activity, Users, Clock } from "lucide-react"
 import Image from "next/image"
@@ -78,12 +77,27 @@ const protocolsData = {
 };
 
 export default function ProtocolPage({ params }: ProtocolPageProps) {
-  const protocolId = use(Promise.resolve(params.id))
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const { theme } = useTheme()
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [showDepositModal, setShowDepositModal] = useState(false)
+  
+  // Get protocol data or default to aave
+  const protocolData = protocolsData[params.id as keyof typeof protocolsData] || protocolsData.aave;
+
+  // Example user positions - empty for now
+  const userPositions: any[] = [];
+
+  const handleSelectPool = (pool: any) => {
+    setSelectedPool(pool?.id === selectedPool?.id ? null : pool)
+  }
+
+  const handleDeposit = () => {
+    if (selectedPool) {
+      setShowDepositModal(true)
+    }
+  }
   
   // Redirect to root if not authenticated
   useEffect(() => {
@@ -100,29 +114,13 @@ export default function ProtocolPage({ params }: ProtocolPageProps) {
       </div>
     )
   }
-  
-  // Get protocol data or default to aave
-  const protocolData = protocolsData[protocolId as keyof typeof protocolsData] || protocolsData.aave;
-
-  // Example user positions - empty for now
-  const userPositions: any[] = [];
-
-  const handleSelectPool = (pool: any) => {
-    setSelectedPool(pool?.id === selectedPool?.id ? null : pool)
-  }
-
-  const handleDeposit = () => {
-    if (selectedPool) {
-      setShowDepositModal(true)
-    }
-  }
 
   return (
     <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'}`}>
       <div className="flex flex-col pt-[80px]">
         <div className="px-4 py-6">
-          <h1 className="text-2xl font-bold mb-4">Protocol: {protocolId}</h1>
-          <ProtocolChart protocolId={protocolId} />
+          <h1 className="text-2xl font-bold mb-4">Protocol: {params.id}</h1>
+          <ProtocolChart protocolId={params.id} />
         </div>
       </div>
 
