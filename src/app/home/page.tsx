@@ -74,12 +74,7 @@ export default function Home() {
 
       {/* PWA Installer */}
       <PWAInstaller />
-
       
-      {/* Navigation */}
-      <div className="mt-auto">
-        <Navbar />
-      </div>
     </div>
   )
 }
