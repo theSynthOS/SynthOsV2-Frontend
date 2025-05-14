@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
-  themeColor: "#0f0b22",
-};
+// export const viewport = {
+//   themeColor: "#0f0b22",
+// };
 
 export default function RootLayout({
   children,
@@ -46,7 +46,7 @@ export default function RootLayout({
         {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f0b22]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <DynamicProviders>
             {children}

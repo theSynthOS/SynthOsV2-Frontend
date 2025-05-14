@@ -39,17 +39,17 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
-        <Header />
-      </div>
       <AuthProvider>
+        <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
+          <Header />
+        </div>
         <PullToRefresh onRefresh={handleGlobalRefresh}>
           {children}
         </PullToRefresh>
+        <div className="fixed bottom-0 left-0 right-0">
+          <Navbar />
+        </div>
       </AuthProvider>
-      <div className="fixed bottom-0 left-0 right-0">
-        <Navbar />
-      </div>
     </ThemeProvider>
   )
 } 
