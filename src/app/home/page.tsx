@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import DynamicFeatures from "@/components/home/dynamic-features"
 import { useTheme } from "next-themes"
