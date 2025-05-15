@@ -10,6 +10,7 @@ import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
 import { useActiveAccount } from "thirdweb/react";
 import { useTheme } from "next-themes";
+import { motion } from "framer-motion";
 
 export default function HoldingPage() {
   const { address, isAuthenticated, login } = useAuth();
@@ -89,8 +90,13 @@ export default function HoldingPage() {
 
   return (
     <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'} p-4`}>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
       {/* Section 1: User Profile */}
-      <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-2xl shadow-md p-6 mb-3 `}>
+      <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-2xl shadow-md p-6 mb-3 mt-14`}>
         <div className="flex flex-col items-center">
           {/* Profile Picture */}
           <div className="relative mb-4">
@@ -161,9 +167,15 @@ export default function HoldingPage() {
           </div>
         </div>
       </div>
+      </motion.div>
       
       {/* Section 2: Holdings */}
-      <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-2xl shadow-md p-6 flex-1`}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+      <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-2xl shadow-md p-6 `}>
         <h2 className="text-xl font-bold mb-4">Your Holdings</h2>
         
         {balance !== null && balance > 0 ? (
@@ -203,6 +215,7 @@ export default function HoldingPage() {
           </div>
         )}
       </div>
+      </motion.div>
       
       {/* Modals */}
       {showModal === "deposit" && (
@@ -222,6 +235,7 @@ export default function HoldingPage() {
           address={address}
         />
       )}
+     
       
       {showModal === "send" && (
         <SendModal 
