@@ -50,12 +50,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
       // Show success toast
       toast({
         variant: "success",
-        title: (
-          <div className="flex items-center">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Deposit Successful
-          </div>
-        ),
+        title: "Deposit Successful",
         description: `$${amount} deposited into ${pool?.name}`,
       })
 

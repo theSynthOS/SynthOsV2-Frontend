@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Scan, ArrowRight, ChevronRight, ArrowLeft, Delete } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface SendModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [recipientAddress, setRecipientAddress] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [balance, setBalance] = useState('0.00');
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
 
   // Mock balance for demo purposes
   useEffect(() => {
@@ -76,6 +79,43 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   
   const handlePreviousStep = () => {
     setStep(1);
+  };
+
+  const handleSend = () => {
+    if (!recipientAddress) {
+      toast({
+        variant: "destructive",
+        title: "Missing Recipient",
+        description: "Please enter a valid recipient address."
+      });
+      return;
+    }
+
+    if (parseFloat(amount) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Please enter a valid amount to send."
+      });
+      return;
+    }
+
+    setIsSending(true);
+
+    // Simulate sending process
+    setTimeout(() => {
+      toast({
+        variant: "success",
+        title: "Transfer Successful",
+        description: `You have successfully sent $${amount} to ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(recipientAddress.length - 4)}`
+      });
+      
+      setIsSending(false);
+      setAmount('0');
+      setRecipientAddress('');
+      setStep(1);
+      handleClose();
+    }, 2000);
   };
 
   return (
@@ -271,11 +311,12 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
               
               {/* Send Button */}
               <button 
-                className="mt-4 w-full bg-purple-600 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-                disabled={!recipientAddress}
+                className="mt-4 w-full bg-purple-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-purple-400"
+                disabled={!recipientAddress || parseFloat(amount) <= 0 || isSending}
+                onClick={handleSend}
               >
-                <span className="mr-2">Send</span>
-                <ArrowRight className="h-4 w-4" />
+                <span className="mr-2">{isSending ? 'Sending...' : 'Send'}</span>
+                {!isSending && <ArrowRight className="h-4 w-4" />}
               </button>
             </div>
           )}

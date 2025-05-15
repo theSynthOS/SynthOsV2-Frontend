@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface WithdrawModalProps {
 
 export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   const [isClosing, setIsClosing] = useState(false);
+  const [amount, setAmount] = useState('');
+  const { toast } = useToast();
 
   const handleClose = () => {
     setIsClosing(true);
@@ -15,6 +18,29 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
       onClose();
       setIsClosing(false);
     }, 200); // Match animation duration
+  };
+
+  const handleWithdraw = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid amount",
+        description: "Please enter a valid amount to withdraw."
+      });
+      return;
+    }
+
+    // Simulate withdrawal process
+    setTimeout(() => {
+      toast({
+        variant: "success",
+        title: "Withdrawal Successful",
+        description: `You have successfully withdrawn ${amount} to your wallet.`
+      });
+      
+      setAmount('');
+      handleClose();
+    }, 1500);
   };
 
   return (
@@ -55,8 +81,13 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                 type="number" 
                 placeholder="0.00" 
                 className="w-full p-2 border border-gray-300 rounded-lg"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
               />
-              <button className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg">
+              <button 
+                className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={handleWithdraw}
+              >
                 Withdraw
               </button>
             </div>
