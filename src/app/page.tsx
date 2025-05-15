@@ -15,19 +15,10 @@ export default function Home() {
     
     // Redirect to home if authenticated
     if (isAuthenticated) {
-      console.log("Already authenticated on landing page, redirecting to /home")
       router.push("/home")
     }
   }, [isAuthenticated, address, router])
   
-  // If authenticated, show a temporary loading state
-  if (isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0f0b22]">
-        <div className="text-white text-lg">Redirecting to dashboard...</div>
-      </div>
-    )
-  }
   
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-[#0f0b22] p-4">

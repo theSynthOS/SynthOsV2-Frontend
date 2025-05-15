@@ -15,7 +15,6 @@ export default function Home() {
   // Redirect to root if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log("Not authenticated, redirecting to landing page")
       router.replace("/")
     } else {
       console.log("Authenticated on home page:", address)

@@ -65,10 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Only redirect to home if not already there
     if (window.location.pathname !== "/home") {
-      console.log("Redirecting to /home after login")
-      
-      // Use Next.js router for SPA navigation
-      // This avoids page reloads that can cause loops
       router.push("/home")
     } else {
       console.log("Already on home page, no redirect needed")
@@ -146,7 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               // Redirect if appropriate
               if (shouldRedirect && !isOnHomePage) {
-                console.log("Redirecting from landing page to home page")
                 router.push("/home")
               }
             }
@@ -175,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Redirect if appropriate
           if (shouldRedirect && !isOnHomePage) {
-            console.log("Redirecting from landing page to home page")
             router.push("/home")
           }
         }
