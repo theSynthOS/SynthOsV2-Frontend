@@ -29,8 +29,8 @@ export default function Home() {
         SynthOS
       </div>
 
-      <div className={`text-2xl font-bold mb-8 flex text-center ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-        Your gateway to the future of DeFi
+      <div className={`text-xl font-bold mb-8 flex text-center ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+        Compare APY across all defi platforms so you invest smarter
       </div>
 
       {/* Custom Connect Wallet Component */}
