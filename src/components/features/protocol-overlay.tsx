@@ -131,7 +131,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-4 py-6 pt-6 flex items-center justify-between">
+          <div className="px-4 py-6 pt-6 flex items-center justify-between mt-12">
             <button onClick={handleClose} className={`w-8 h-8 flex items-center justify-center ${theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'}`}>
               <ArrowLeft className="h-6 w-6" />
             </button>
@@ -229,7 +229,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
           </div>
 
           {/* Deposit Button */}
-          <div className={`px-4 py-4 mt-auto border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
+          <div className={`px-4 py-4 mb-24 mt-auto border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
             <button
               className={`w-full py-3 rounded-lg flex items-center justify-center font-semibold ${
                 selectedPool 
