@@ -3,14 +3,16 @@ import { X, Scan, ArrowRight, ChevronRight, ArrowLeft, Delete } from 'lucide-rea
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
+import ConnectWalletButton from '../CustomConnectWallet';
 
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isAuthenticated: boolean;
+  address?: string | null;
 }
 
-export default function SendModal({ isOpen, onClose }: SendModalProps) {
-  const { address } = useAuth();
+export default function SendModal({ isOpen, onClose, isAuthenticated, address }: SendModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState(1); // Step 1: Amount, Step 2: Recipient
   const [amount, setAmount] = useState('0');
@@ -154,7 +156,14 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         <div className="p-6 pb-20 h-full">
           <h2 className="text-2xl font-bold mb-6 text-center">Send</h2>
           
-          {showScanner ? (
+          {!isAuthenticated ? (
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                Connect your wallet to send funds.
+              </p>
+              <ConnectWalletButton />
+            </div>
+          ) : showScanner ? (
             <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
               <div className="mb-4">
                 <div className="w-full h-64 bg-black rounded-lg flex items-center justify-center mb-4">

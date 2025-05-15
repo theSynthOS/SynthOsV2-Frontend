@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
+import ConnectWalletButton from '../CustomConnectWallet';
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isAuthenticated: boolean;
+  address?: string | null;
 }
 
-export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
+export default function WithdrawModal({ isOpen, onClose, isAuthenticated, address }: WithdrawModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [amount, setAmount] = useState('');
   const { toast } = useToast();
@@ -79,30 +82,39 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
         <div className="p-6 pb-20 h-full overflow-y-auto">
           <h2 className="text-2xl font-bold mb-6">Withdraw Funds</h2>
           
-          <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
-            <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              Select an asset to withdraw to your wallet.
-            </p>
-            
-            <div className="mt-4 text-left">
-              <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                Amount to withdraw
-              </label>
-              <input 
-                type="number" 
-                placeholder="0.00" 
-                className={`w-full p-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'} rounded-lg`}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              <button 
-                className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
-                onClick={handleWithdraw}
-              >
-                Withdraw
-              </button>
+          {!isAuthenticated ? (
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                Connect your wallet to withdraw funds.
+              </p>
+              <ConnectWalletButton />
             </div>
-          </div>
+          ) : (
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Select an asset to withdraw to your wallet.
+              </p>
+              
+              <div className="mt-4 text-left">
+                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                  Amount to withdraw
+                </label>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  className={`w-full p-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'} rounded-lg`}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+                <button 
+                  className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+                  onClick={handleWithdraw}
+                >
+                  Withdraw
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

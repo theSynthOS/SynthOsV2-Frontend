@@ -218,6 +218,8 @@ export default function HoldingPage() {
         <WithdrawModal 
           isOpen={showModal === "withdraw"} 
           onClose={closeModal} 
+          isAuthenticated={isAuthenticated}
+          address={address}
         />
       )}
       
@@ -225,6 +227,8 @@ export default function HoldingPage() {
         <SendModal 
           isOpen={showModal === "send"} 
           onClose={closeModal} 
+          isAuthenticated={isAuthenticated}
+          address={address}
         />
       )}
     </div>

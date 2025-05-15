@@ -76,7 +76,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
           ) : (
             <div className="space-y-6">
               {/* Wallet Address Section */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'} rounded-lg p-6`}>
+              <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'} rounded-lg p-6`}>
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-medium">Your Wallet Address</h3>
                   {/* <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Copy and paste this address to send funds to your wallet</p> */}
