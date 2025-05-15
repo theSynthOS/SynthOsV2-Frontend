@@ -22,9 +22,9 @@ export default function ProtocolSpotlight() {
           onClick={() => setShowProtocol(true)}
         >
           <div className="flex items-center">
-            <div className="w-12 h-12 rounded-full overflow-hidden mr-3">
-              <Image src="/aave-logo.png" alt="AAVE" width={48} height={48} />
-            </div>
+
+              <Image src="/aave.png" alt="Aave" width={100} height={100} className="w-12 h-12 rounded-full mr-3" />
+
             <div>
               <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>AAVE</div>
               <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>AAVE Protocol</div>

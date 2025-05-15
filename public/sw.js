@@ -8,9 +8,6 @@ const urlsToCache = [
   "/manifest.json",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
-  "/aave-logo.png",
-  "/fx-protocol-logo.png",
-  "/quill-finance-logo.png",
 ];
 
 self.addEventListener("install", (event) => {

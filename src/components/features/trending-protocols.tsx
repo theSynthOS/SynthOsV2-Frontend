@@ -11,7 +11,7 @@ export default function TrendingProtocols() {
   const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null)
   
   const trendingProtocols = [
-    { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave-logo.png", isUp: true, change: 1.27 },
+    { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave.png", isUp: true, change: 1.27 },
     { id: "fx", name: "FX Protocol", apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png", isUp: true, change: 2.32 },
     { id: "quill", name: "Quill Finance", apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true, change: 3.15 },
   ]

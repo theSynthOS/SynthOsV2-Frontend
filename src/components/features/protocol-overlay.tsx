@@ -153,7 +153,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
             <div className="px-4 py-6">
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
-                  <Image src={protocolData.logo || "/placeholder.svg"} alt={protocolData.name} width={32} height={32} />
+                  <Image src={protocolData.logo} alt={protocolData.name} width={32} height={32} />
                 </div>
                 <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocolData.name}</div>
               </div>
