@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -11,6 +12,13 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [amount, setAmount] = useState('');
   const { toast } = useToast();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state once hydration is complete
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -43,6 +51,9 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     }, 1500);
   };
 
+  // If theme isn't loaded yet, return nothing to avoid flash
+  if (!mounted) return null;
+
   return (
     <div className="fixed inset-0 z-50" onClick={(e) => e.stopPropagation()}>
       {/* Backdrop */}
@@ -52,14 +63,14 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
       ></div>
       
       {/* Modal Content */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50 overflow-hidden`}>
+      <div className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50 overflow-hidden`}>
         {/* Drag Handle */}
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
+        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4`}></div>
         
         {/* Close Button */}
         <button 
           onClick={handleClose} 
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+          className={`absolute top-4 right-4 p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
         >
           <X className="h-6 w-6" />
         </button>
@@ -68,19 +79,19 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
         <div className="p-6 pb-20 h-full overflow-y-auto">
           <h2 className="text-2xl font-bold mb-6">Withdraw Funds</h2>
           
-          <div className="bg-gray-50 rounded-lg p-6 text-center">
-            <p className="text-gray-500">
+          <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+            <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Select an asset to withdraw to your wallet.
             </p>
             
             <div className="mt-4 text-left">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                 Amount to withdraw
               </label>
               <input 
                 type="number" 
                 placeholder="0.00" 
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className={`w-full p-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'} rounded-lg`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
