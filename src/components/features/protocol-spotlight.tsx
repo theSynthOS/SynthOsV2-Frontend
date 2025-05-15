@@ -18,7 +18,7 @@ export default function ProtocolSpotlight() {
           <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Spotlight</h2>
         </div>
         <div 
-          className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'} rounded-xl p-4 cursor-pointer hover:opacity-90 transition-opacity`} 
+          className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-xl p-4 cursor-pointer hover:opacity-90 transition-opacity`} 
           onClick={() => setShowProtocol(true)}
         >
           <div className="flex items-center">
@@ -30,7 +30,7 @@ export default function ProtocolSpotlight() {
               <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>AAVE Protocol</div>
             </div>
             <div className="ml-auto flex items-center">
-              <span className="bg-purple-500 text-xs px-2 py-1 rounded-full">Live</span>
+              <span className="bg-green-500 text-xs px-2 py-1 rounded-full">Live</span>
             </div>
           </div>
           <div className="mt-2 flex items-center">

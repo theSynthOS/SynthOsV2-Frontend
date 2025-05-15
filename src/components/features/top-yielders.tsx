@@ -29,7 +29,7 @@ export default function TopYielders() {
               className="flex-shrink-0 w-1/2 cursor-pointer"
               onClick={() => setSelectedProtocol(protocol.id)}
             >
-              <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'} rounded-xl p-3 flex items-center`}>
+              <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-xl p-3 flex items-center`}>
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                   <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={40} height={40} />
                 </div>

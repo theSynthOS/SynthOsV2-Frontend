@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle } from "lucide-react"
+import { useTheme } from "next-themes"
 
 interface DepositModalProps {
   pool: {
@@ -19,7 +20,14 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const maxBalance = 1000 // Example max balance, would come from user's wallet in real app
+
+  // Set mounted state once hydration is complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Update input when slider changes
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,34 +72,35 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
     }, 1000)
   }
 
-  if (!pool) return null
+  // If theme isn't loaded yet or no pool selected, return nothing
+  if (!mounted || !pool) return null
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className="bg-[#0f0b22] rounded-lg w-full max-w-md p-4">
+      <div className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4`}>
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
         <div className="mb-6">
           <div className="flex justify-between text-sm mb-2">
-            <span>Current APY</span>
+            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Current APY</span>
             <span className="text-green-400">{pool.apy}%</span>
           </div>
           <div className="flex justify-between text-sm mb-4">
-            <span>Risk Level</span>
-            <span>{pool.risk}</span>
+            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Risk Level</span>
+            <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}>{pool.risk}</span>
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm mb-2">Amount to Deposit</label>
+            <label className={`block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Amount to Deposit</label>
             <div className="relative">
               <input
                 type="number"
                 value={amount}
                 onChange={handleInputChange}
                 placeholder="0.00"
-                className="w-full bg-gray-800 rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-green-400 border border-green-400/30"
+                className={`w-full ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'} rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-green-400 border ${theme === 'dark' ? 'border-green-400/30' : 'border-green-400/50'}`}
                 disabled={isSubmitting}
               />
-              <div className="absolute right-3 top-3 text-gray-400">USDC</div>
+              <div className={`absolute right-3 top-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>USDC</div>
             </div>
 
             {/* Slider */}
@@ -102,7 +111,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
                 max="100"
                 value={sliderValue}
                 onChange={handleSliderChange}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-400"
+                className={`w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'} rounded-lg appearance-none cursor-pointer accent-green-400`}
                 disabled={isSubmitting}
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -114,17 +123,17 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
               </div>
             </div>
 
-            <div className="text-right text-xs text-gray-400 mt-2">Balance: {maxBalance.toFixed(2)} USDC</div>
+            <div className={`text-right text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Balance: {maxBalance.toFixed(2)} USDC</div>
           </div>
 
-          <div className="bg-gray-800/50 rounded-lg p-3 mb-4">
+          <div className={`${theme === 'dark' ? 'bg-[#0f0b22]/30' : 'bg-gray-100/50'} rounded-lg p-3 mb-4`}>
             <div className="flex justify-between text-sm mb-1">
-              <span>Estimated APY</span>
+              <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Estimated APY</span>
               <span className="text-green-400">{pool.apy}%</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Estimated Yearly Yield</span>
-              <span>${yearlyYield.toFixed(2)}</span>
+              <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Estimated Yearly Yield</span>
+              <span className={theme === 'dark' ? 'text-white' : 'text-black'}>${yearlyYield.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -132,14 +141,16 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-700 text-white font-semibold py-3 rounded-lg"
+            className={`flex-1 ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'} font-semibold py-3 rounded-lg`}
             disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             className={`flex-1 font-semibold py-3 rounded-lg relative ${
-              isSubmitting ? "bg-gray-600 text-gray-400" : "bg-green-400 text-black"
+              isSubmitting 
+                ? theme === 'dark' ? "bg-gray-600 text-gray-400" : "bg-gray-300 text-gray-500" 
+                : "bg-green-400 text-black"
             }`}
             disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
             onClick={handleConfirmDeposit}
@@ -148,7 +159,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
               <>
                 <span className="opacity-0">Confirm Deposit</span>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-5 w-5 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                  <div className={`h-5 w-5 border-2 ${theme === 'dark' ? 'border-gray-400 border-t-white' : 'border-gray-300 border-t-gray-700'} rounded-full animate-spin`}></div>
                 </div>
               </>
             ) : (

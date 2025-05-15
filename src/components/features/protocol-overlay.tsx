@@ -75,9 +75,15 @@ const protocolsData = {
 
 export default function ProtocolOverlay({ protocolId, isOpen, onClose }: ProtocolOverlayProps) {
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  
+  // Set mounted state once hydration is complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   // Get protocol data or default to aave
   const protocolData = protocolsData[protocolId as keyof typeof protocolsData] || protocolsData.aave;
@@ -111,6 +117,9 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
     }, 300)
   }
 
+  // If theme isn't loaded yet, return nothing to avoid flash
+  if (!mounted) return null
+
   if (!isOpen && !isVisible) return null
 
   return (
@@ -125,7 +134,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
       
       {/* Protocol Panel */}
       <div 
-        className={`fixed inset-y-0 right-0 w-full max-w-md ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'} shadow-xl transition-transform duration-300 transform z-50 ${
+        className={`fixed inset-y-0 right-0 w-full max-w-md ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'} shadow-xl transition-transform duration-300 transform z-50 ${
           isVisible ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -158,7 +167,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
             </div>
 
             {/* Time Filters */}
-            <div className="flex justify-between px-4 py-4">
+            <div className={`flex justify-between px-4 py-4 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} mx-4 rounded-lg mb-4`}>
               <button className="text-green-400 font-medium">LIVE</button>
               <button className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>4H</button>
               <button className="bg-green-400 text-black px-3 py-1 rounded-md">1D</button>
@@ -174,7 +183,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
 
             {/* Your Position */}
             <div className={`px-4 py-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-              <UserPosition protocolName={protocolData.name} positions={userPositions} />
+              <UserPosition protocolName={protocolData.name} positions={userPositions} theme={theme} />
             </div>
 
             {/* Available Pools/Vaults */}
@@ -183,6 +192,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
                 pools={protocolData.pools}
                 onSelectPool={handleSelectPool}
                 selectedPoolId={selectedPool?.id || null}
+                theme={theme}
               />
             </div>
 
@@ -190,7 +200,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
             <div className={`px-4 py-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
               <h2 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>About</h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between p-3 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-lg`}>
                   <div className="flex items-center">
                     <PieChart className={`w-5 h-5 mr-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
                     <div className={theme === 'dark' ? 'text-white' : 'text-black'}>Market cap</div>
@@ -198,7 +208,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
                   <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocolData.tvl}</div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between p-3 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-lg`}>
                   <div className="flex items-center">
                     <Activity className={`w-5 h-5 mr-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
                     <div>
@@ -209,7 +219,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
                   <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocolData.volume}</div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between p-3 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-lg`}>
                   <div className="flex items-center">
                     <Users className={`w-5 h-5 mr-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
                     <div className={theme === 'dark' ? 'text-white' : 'text-black'}>Users</div>
@@ -217,7 +227,7 @@ export default function ProtocolOverlay({ protocolId, isOpen, onClose }: Protoco
                   <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocolData.users}</div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between p-3 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-lg`}>
                   <div className="flex items-center">
                     <Clock className={`w-5 h-5 mr-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
                     <div className={theme === 'dark' ? 'text-white' : 'text-black'}>Created</div>
