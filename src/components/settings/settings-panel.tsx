@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, User, Settings, LogOut, CreditCard, Bell, Shield, Info, MessageCircle, LogIn, Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
+import { useActiveAccount, useActiveWallet, useDisconnect, useConnect } from "thirdweb/react";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 
 interface SettingsPanelProps {
@@ -16,8 +17,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const account = useActiveAccount();
   const wallet = useActiveWallet();
   const { disconnect } = useDisconnect();
+  const { connect } = useConnect();
   const router = useRouter();
-  const { isAuthenticated, address, logout } = useAuth();
+  const { isAuthenticated, address, logout, login } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
@@ -33,8 +35,35 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
+  // Sync ThirdWeb account with Auth Context
+  useEffect(() => {
+    // If ThirdWeb has an account but Auth Context doesn't, update Auth Context
+    if (account?.address && !isAuthenticated) {
+      console.log("Syncing ThirdWeb account to Auth Context:", account.address);
+      login(account.address, wallet?.id);
+    }
+    // If Auth Context is authenticated but ThirdWeb has no account, update display from Auth Context
+    else if (!account?.address && isAuthenticated && address) {
+      console.log("Using Auth Context address:", address);
+      setDisplayAddress(address);
+    }
+
+  }, [account, wallet, isAuthenticated, address, login]);
+
   // Update display address whenever account or auth address changes
   useEffect(() => {
+    console.log("Settings panel address check:", { 
+      thirdwebAddress: account?.address, 
+      contextAddress: address,
+      isAuthenticated 
+    });
+    
+    // Clear display address if not authenticated regardless of account
+    if (!isAuthenticated) {
+      setDisplayAddress(null);
+      return;
+    }
+    
     if (account && account.address) {
       setDisplayAddress(account.address);
     } else if (address) {
@@ -42,13 +71,18 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     } else {
       setDisplayAddress(null);
     }
-  }, [account, address]);
+  }, [account, address, isAuthenticated]);
 
   const handleAuth = () => {
     if (isAuthenticated) {
+      console.log("Starting logout process...");
+      setDisplayAddress(null);
+      sessionStorage.removeItem("session_active");
+      onClose();
+      window.location.href = "/";
       logout();
     } else {
-      router.push("/");
+      handleGoBack();
     }
   };
 

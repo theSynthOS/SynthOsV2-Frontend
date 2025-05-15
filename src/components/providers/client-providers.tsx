@@ -1,10 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import PullToRefresh from "@/components/features/pull-to-refresh"
 import { useRouter } from 'next/navigation'
 import { ThemeProvider } from 'next-themes'
+import { useActiveAccount } from 'thirdweb/react'
 
 // Lazy load components that aren't needed immediately
 const AuthProvider = dynamic(() => import("@/contexts/AuthContext").then(mod => mod.AuthProvider), {
@@ -23,6 +24,23 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const router = useRouter()
+  const account = useActiveAccount()
+  
+  // Log active account for debugging
+  useEffect(() => {
+    if (account?.address) {
+      console.log("ThirdWeb active account:", account.address)
+      
+      // We could store this in localStorage for AuthContext to pick up
+      const existingAuth = localStorage.getItem("user_auth")
+      if (!existingAuth) {
+        const newAuth = {
+          address: account.address
+        }
+        localStorage.setItem("user_auth", JSON.stringify(newAuth))
+      }
+    }
+  }, [account])
   
   // Handle refresh action for global pull-to-refresh
   const handleGlobalRefresh = async () => {

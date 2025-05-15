@@ -5,43 +5,97 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import DynamicFeatures from "@/components/home/dynamic-features"
 import { useTheme } from "next-themes"
+import { motion } from "framer-motion"
 
 export default function Home() {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, address } = useAuth()
   const { theme } = useTheme()
   
   // Redirect to root if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
+      console.log("Not authenticated, redirecting to landing page")
       router.replace("/")
+    } else {
+      console.log("Authenticated on home page:", address)
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, address])
 
   // Show loading state while checking authentication
   if (!isAuthenticated) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'}`}>
-        <div className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Loading...</div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'}`}
+      >
+        <motion.div 
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1, opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}
+        >
+          Loading...
+        </motion.div>
+      </motion.div>
     )
   }
   
   return (
-    <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'}`}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className={`flex flex-col min-h-screen ${theme === 'dark' ? 'bg-[#0f0b22] text-white' : 'bg-white text-black'}`}
+    >
       <div className="flex flex-col min-h-screen">
         {/* Balance */}
-        <div className={`px-4 py-6 pt-[80px] border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Total balance</div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className={`px-4 py-6 pt-[80px] border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
+        >
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}
+          >
+            Total balance
+          </motion.div>
           <div className="flex items-center">
-            <div className="text-4xl font-bold">$0.00</div>
-            <div className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>▶</div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
+              className="text-4xl font-bold"
+            >
+              $0.00
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
+              className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}
+            >
+              ▶
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Dynamic Features */}
-        <DynamicFeatures />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+        >
+          <DynamicFeatures />
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }

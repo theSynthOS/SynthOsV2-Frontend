@@ -131,10 +131,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         
         // If connection is successful, store in auth context
         if (account) {
-          login(account.address, walletId);
-          // Close modal and redirect to home
+          // Set session in sessionStorage to ensure persistence across refreshes
+          sessionStorage.setItem("session_active", "true");
+          
+          // Close modal first
           onClose();
-          router.push("/home");
+          
+          // Let the login function in AuthContext handle the redirect
+          login(account.address, walletId, "wallet");
         }
         
         // Return the connected wallet
@@ -181,10 +185,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           
           // If connection is successful, store in auth context
           if (account) {
-            login(account.address, undefined, provider);
-            // Close modal and redirect to home
+            // Set session in sessionStorage to ensure persistence across refreshes
+            sessionStorage.setItem("session_active", "true");
+            
+            // Close modal first
             onClose();
-            router.push("/home");
+            
+            // Let the login function in AuthContext handle the redirect
+            login(account.address, undefined, provider);
           }
         } else if (provider === "email") {
           // For email, we would need to implement the email verification flow
@@ -239,11 +247,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         
         // If connection is successful, store in auth context
         if (account) {
-          login(account.address, undefined, "passkey");
           localStorage.setItem("hasPasskey", "true");
-          // Close modal and redirect to home
+          
+          // Set session in sessionStorage to ensure persistence across refreshes
+          sessionStorage.setItem("session_active", "true");
           onClose();
-          router.push("/home");
+          
+          // Let the login function in AuthContext handle the redirect
+          login(account.address, undefined, "passkey");
         }
         
         // Return the connected wallet
@@ -260,6 +271,10 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
   
   // Disconnect wallet function
   const handleDisconnect = () => {
+    console.log("Disconnecting wallet...");
+    sessionStorage.removeItem("session_active");
+    onClose();
+    window.location.href = "/";
     logout();
   };
 

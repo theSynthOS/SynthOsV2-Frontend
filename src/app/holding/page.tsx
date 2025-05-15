@@ -8,12 +8,48 @@ import { MoveUp, MoveDown, Send } from "lucide-react";
 import DepositModal from "@/components/features/DepositModal";
 import WithdrawModal from "@/components/features/WithdrawModal";
 import SendModal from "@/components/features/SendModal";
+import { useActiveAccount } from "thirdweb/react";
 
 export default function HoldingPage() {
-  const { address, isAuthenticated } = useAuth();
+  const { address, isAuthenticated, login } = useAuth();
+  const account = useActiveAccount();
   const [showModal, setShowModal] = useState<"deposit" | "withdraw" | "send" | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [profileImage, setProfileImage] = useState<string>("/SynthOS-tranparent.png");
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  
+  // Debug auth state
+  useEffect(() => {
+    console.log("Holding page auth state:", { isAuthenticated, address });
+    console.log("ThirdWeb account:", account?.address);
+  }, [isAuthenticated, address, account]);
+  
+  // Update display address whenever account or auth address changes
+  useEffect(() => {
+    // Clear display address if not authenticated regardless of account
+    if (!isAuthenticated) {
+      setDisplayAddress(null);
+      return;
+    }
+    
+    if (account && account.address) {
+      setDisplayAddress(account.address);
+    } else if (address) {
+      setDisplayAddress(address);
+    } else {
+      setDisplayAddress(null);
+    }
+  }, [account, address, isAuthenticated]);
+  
+  // If ThirdWeb has an account but Auth Context doesn't, update Auth Context
+  useEffect(() => {
+    // This will keep the auth context in sync with the ThirdWeb account
+    if (account?.address && !isAuthenticated) {
+      console.log("Syncing ThirdWeb account to Auth Context in holding page:", account.address);
+      // You would need the login function from your auth context
+      login(account.address);
+    }
+  }, [account, isAuthenticated]);
   
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -70,7 +106,7 @@ export default function HoldingPage() {
           
           {/* Wallet Address */}
           <div className="text-sm font-medium text-gray-500 mb-3">
-            {isAuthenticated && address ? formatAddress(address) : "Wallet not connected"}
+            {displayAddress ? formatAddress(displayAddress) : "Wallet not connected"}
           </div>
           
           {/* Connect Wallet Button (if not connected) */}
