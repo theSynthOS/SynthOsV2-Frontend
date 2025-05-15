@@ -12,21 +12,6 @@
       "src": "/SynthOS-tranparent.png",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
-    },
-    {
-      "src": "/aave.png",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
-    },
-    {
-      "src": "/fx-protocol-logo.png",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
-    },
-    {
-      "src": "/quill-finance-logo.png",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
     }
   ]
 }
