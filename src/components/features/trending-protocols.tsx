@@ -54,7 +54,7 @@ export default function TrendingProtocols() {
           <Flame className={`w-5 h-5 mr-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
           <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Protocol Lists</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
           {trendingProtocols.map((protocol) => (
             <div 
               key={protocol.id}
