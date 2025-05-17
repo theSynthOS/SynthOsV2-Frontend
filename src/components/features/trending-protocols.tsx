@@ -58,22 +58,22 @@ export default function TrendingProtocols() {
           {trendingProtocols.map((protocol) => (
             <div 
               key={protocol.id}
-              className={`flex flex-col cursor-pointer ${theme === 'dark' ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-gray-100/50 hover:bg-gray-100'} p-4 rounded-xl transition-colors duration-200 relative`}
+              className={`flex flex-col cursor-pointer ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-[20vh]`}
               onClick={() => handleProtocolClick(protocol)}
             >
-              <div className={`absolute top-3 right-3 text-sm font-medium ${getRiskColor(protocol.riskScore)}`}>
+              <div className={`absolute top-4 right-4 text-lg font-semibold ${getRiskColor(protocol.riskScore)}`}>
                 Risk: {protocol.riskScore}
               </div>
-              <div className="flex items-center mb-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={40} height={40} />
+              <div className="flex items-center mb-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
+                  <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={56} height={56} />
                 </div>
                 <div className="flex-1">
-                  <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocol.name}</div>
+                  <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{protocol.name}</div>
                   <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{protocol.tvl} TVL</div>
                 </div>
               </div>
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end mt-auto">
                 <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                   {protocol.apy.toFixed(2)}%
                 </div>
