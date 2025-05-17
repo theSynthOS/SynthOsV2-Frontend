@@ -19,7 +19,7 @@ interface ProtocolOverlayProps {
 const protocolsData = {
     aave: {
       name: "AAVE",
-      logo: "/aave-logo.png",
+      logo: "/aave.png",
       currentApy: 6.13,
       change: 0.0619,
       changePercent: 6.05,
