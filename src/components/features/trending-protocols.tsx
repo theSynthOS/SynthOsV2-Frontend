@@ -4,11 +4,11 @@ import { Flame } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useState } from "react"
-import ProtocolOverlay from "./protocol-overlay"
+import DepositModal from "./deposit-modal"
 
 export default function TrendingProtocols() {
   const { theme } = useTheme()
-  const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null)
+  const [selectedPool, setSelectedPool] = useState<any>(null)
   
   const trendingProtocols = [
     { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave.png", isUp: true, change: 1.27 },
@@ -16,8 +16,12 @@ export default function TrendingProtocols() {
     { id: "quill", name: "Quill Finance", apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true, change: 3.15 },
   ]
 
-  const handleProtocolClick = (protocolId: string) => {
-    setSelectedProtocol(protocolId)
+  const handleProtocolClick = (protocol: any) => {
+    setSelectedPool({
+      name: protocol.name,
+      apy: protocol.apy,
+      risk: "Low"
+    })
   }
 
   return (
@@ -32,7 +36,7 @@ export default function TrendingProtocols() {
             <div 
               key={protocol.id}
               className={`flex items-center cursor-pointer ${theme === 'dark' ? 'hover:bg-gray-800/50' : 'hover:bg-gray-100'} p-2 rounded-lg transition-colors duration-200`}
-              onClick={() => handleProtocolClick(protocol.id)}
+              onClick={() => handleProtocolClick(protocol)}
             >
               <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                 <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={40} height={40} />
@@ -54,10 +58,9 @@ export default function TrendingProtocols() {
         </div>
       </div>
 
-      <ProtocolOverlay 
-        protocolId={selectedProtocol || ""}
-        isOpen={!!selectedProtocol}
-        onClose={() => setSelectedProtocol(null)}
+      <DepositModal 
+        pool={selectedPool}
+        onClose={() => setSelectedPool(null)}
       />
     </>
   )

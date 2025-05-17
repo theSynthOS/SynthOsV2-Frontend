@@ -4,16 +4,24 @@ import { TrendingUp } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useState } from "react"
-import ProtocolOverlay from "./protocol-overlay"
+import DepositModal from "./deposit-modal"
 
 export default function TopYielders() {
   const { theme } = useTheme()
-  const [selectedProtocol, setSelectedProtocol] = useState<string | null>(null)
+  const [selectedPool, setSelectedPool] = useState<any>(null)
   
   const topYielders = [
     { id: "quill", name: "Quill Finance", apy: 12.19, logo: "/quill-finance-logo.png" },
     { id: "fx", name: "FX Protocol", apy: 9.86, logo: "/fx-protocol-logo.png" },
   ]
+
+  const handleProtocolClick = (protocol: any) => {
+    setSelectedPool({
+      name: protocol.name,
+      apy: protocol.apy,
+      risk: "Low"
+    })
+  }
 
   return (
     <>
@@ -27,7 +35,7 @@ export default function TopYielders() {
             <div 
               key={protocol.id} 
               className="flex-shrink-0 w-1/2 cursor-pointer"
-              onClick={() => setSelectedProtocol(protocol.id)}
+              onClick={() => handleProtocolClick(protocol)}
             >
               <div className={`${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100/50'} rounded-xl p-3 flex items-center`}>
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
@@ -43,10 +51,9 @@ export default function TopYielders() {
         </div>
       </div>
 
-      <ProtocolOverlay 
-        protocolId={selectedProtocol || ""}
-        isOpen={!!selectedProtocol}
-        onClose={() => setSelectedProtocol(null)}
+      <DepositModal 
+        pool={selectedPool}
+        onClose={() => setSelectedPool(null)}
       />
     </>
   )
