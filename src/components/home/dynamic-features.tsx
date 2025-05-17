@@ -10,16 +10,6 @@ const LoadingPlaceholder = () => {
 };
 
 // Lazy load heavy components with loading states
-const ProtocolSpotlight = dynamic(() => import("@/components/features/protocol-spotlight"), {
-  loading: () => <LoadingPlaceholder />,
-  ssr: false
-});
-
-const TopYielders = dynamic(() => import("@/components/features/top-yielders"), {
-  loading: () => <LoadingPlaceholder />,
-  ssr: false
-});
-
 const TrendingProtocols = dynamic(() => import("@/components/features/trending-protocols"), {
   loading: () => <LoadingPlaceholder />,
   ssr: false
@@ -35,16 +25,6 @@ export default function DynamicFeatures() {
   
   return (
     <>
-      {/* Spotlight */}
-      <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-        <ProtocolSpotlight />
-      </div>
-
-      {/* Top Yielders */}
-      <div className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-        <TopYielders />
-      </div>
-
       {/* Trending */}
       <div className="mb-[80px]">
         <TrendingProtocols />
