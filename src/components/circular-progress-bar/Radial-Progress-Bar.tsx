@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useDraggable } from './useDraggable';
-// Remove CSS import since we're using Tailwind classes
-// import './styles.css';
+import { useTheme } from "next-themes"
 
 interface RadialProgressBarProps {
     initialAngle: number; // 0-1 range from parent
@@ -17,7 +16,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     // Keep track of the current angle internally
     const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
     
-    
+    const { theme } = useTheme()
+
     const [draggbleRef, dx, dy, angle] = useDraggable({
         initialAngle: currentAngle,
     });
@@ -39,10 +39,10 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
         <div 
             className="rounded-full overflow-hidden relative h-48 w-48"
             style={{
-                background: `conic-gradient(rgb(86, 252, 150) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`
+                background: `conic-gradient(rgb(46, 240, 120) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`
             }}
         >
-            <div className="rounded-full bg-white absolute inset-4" />
+            <div className={`rounded-full  absolute inset-4 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`} />
 
             <div className="absolute inset-2 flex items-center justify-center">
                 <div
