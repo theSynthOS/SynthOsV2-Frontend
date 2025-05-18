@@ -185,9 +185,9 @@ export default function PullToRefresh({ onRefresh, children, backgroundColor = "
           opacity: pullDistance > 0 || refreshing ? 1 : 0
         }}
       >
-        <div className="bg-purple-900/30 p-3 rounded-full">
+        <div className="bg-green-900/30 p-3 rounded-full">
           <RefreshCw 
-            className={`h-8 w-8 text-purple-500 ${refreshing ? 'animate-spin' : ''}`} 
+            className={`h-8 w-8 text-green-500 ${refreshing ? 'animate-spin' : ''}`} 
             style={{ 
               transform: refreshing ? 'rotate(0deg)' : `rotate(${-1 * (pullDistance / refreshThreshold) * 360}deg)`,
             }} 

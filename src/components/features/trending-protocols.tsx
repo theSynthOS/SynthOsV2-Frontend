@@ -158,7 +158,7 @@ export default function TrendingProtocols() {
                       <span className="flex items-center">
                         <div className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
                           riskFilters.all 
-                            ? 'bg-purple-500 border-purple-500'
+                            ? 'bg-green-500 border-green-500'
                             : `border-gray-400 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`
                         }`}>
                           {riskFilters.all && <Check className="w-3 h-3 text-white" />}

@@ -100,7 +100,7 @@ export default function HoldingPage() {
         <div className="flex flex-col items-center">
           {/* Profile Picture */}
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-purple-100">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-green-100">
               <Image 
                 src={profileImage} 
                 alt="Profile" 
@@ -109,7 +109,7 @@ export default function HoldingPage() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-purple-600 rounded-full p-1.5 cursor-pointer shadow-md">
+            <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-green-600 rounded-full p-1.5 cursor-pointer shadow-md">
               <Upload size={14} className="text-white" />
             </label>
             <input 
@@ -139,7 +139,7 @@ export default function HoldingPage() {
               onClick={() => setShowModal("deposit")}
               className="flex flex-col items-center"
             >
-              <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-2">
                 <MoveDown size={24} className="text-white" />
               </div>
               <span className="text-sm font-medium">Deposit</span>
@@ -149,7 +149,7 @@ export default function HoldingPage() {
               onClick={() => setShowModal("withdraw")}
               className="flex flex-col items-center"
             >
-              <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-2">
                 <MoveUp size={24} className="text-white" />
               </div>
               <span className="text-sm font-medium">Withdraw</span>
@@ -159,7 +159,7 @@ export default function HoldingPage() {
               onClick={() => setShowModal("send")}
               className="flex flex-col items-center"
             >
-              <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mb-2">
                 <Send size={24} className="text-white" />
               </div>
               <span className="text-sm font-medium">Send</span>
@@ -207,7 +207,7 @@ export default function HoldingPage() {
               <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-6`}>Start by depositing assets to earn yields</p>
               <button 
                 onClick={() => setShowModal("deposit")}
-                className="bg-purple-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-purple-700"
+                className="bg-green-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-green-700"
               >
                 Deposit Now
               </button>

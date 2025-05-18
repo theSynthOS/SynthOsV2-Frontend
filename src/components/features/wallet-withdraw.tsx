@@ -107,7 +107,7 @@ export default function WithdrawModal({ isOpen, onClose, isAuthenticated, addres
                   onChange={(e) => setAmount(e.target.value)}
                 />
                 <button 
-                  className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+                  className="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
                   onClick={handleWithdraw}
                 >
                   Withdraw

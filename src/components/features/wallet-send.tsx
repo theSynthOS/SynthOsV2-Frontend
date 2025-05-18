@@ -331,7 +331,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               
               {/* Send Button */}
               <button 
-                className={`mt-4 w-full bg-purple-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-purple-400`}
+                className={`mt-4 w-full bg-green-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-green-400`}
                 disabled={!recipientAddress || parseFloat(amount) <= 0 || isSending}
                 onClick={handleSend}
               >
