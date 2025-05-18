@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle } from "lucide-react"
 import { useTheme } from "next-themes"
+import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar"
 
 interface DepositModalProps {
   pool: {
@@ -19,29 +20,77 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0")
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [maxBalance, setMaxBalance] = useState(1000)
   const { toast } = useToast()
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const maxBalance = 1000 // Example max balance, would come from user's wallet in real app
+  const modalRef = useRef<HTMLDivElement>(null)
+  
+  // Keep track of the previous maxBalance value to handle transitions
+  const prevMaxBalanceRef = useRef(maxBalance)
 
-  // Set mounted state once hydration is complete
+  // For demo purposes - simulate balance changes
+  // useEffect(() => {
+  //   // Uncomment this to test balance changes
+  //    const timer = setTimeout(() => {
+  //      setMaxBalance(prev => prev === 1000 ? 2000 : 1000);
+  //    }, 5000);
+  //    return () => clearTimeout(timer);
+  // }, [maxBalance]);
+
+  // Handle maxBalance updates while maintaining the percentage
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (pool) {
+      if (prevMaxBalanceRef.current !== maxBalance) {
+        // Store the previous maxBalance
+        prevMaxBalanceRef.current = maxBalance
+        
+        // The slider value (percentage) should remain the same
+        // Only the absolute amount needs to be recalculated
+        const currentPercentage = sliderValue
+        const newAmount = ((currentPercentage / 100) * maxBalance).toFixed(2)
+        setAmount(newAmount)
+      }
+    }
+  }, [maxBalance, pool, sliderValue])
 
-  // Update input when slider changes
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseInt(e.target.value)
-    setSliderValue(value)
-    setAmount(((value / 100) * maxBalance).toFixed(2))
+  // Handle modal close and reset values
+  const handleClose = () => {
+    setAmount("0")
+    setSliderValue(0)
+    onClose()
   }
 
-  // Update slider when input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setAmount(value)
-    const numValue = Number.parseFloat(value) || 0
-    setSliderValue((numValue / maxBalance) * 100)
+  // Set mounted state and handle scroll lock
+  useEffect(() => {
+    setMounted(true)
+    
+    if (pool) {
+      // Save current body styles
+      const originalStyle = window.getComputedStyle(document.body)
+      const originalOverflow = originalStyle.overflow
+      
+      // Prevent background scrolling and interactions
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
+      
+      return () => {
+        // Restore original body styles
+        document.body.style.overflow = originalOverflow
+        document.body.style.position = ''
+        document.body.style.width = ''
+        document.body.style.height = ''
+      }
+    }
+  }, [pool])
+
+  // Handle radial progress update
+  const handleRadialProgressUpdate = (progressPercentage: number) => {
+    setSliderValue(progressPercentage)
+    const calculatedAmount = ((progressPercentage / 100) * maxBalance).toFixed(2)
+    setAmount(calculatedAmount)
   }
 
   // Calculate estimated yearly yield
@@ -50,6 +99,16 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   // Handle deposit confirmation
   const handleConfirmDeposit = () => {
     setIsSubmitting(true)
+
+    // Log the deposit details
+    console.log({
+      action: 'Deposit Confirmation',
+      depositAmount: `$${amount}`,
+      poolName: pool?.name,
+      estimatedYearlyYield: `$${yearlyYield.toFixed(2)}`,
+      apy: `${pool?.apy}%`,
+      pair: `${pool?.name}`
+    })
 
     // Simulate API call with timeout
     setTimeout(() => {
@@ -62,8 +121,8 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
         description: `$${amount} deposited into ${pool?.name}`,
       })
 
-      // Close modal
-      onClose()
+      // Close modal and reset values
+      handleClose()
 
       // Trigger haptic feedback if supported
       if (navigator.vibrate) {
@@ -75,59 +134,42 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   // If theme isn't loaded yet or no pool selected, return nothing
   if (!mounted || !pool) return null
 
+  // Calculate the initial angle for the radial progress bar (0-1 range)
+  const initialAngle = sliderValue / 100;
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4`}>
+    <div 
+      ref={modalRef}
+      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden" 
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
+    >
+      <div 
+        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
+          rounded-lg w-full max-w-md p-4 overflow-y-auto max-h-[90vh] relative isolate`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
-        <div className="mb-6">
-          <div className="flex justify-between text-sm mb-2">
-            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Current APY</span>
-            <span className="text-green-400">{pool.apy}%</span>
-          </div>
-          <div className="flex justify-between text-sm mb-4">
-            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Risk Level</span>
-            <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}>{pool.risk}</span>
-          </div>
-
-          <div className="mb-6">
-            <label className={`block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Amount to Deposit</label>
-            <div className="relative">
-              <input
-                type="number"
-                value={amount}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className={`w-full ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'} rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-green-400 border ${theme === 'dark' ? 'border-green-400/30' : 'border-green-400/50'}`}
-                disabled={isSubmitting}
+        
+        <div className="flex flex-col space-y-6">
+          {/* Input and Circle Section */}
+          <div>
+            {/* Radial progress bar */}
+            <div className="flex flex-col items-center">
+              <RadialProgressBar 
+                initialAngle={initialAngle} 
+                maxBalance={maxBalance}
+                onAngleChange={handleRadialProgressUpdate}
               />
-              <div className={`absolute right-3 top-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>USDC</div>
             </div>
 
-            {/* Slider */}
-            <div className="mt-4 px-1">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={sliderValue}
-                onChange={handleSliderChange}
-                className={`w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'} rounded-lg appearance-none cursor-pointer accent-green-400`}
-                disabled={isSubmitting}
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>0%</span>
-                <span>25%</span>
-                <span>50%</span>
-                <span>75%</span>
-                <span>100%</span>
-              </div>
+            <div className={`text-right text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1 w-full`}>
+              Balance: {maxBalance.toFixed(2)} USDC
             </div>
-
-            <div className={`text-right text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Balance: {maxBalance.toFixed(2)} USDC</div>
           </div>
 
-          <div className={`${theme === 'dark' ? 'bg-[#0f0b22]/30' : 'bg-gray-100/50'} rounded-lg p-3 mb-4`}>
-            <div className="flex justify-between text-sm mb-1">
+          {/* Statistics */}
+          <div className={`${theme === 'dark' ? 'bg-[#0f0b22]/30' : 'bg-gray-100/50'} rounded-lg p-4`}>
+            <div className="flex justify-between text-sm mb-2">
               <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Estimated APY</span>
               <span className="text-green-400">{pool.apy}%</span>
             </div>
@@ -136,36 +178,47 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
               <span className={theme === 'dark' ? 'text-white' : 'text-black'}>${yearlyYield.toFixed(2)}</span>
             </div>
           </div>
-        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className={`flex-1 ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'} font-semibold py-3 rounded-lg`}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            className={`flex-1 font-semibold py-3 rounded-lg relative ${
-              isSubmitting 
-                ? theme === 'dark' ? "bg-gray-600 text-gray-400" : "bg-gray-300 text-gray-500" 
-                : "bg-green-400 text-black"
-            }`}
-            disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
-            onClick={handleConfirmDeposit}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="opacity-0">Confirm Deposit</span>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className={`h-5 w-5 border-2 ${theme === 'dark' ? 'border-gray-400 border-t-white' : 'border-gray-300 border-t-gray-700'} rounded-full animate-spin`}></div>
-                </div>
-              </>
-            ) : (
-              "Confirm Deposit"
-            )}
-          </button>
+          {/* For testing - uncomment to test balance changes */}
+          {/* <div className="mb-4">
+            <button 
+              onClick={() => setMaxBalance(prev => prev === 1000 ? 2000 : 1000)}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Toggle Max Balance ({maxBalance})
+            </button>
+          </div> */}
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleClose}
+              className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              className={`flex-1 font-semibold py-3 rounded-lg relative ${
+                isSubmitting 
+                  ? "bg-gray-300 text-gray-500" 
+                  : "bg-green-400 text-black"
+              }`}
+              disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
+              onClick={handleConfirmDeposit}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="opacity-0">Confirm Deposit</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+                  </div>
+                </>
+              ) : (
+                "Confirm Deposit"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

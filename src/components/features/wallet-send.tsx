@@ -28,6 +28,18 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Control body scrolling based on modal open state
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // Re-enable scrolling when component unmounts or modal closes
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
 
   // Mock balance for demo purposes
   useEffect(() => {
@@ -128,19 +140,22 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
     }, 2000);
   };
 
-  // If theme isn't loaded yet, return nothing to avoid flash
-  if (!mounted) return null;
+  // If theme isn't loaded yet or modal not open, return nothing
+  if (!mounted || !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 touch-none" onClick={handleClose}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
+        aria-hidden="true"
       ></div>
       
       {/* Modal Content */}
-      <div className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50 overflow-hidden`}>
+      <div 
+        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} max-h-[90%] z-50`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Drag Handle */}
         <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4`}></div>
         
@@ -153,7 +168,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
         </button>
         
         {/* Modal Content - Scrollable Area */}
-        <div className="p-6 pb-20 h-full">
+        <div className="p-6 pb-28 overflow-y-auto overscroll-contain" style={{ maxHeight: 'calc(90% - 40px)' }}>
           <h2 className="text-2xl font-bold mb-6 text-center">Send</h2>
           
           {!isAuthenticated ? (
@@ -245,7 +260,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               <button 
                 onClick={handleNextStep}
                 disabled={parseFloat(amount) <= 0}
-                className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-4 px-6 flex items-center justify-between`}
+                className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-4 px-6 flex items-center justify-between mb-8`}
               >
                 <div className="w-6"></div> {/* Spacer for alignment */}
                 <div className="text-center flex-1">
@@ -322,7 +337,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               </div>
               
               {/* Chain Information */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4`}>
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 mb-6`}>
                 <div className="flex justify-between text-sm">
                   <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Network</span>
                   <span className="font-medium">Scroll Sepolia</span>
@@ -331,7 +346,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               
               {/* Send Button */}
               <button 
-                className={`mt-4 w-full bg-purple-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-purple-400`}
+                className={`mt-4 w-full bg-green-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-green-400 mb-8`}
                 disabled={!recipientAddress || parseFloat(amount) <= 0 || isSending}
                 onClick={handleSend}
               >

@@ -21,6 +21,18 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Control body scrolling based on modal open state
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // Re-enable scrolling when component unmounts or modal closes
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -38,32 +50,35 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
     }
   };
 
-  // If theme isn't loaded yet, return nothing to avoid flash
-  if (!mounted) return null;
+  // If theme isn't loaded yet or modal not open, return nothing
+  if (!mounted || !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 touch-none" onClick={handleClose}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
+        aria-hidden="true"
       ></div>
       
       {/* Modal Content */}
-      <div className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} h-[90%] z-50 overflow-hidden`}>
+      <div 
+        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} max-h-[90%] z-50 flex flex-col`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Drag Handle */}
-        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4`}></div>
+        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4 flex-shrink-0`}></div>
         
         {/* Close Button */}
         <button 
           onClick={handleClose} 
-          className={`absolute top-4 right-4 p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+          className={`absolute top-4 right-4 p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} z-10`}
         >
           <X className="h-6 w-6" />
         </button>
         
         {/* Modal Content - Scrollable Area */}
-        <div className="p-6 pb-20 h-full overflow-y-auto">
+        <div className="p-6 pb-20 overflow-y-auto overscroll-contain touch-auto flex-grow" style={{ WebkitOverflowScrolling: 'touch' }}>
           <h2 className="text-2xl font-bold mb-6">Deposit Funds</h2>
           
           {!isAuthenticated ? (
