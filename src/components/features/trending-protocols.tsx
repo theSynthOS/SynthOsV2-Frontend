@@ -248,8 +248,9 @@ export default function TrendingProtocols() {
                 </div>
               </div>
               <div className="flex justify-between items-center mt-auto">
-                <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                   {protocol.apy.toFixed(2)}%
+                  <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
                 </div>
                 <div className={`font-semibold text-md ${getRiskColor(protocol.riskScore)}`}>
                   Risk: {getRiskLabel(protocol.riskScore)}
