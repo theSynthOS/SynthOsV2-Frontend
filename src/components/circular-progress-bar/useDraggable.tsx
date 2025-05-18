@@ -59,6 +59,9 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
         if (!node) {
             return;
         }
+        // Prevent any default behaviors
+        e.preventDefault();
+        
         const startPos = {
             x: e.clientX - dx,
             y: e.clientY - dy,
@@ -70,6 +73,7 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
         const center = radius - width / 2;
 
         const handleMouseMove = (e: MouseEvent) => {
+            e.preventDefault();
             let newDx = e.clientX - startPos.x;
             let newDy = e.clientY - startPos.y;
 
@@ -89,7 +93,8 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
             updateCursor();
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (e: MouseEvent) => {
+            e.preventDefault();
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
             resetCursor();
@@ -103,18 +108,23 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
         if (!node) {
             return;
         }
+        // Prevent default touch behaviors (scrolling, zooming)
+        e.preventDefault();
+        
         const touch = e.touches[0];
-
         const startPos = {
             x: touch.clientX - dx,
             y: touch.clientY - dy,
         };
+
         const width = node.getBoundingClientRect().width;
         const containerWidth = node.parentElement?.getBoundingClientRect().width || 0;
         const radius = containerWidth / 2;
         const center = radius - width / 2;
 
         const handleTouchMove = (e: TouchEvent) => {
+            // Prevent scrolling while dragging
+            e.preventDefault();
             const touch = e.touches[0];
             let newDx = touch.clientX - startPos.x;
             let newDy = touch.clientY - startPos.y;
@@ -135,13 +145,15 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
             updateCursor();
         };
 
-        const handleTouchEnd = () => {
+        const handleTouchEnd = (e: TouchEvent) => {
+            e.preventDefault();
             document.removeEventListener('touchmove', handleTouchMove);
             document.removeEventListener('touchend', handleTouchEnd);
             resetCursor();
         };
 
-        document.addEventListener('touchmove', handleTouchMove);
+        // Use passive: false to allow preventDefault()
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
         document.addEventListener('touchend', handleTouchEnd);
     }, [node, dx, dy]);
 
@@ -164,7 +176,8 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
         const touchStartHandler = (e: Event) => handleTouchStart(e as TouchEvent);
         
         node.addEventListener("mousedown", mouseDownHandler);
-        node.addEventListener("touchstart", touchStartHandler);
+        // Use passive: false for touch events
+        node.addEventListener("touchstart", touchStartHandler, { passive: false });
         
         return () => {
             node.removeEventListener("mousedown", mouseDownHandler);

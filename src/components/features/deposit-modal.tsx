@@ -24,20 +24,36 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const { toast } = useToast()
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
   const maxBalance = 1000 // Example max balance, would come from user's wallet in real app
 
-  // Set mounted state once hydration is complete
+  // Handle modal close and reset values
+  const handleClose = () => {
+    setAmount("0")
+    setSliderValue(0)
+    onClose()
+  }
+
+  // Set mounted state once hydration is complete and handle touch events
   useEffect(() => {
     setMounted(true)
     
     // Prevent background scrolling when modal is open
     if (pool) {
       document.body.style.overflow = 'hidden'
-    }
-    
-    // Re-enable scrolling when component unmounts
-    return () => {
-      document.body.style.overflow = 'auto'
+      
+      // Add touch event listeners with passive: false
+      const preventTouch = (e: TouchEvent) => {
+        e.preventDefault()
+      }
+      
+      document.addEventListener('touchmove', preventTouch, { passive: false })
+      
+      // Clean up
+      return () => {
+        document.body.style.overflow = 'auto'
+        document.removeEventListener('touchmove', preventTouch)
+      }
     }
   }, [pool])
 
@@ -58,6 +74,16 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const handleConfirmDeposit = () => {
     setIsSubmitting(true)
 
+    // Log the deposit details
+    console.log({
+      action: 'Deposit Confirmation',
+      depositAmount: `$${amount}`,
+      poolName: pool?.name,
+      estimatedYearlyYield: `$${yearlyYield.toFixed(2)}`,
+      apy: `${pool?.apy}%`,
+      pair: `${pool?.name}`
+    })
+
     // Simulate API call with timeout
     setTimeout(() => {
       setIsSubmitting(false)
@@ -69,8 +95,8 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
         description: `$${amount} deposited into ${pool?.name}`,
       })
 
-      // Close modal
-      onClose()
+      // Close modal and reset values
+      handleClose()
 
       // Trigger haptic feedback if supported
       if (navigator.vibrate) {
@@ -98,9 +124,14 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const initialAngle = sliderValue / 100;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div 
+      ref={modalRef}
+      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" 
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
+    >
       <div 
-        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain touch-auto`}
+        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
+          rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain touch-none`}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
@@ -108,9 +139,8 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
         <div className="flex flex-col space-y-6">
           {/* Input and Circle Section */}
           <div>
-            
             {/* Radial progress bar */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center touch-none">
               <RadialProgressBar 
                 initialAngle={initialAngle} 
                 maxBalance={maxBalance}
@@ -138,7 +168,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
           {/* Buttons */}
           <div className="flex gap-3">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
               disabled={isSubmitting}
             >
