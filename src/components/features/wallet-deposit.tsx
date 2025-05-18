@@ -17,13 +17,17 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
     setMounted(true);
+    
+    // Check if the device is mobile and update window height
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
+      setWindowHeight(window.innerHeight);
     };
     
     checkMobile();
@@ -75,34 +79,25 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
     const preventTouchMove = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
       
-      // Check if we're inside the modal content
       if (modalRef.current && modalRef.current.contains(target)) {
-        // Allow scrolling within scrollable elements inside the modal
+        // Find if we're inside a scrollable container
         const isScrollable = (el: HTMLElement) => {
-          // Check if the element has a scrollbar
           const hasScrollableContent = el.scrollHeight > el.clientHeight;
-          // Get the computed overflow-y style
           const overflowYStyle = window.getComputedStyle(el).overflowY;
-          // Check if overflow is set to something scrollable
           const isOverflowScrollable = ['scroll', 'auto'].includes(overflowYStyle);
-          
           return hasScrollableContent && isOverflowScrollable;
         };
         
-        // Find if we're inside a scrollable container
         let scrollableParent = target;
         while (scrollableParent && modalRef.current.contains(scrollableParent)) {
           if (isScrollable(scrollableParent)) {
-            // If we're at the top or bottom edge of the scrollable container, prevent default behavior
             const atTop = scrollableParent.scrollTop <= 0;
             const atBottom = scrollableParent.scrollHeight - scrollableParent.scrollTop <= scrollableParent.clientHeight + 1;
             
-            // Check scroll direction using touch position
             if (e.touches.length > 0) {
               const touch = e.touches[0];
               const touchY = touch.clientY;
               
-              // Store the last touch position
               const lastTouchY = scrollableParent.getAttribute('data-last-touch-y');
               scrollableParent.setAttribute('data-last-touch-y', touchY.toString());
               
@@ -111,12 +106,9 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                 const scrollingUp = touchDelta > 0;
                 const scrollingDown = touchDelta < 0;
                 
-                // Only prevent default if trying to scroll past the edges
                 if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
                   e.preventDefault();
                 }
-                
-                // Allow scrolling within the container
                 return;
               }
             }
@@ -125,16 +117,13 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
           scrollableParent = scrollableParent.parentElement as HTMLElement;
         }
         
-        // If we're not in a scrollable container within the modal, prevent default
         e.preventDefault();
       }
     };
     
-    // Add the touchmove listener
     document.addEventListener('touchmove', preventTouchMove, { passive: false });
     
     return () => {
-      // Remove the touchmove listener
       document.removeEventListener('touchmove', preventTouchMove);
     };
   }, [isOpen]);
@@ -147,7 +136,8 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
     }, 200); // Match animation duration
   };
 
-  const copyToClipboard = () => {
+  const copyToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal close
     if (address) {
       navigator.clipboard.writeText(address);
       setCopied(true);
@@ -157,6 +147,13 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
 
   // If theme isn't loaded yet or modal not open, return nothing
   if (!mounted || !isOpen) return null;
+
+  // Calculate dynamic styles based on device height
+  const isSmallHeight = windowHeight < 700;
+  const modalMaxHeight = isSmallHeight ? '95vh' : '90vh';
+  const contentPadding = isMobile ? (isSmallHeight ? 'p-3' : 'p-4') : 'p-6';
+  const headingSize = isMobile ? (isSmallHeight ? 'text-lg' : 'text-xl') : 'text-2xl';
+  const qrSize = isMobile ? (isSmallHeight ? 130 : 150) : 180;
 
   return (
     <div className="fixed inset-0 z-50" onClick={handleClose}>
@@ -169,62 +166,60 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
       {/* Modal Content */}
       <div 
         ref={modalRef}
-        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} max-h-[90vh] z-50 flex flex-col`}
+        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} z-50 overflow-hidden flex flex-col`}
+        style={{ maxHeight: modalMaxHeight }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
-        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4 flex-shrink-0`}></div>
+        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-3 flex-shrink-0`}></div>
         
         {/* Close Button */}
         <button 
           onClick={handleClose} 
-          className={`absolute top-4 right-4 p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} z-10`}
+          className={`absolute top-3 right-3 p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} z-10`}
         >
           <X className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
         </button>
         
         {/* Fixed Header */}
-        <h2 className={`text-${isMobile ? 'xl' : '2xl'} font-bold px-6 pt-2 pb-4 flex-shrink-0`}>Deposit Funds</h2>
+        <h2 className={`${headingSize} font-bold px-6 pt-1 pb-3 flex-shrink-0 text-center mt-1`}>Deposit Funds</h2>
         
-        {/* Modal Content - Scrollable Area with improved scrolling */}
+        {/* Modal Content - Scrollable Area */}
         <div 
-          className="px-4 pb-safe overflow-y-auto flex-grow overscroll-contain scrollbar-hide"
+          className="px-4 overflow-y-auto flex-grow overscroll-contain scrollbar-hide"
           style={{ 
             WebkitOverflowScrolling: 'touch',
-            paddingBottom: isMobile ? '6rem' : '8rem'
+            paddingBottom: isMobile ? '4rem' : '6rem'
           }}
         >
           {!isAuthenticated ? (
-            <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-${isMobile ? '4' : '6'} text-center`}>
-              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+            <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg ${contentPadding} text-center`}>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-sm mb-3' : 'mb-4'}`}>
                 Connect your wallet to get your deposit address
               </p>
               <ConnectWalletButton />
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className={`space-y-${isSmallHeight ? '3' : '4'}`}>
               {/* Wallet Address Section */}
-              <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-${isMobile ? '4' : '6'}`}>
-                <div className="text-center mb-3">
+              <div className={`${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'} rounded-lg ${contentPadding}`}>
+                <div className="text-center mb-2">
                   <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-medium`}>Your Wallet Address</h3>
                 </div>
                 
-                <div className={`flex items-start justify-between ${theme === 'dark' ? 'bg-gray-600 border-gray-500' : 'bg-white border-gray-200'} border rounded-lg p-3 mb-4`}>
+                <div className={`flex items-start justify-between ${theme === 'dark' ? 'bg-gray-600 border-gray-500' : 'bg-white border-gray-200'} border rounded-lg ${isMobile ? 'p-2' : 'p-3'} mb-4`}>
                   <div className={`font-mono ${isMobile ? 'text-xs' : 'text-sm'} break-all flex-1 min-h-[40px] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {address || "Connect wallet"}
                   </div>
                   <button 
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent modal close
-                      copyToClipboard();
-                    }}
-                    className={`ml-2 p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-gray-500' : 'hover:bg-gray-100'} transition-colors flex-shrink-0`}
+                    onClick={copyToClipboard}
+                    className={`ml-2 ${isMobile ? 'p-1' : 'p-1.5'} rounded-full ${theme === 'dark' ? 'hover:bg-gray-500' : 'hover:bg-gray-100'} transition-colors flex-shrink-0`}
                     disabled={!address}
                   >
                     {copied ? (
-                      <Check className="h-5 w-5 text-green-500" />
+                      <Check className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-500`} />
                     ) : (
-                      <Copy className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <Copy className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                     )}
                   </button>
                 </div>
@@ -232,17 +227,17 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                 {/* QR Code */}
                 <div className="flex justify-center mb-3">
                   {address ? (
-                    <div className="bg-white p-3 rounded-lg">
+                    <div className={`bg-white ${isMobile ? 'p-2' : 'p-3'} rounded-lg`}>
                       <QRCode 
                         value={address} 
-                        size={isMobile ? 150 : 180} 
+                        size={qrSize}
                         level="H"
                         className="mx-auto"
                       />
                     </div>
                   ) : (
-                    <div className={`w-[${isMobile ? '150' : '180'}px] h-[${isMobile ? '150' : '180'}px] ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
-                      <span className={`${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No address available</span>
+                    <div className={`w-[${qrSize}px] h-[${qrSize}px] ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
+                      <span className={`${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} ${isMobile ? 'text-xs' : 'text-sm'}`}>No address available</span>
                     </div>
                   )}
                 </div>
@@ -253,7 +248,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
               </div>
               
               {/* Network Information */}
-              <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-${isMobile ? '4' : '6'}`}>
+              <div className={`${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'} rounded-lg ${contentPadding}`}>
                 <h3 className={`font-medium mb-2 ${isMobile ? 'text-sm' : ''}`}>Important Information</h3>
                 <ul className={`${isMobile ? 'text-xs' : 'text-sm'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} space-y-2`}>
                   <li>• Only send assets on the Scroll Sepolia network</li>

@@ -261,7 +261,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
         </div>
 
         {/* Buttons - Fixed at the bottom */}
-        <div className="mt-4 flex gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-4 flex gap-3 pt-2 ">
           <button
             onClick={handleClose}
             className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"

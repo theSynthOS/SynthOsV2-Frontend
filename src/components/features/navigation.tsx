@@ -38,15 +38,6 @@ export default function Navbar() {
           <span className="text-xs mt-1">Home</span>
         </Link>
         
-        <Link 
-          href="/rewards" 
-          className={`flex flex-col items-center ${isActive('/rewards') ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-500' : 'text-gray-400')}`}
-        >
-          <div className={`p-2 ${isActive('/rewards') ? 'bg-green-600/20 rounded-full' : ''}`}>
-            <Award className={`h-6 w-6 ${isActive('/rewards') ? 'text-green-500' : ''}`} />
-          </div>
-          <span className="text-xs mt-1">Feeds</span>
-        </Link>
         
         <Link 
           href="/holding" 
