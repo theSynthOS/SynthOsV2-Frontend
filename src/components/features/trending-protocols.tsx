@@ -233,7 +233,7 @@ export default function TrendingProtocols() {
           {filteredProtocols.map((protocol) => (
             <div 
               key={`${protocol.id}-${protocol.pair}`}
-              className={`flex flex-col cursor-pointer ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-[17vh]`}
+              className={`flex flex-col cursor-pointer shadow-md ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-[17vh]`}
               onClick={() => handleProtocolClick(protocol)}
             >
               <div className="flex items-center mb-4">
