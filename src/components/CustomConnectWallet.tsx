@@ -15,7 +15,7 @@ type WalletOption = {
   icon: React.ReactNode;
 };
 
-type OAuthProvider = "google" | "apple" | "email" | "passkey" | "x" | "telegram";
+type OAuthProvider = "google" | "apple" | "email" | "x" | "telegram";
 
 export default function ConnectWalletButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,7 +89,7 @@ export default function ConnectWalletButton() {
 // Separate component for the wallet connection UI
 function WalletConnectionUI({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"wallets" | "social" | "passkey">("wallets");
+  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">("social");
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
   const [currentAuth, setCurrentAuth] = useState<string>("");
@@ -213,61 +213,61 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
     }
   };
   
-  // Connect with passkey
-  const handleConnectWithPasskey = async () => {
-    try {
-      setIsConnecting(true);
-      setCurrentAuth("passkey");
-      setCurrentWallet("");
-      setError("");
+  // // Connect with passkey
+  // const handleConnectWithPasskey = async () => {
+  //   try {
+  //     setIsConnecting(true);
+  //     setCurrentAuth("passkey");
+  //     setCurrentWallet("");
+  //     setError("");
       
-      // Check if user has used passkey before
-      const hasPasskey = localStorage.getItem("hasPasskey") === "true";
+  //     // Check if user has used passkey before
+  //     const hasPasskey = localStorage.getItem("hasPasskey") === "true";
       
-      await connect(async () => {
-        // Create in-app wallet with passkey auth
-        const wallet = inAppWallet({
-          auth: {
-            options: ["passkey"],
-            mode: "popup",
-          },
-          smartAccount: {
-            chain: scrollSepolia,
-            sponsorGas: true,
-          }
-        });
+  //     await connect(async () => {
+  //       // Create in-app wallet with passkey auth
+  //       const wallet = inAppWallet({
+  //         auth: {
+  //           options: ["passkey"],
+  //           mode: "popup",
+  //         },
+  //         smartAccount: {
+  //           chain: scrollSepolia,
+  //           sponsorGas: true,
+  //         }
+  //       });
         
-        // Connect with passkey strategy
-        const account = await wallet.connect({
-          client,
-          strategy: "passkey",
-          type: hasPasskey ? "sign-in" : "sign-up", // Required for passkey strategy
-          passkeyName: "SynthOS Wallet", // Optional name for the passkey
-        });
+  //       // Connect with passkey strategy
+  //       const account = await wallet.connect({
+  //         client,
+  //         strategy: "passkey",
+  //         type: hasPasskey ? "sign-in" : "sign-up", // Required for passkey strategy
+  //         passkeyName: "SynthOS Wallet", // Optional name for the passkey
+  //       });
         
-        // If connection is successful, store in auth context
-        if (account) {
-          localStorage.setItem("hasPasskey", "true");
+  //       // If connection is successful, store in auth context
+  //       if (account) {
+  //         localStorage.setItem("hasPasskey", "true");
           
-          // Set session in sessionStorage to ensure persistence across refreshes
-          sessionStorage.setItem("session_active", "true");
-          onClose();
+  //         // Set session in sessionStorage to ensure persistence across refreshes
+  //         sessionStorage.setItem("session_active", "true");
+  //         onClose();
           
-          // Let the login function in AuthContext handle the redirect
-          login(account.address, undefined, "passkey");
-        }
+  //         // Let the login function in AuthContext handle the redirect
+  //         login(account.address, undefined, "passkey");
+  //       }
         
-        // Return the connected wallet
-        return wallet;
-      });
+  //       // Return the connected wallet
+  //       return wallet;
+  //     });
       
-    } catch (err: any) {
-      setError(err.message || "Failed to connect with passkey");
-      console.error("Failed to connect with passkey:", err);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+  //   } catch (err: any) {
+  //     setError(err.message || "Failed to connect with passkey");
+  //     console.error("Failed to connect with passkey:", err);
+  //   } finally {
+  //     setIsConnecting(false);
+  //   }
+  // };
   
   // Disconnect wallet function
   const handleDisconnect = () => {
@@ -288,16 +288,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
       
       {/* Tabs */}
       <div className="flex mb-6 border-b">
-        <button
-          className={`flex-1 py-3 px-4 text-lg font-medium ${
-            activeTab === "wallets" 
-              ? "text-purple-500 border-b-2 border-purple-500" 
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("wallets")}
-        >
-          Wallets
-        </button>
+        
         <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "social" 
@@ -308,7 +299,18 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         >
           Social
         </button>
+
         <button
+          className={`flex-1 py-3 px-4 text-lg font-medium ${
+            activeTab === "wallets" 
+              ? "text-purple-500 border-b-2 border-purple-500" 
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("wallets")}
+        >
+          Wallets
+        </button>
+        {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "passkey" 
               ? "text-purple-500 border-b-2 border-purple-500" 
@@ -317,7 +319,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           onClick={() => setActiveTab("passkey")}
         >
           Passkey
-        </button>
+        </button> */}
       </div>
       
       {/* Error Message */}
@@ -402,7 +404,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
       )}
       
       {/* Passkey Options */}
-      {activeTab === "passkey" && (
+      {/* {activeTab === "passkey" && (
         <div className="text-center p-4">
           <div className="h-16 w-16 mx-auto mb-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -429,7 +431,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
             </span>
           </button>
         </div>
-      )}
+      )} */}
       
       <div className="mt-8 text-center text-xs text-gray-500">
         By continuing, you agree to our Terms of Service and Privacy Policy
