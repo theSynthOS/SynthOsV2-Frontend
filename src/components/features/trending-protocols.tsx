@@ -18,15 +18,15 @@ export default function TrendingProtocols() {
   const [showFilter, setShowFilter] = useState(false)
   
   const trendingProtocols = [
-    { id: "aave", name: "AAVE", pair: 'GHO', type: 'supply', apy: 6.13, tvl: "$1.1B", logo: "/aave.png", isUp: true, change: 1.27, riskScore: 2 },
-    { id: "fx", name: "FX", pair: 'USDT', type: 'supply', apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png", isUp: true,  riskScore: 3 },
-    { id: "quill", name: "Quill Finance", pair: 'ETH', type: 'earn', apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true,  riskScore: 4 },
-    { id: "fx", name: "FX ", pair: 'FXS', type: 'supply', apy: 5.45, tvl: "$892M", logo: "/compound.png", isUp: true,  riskScore: 2 },
-    { id: "quill", name: "Quill Finance", pair: 'wstETH', type: 'earn', apy: 33.19, tvl: "$262M", logo: "/quill-finance-logo.png", isUp: true,  riskScore: 9 },
-    { id: "aave", name: "AAVE", pair: 'GHO', type: 'supply', apy: 1.13, tvl: "$1.1B", logo: "/aave.png", isUp: false,  riskScore: 1 },
-    { id: "ambient", name: "Ambient", pair: 'USDC/USDT', type: 'vault', apy: 2.19, tvl: "$487k", logo: "/ambient.png", isUp: true,  riskScore: 2 },
-    { id: "ambient", name: "Ambient", pair: 'SCR/ETH', type: 'vault', apy: 27.98, tvl: "$15.06k", logo: "/ambient.png", isUp: true,  riskScore: 10 },
-    { id: "ambient", name: "Ambient", pair: 'wstETH/wrsWTH', type: 'vault', apy: 3.45, tvl: "$15.92k", logo: "/ambient.png", isUp: true,  riskScore: 5 },
+    { id: "fx", name: "FX", pair: 'USDT', type: 'supply', apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png",  riskScore: 3 },
+    { id: "quill", name: "Quill Finance", pair: 'ETH', type: 'earn', apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 4 },
+    { id: "fx", name: "FX ", pair: 'FXS', type: 'supply', apy: 5.45, tvl: "$892M", logo: "/compound.png", riskScore: 2 },
+    { id: "quill", name: "Quill Finance", pair: 'wstETH', type: 'earn', apy: 33.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 9 },
+    { id: "aave", name: "AAVE", pair: 'GHO/USDT', type: 'supply', apy: 1.13, tvl: "$1.1B", logo: "/aave.png",  riskScore: 1 },
+    { id: "ambient", name: "Ambient", pair: 'USDC/USDT', type: 'vault', apy: 2.19, tvl: "$487k", logo: "/ambient.png", riskScore: 2 },
+    { id: "ambient", name: "Ambient", pair: 'SCR/ETH', type: 'vault', apy: 27.98, tvl: "$15.06k", logo: "/ambient.png", riskScore: 10 },
+    { id: "ambient", name: "Ambient", pair: 'wstETH/wrsWTH', type: 'vault', apy: 3.45, tvl: "$15.92k", logo: "/ambient.png", riskScore: 5 },
+    { id: "aave", name: "AAVE", pair: 'GHO', type: 'supply', apy: 6.13, tvl: "$1.1B", logo: "/aave.png", riskScore: 2 },
   ]
 
   const getRiskCategory = (score: number) => {
