@@ -27,7 +27,17 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   // Set mounted state once hydration is complete
   useEffect(() => {
     setMounted(true)
-  }, [])
+    
+    // Prevent background scrolling when modal is open
+    if (pool) {
+      document.body.style.overflow = 'hidden'
+    }
+    
+    // Re-enable scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = 'auto'
+    }
+  }, [pool])
 
   // Update input when slider changes
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,8 +86,11 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   if (!mounted || !pool) return null
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4`}>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div 
+        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
         <div className="mb-6">
           <div className="flex justify-between text-sm mb-2">
@@ -138,7 +151,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pb-2">
           <button
             onClick={onClose}
             className={`flex-1 ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'} font-semibold py-3 rounded-lg`}

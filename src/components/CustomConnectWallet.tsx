@@ -47,7 +47,7 @@ export default function ConnectWalletButton() {
       {/* Connect Wallet Button */}
       <button 
         onClick={openModal}
-        className="bg-green-700 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
+        className="bg-green-600 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
       >
         {isAuthenticated && address 
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -65,7 +65,7 @@ export default function ConnectWalletButton() {
           ></div>
           
           {/* Modal Content */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up">
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up max-h-[90vh] overflow-hidden">
             {/* Drag Handle */}
             <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
             
@@ -78,7 +78,9 @@ export default function ConnectWalletButton() {
             </button>
             
             {/* Wallet Connection UI */}
-            <WalletConnectionUI onClose={closeModal} />
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 40px)' }}>
+              <WalletConnectionUI onClose={closeModal} />
+            </div>
           </div>
         </div>
       )}
@@ -279,15 +281,14 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="p-6 w-full max-w-md mx-auto text-black">
+    <div className="p-6 w-full max-w-md mx-auto text-black pb-8">
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-2">Connect to Continue</h2>
-        <p className="text-gray-500 text-lg">Choose your preferred authentication method</p>
       </div>
       
       {/* Tabs */}
-      <div className="flex mb-6 border-b">
+      <div className="flex mb-6">
         
         <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
@@ -353,7 +354,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={wallet.id}
               onClick={() => handleConnectWallet(wallet.id)}
               disabled={isConnecting && currentWallet === wallet.id}
-              className={`flex items-center justify-between w-full p-4 bg-green-100/50 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20  rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
               }`}
             >
@@ -382,7 +383,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={option.id}
               onClick={() => handleConnectWithSocial(option.id)}
               disabled={isConnecting && currentAuth === option.id}
-              className={`flex items-center justify-between w-full p-4 bg-green-100/50 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20 rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentAuth !== option.id ? "opacity-50" : ""
               }`}
             >
@@ -390,7 +391,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
                 <div className="w-8 h-8 flex items-center justify-center mr-3">
                   {option.icon}
                 </div>
-                <span className="text-lg font-medium">Continue with {option.name}</span>
+                <span className="text-lg font-medium">{option.name}</span>
               </div>
               
               {isConnecting && currentAuth === option.id ? (
