@@ -66,25 +66,105 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
     setMounted(true)
     
     if (pool) {
-      // Save current body styles
-      const originalStyle = window.getComputedStyle(document.body)
-      const originalOverflow = originalStyle.overflow
+      // Save current body styles and position
+      const scrollY = window.scrollY
+      const originalStyle = {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        width: document.body.style.width,
+        height: document.body.style.height
+      }
       
       // Prevent background scrolling and interactions
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
       document.body.style.width = '100%'
       document.body.style.height = '100%'
       
       return () => {
         // Restore original body styles
-        document.body.style.overflow = originalOverflow
-        document.body.style.position = ''
-        document.body.style.width = ''
-        document.body.style.height = ''
+        document.body.style.overflow = originalStyle.overflow
+        document.body.style.position = originalStyle.position
+        document.body.style.top = originalStyle.top
+        document.body.style.width = originalStyle.width
+        document.body.style.height = originalStyle.height
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollY)
       }
     }
   }, [pool])
+
+  // Prevent touchmove events from propagating to body
+  useEffect(() => {
+    const preventTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      
+      // Check if we're inside the modal content
+      if (modalRef.current && modalRef.current.contains(target)) {
+        // Allow scrolling within scrollable elements inside the modal
+        const isScrollable = (el: HTMLElement) => {
+          // Check if the element has a scrollbar
+          const hasScrollableContent = el.scrollHeight > el.clientHeight
+          // Get the computed overflow-y style
+          const overflowYStyle = window.getComputedStyle(el).overflowY
+          // Check if overflow is set to something scrollable
+          const isOverflowScrollable = ['scroll', 'auto'].includes(overflowYStyle)
+          
+          return hasScrollableContent && isOverflowScrollable
+        }
+        
+        // Find if we're inside a scrollable container
+        let scrollableParent = target
+        while (scrollableParent && modalRef.current.contains(scrollableParent)) {
+          if (isScrollable(scrollableParent)) {
+            // If we're at the top or bottom edge of the scrollable container, prevent default behavior
+            const atTop = scrollableParent.scrollTop <= 0
+            const atBottom = scrollableParent.scrollHeight - scrollableParent.scrollTop <= scrollableParent.clientHeight + 1
+            
+            // Check scroll direction using touch position
+            if (e.touches.length > 0) {
+              const touch = e.touches[0]
+              const touchY = touch.clientY
+              
+              // Store the last touch position
+              const lastTouchY = scrollableParent.getAttribute('data-last-touch-y')
+              scrollableParent.setAttribute('data-last-touch-y', touchY.toString())
+              
+              if (lastTouchY) {
+                const touchDelta = touchY - parseFloat(lastTouchY)
+                const scrollingUp = touchDelta > 0
+                const scrollingDown = touchDelta < 0
+                
+                // Only prevent default if trying to scroll past the edges
+                if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
+                  e.preventDefault()
+                }
+                
+                // Allow scrolling within the container
+                return
+              }
+            }
+            return
+          }
+          scrollableParent = scrollableParent.parentElement as HTMLElement
+        }
+        
+        // If we're not in a scrollable container within the modal, prevent default
+        e.preventDefault()
+      }
+    }
+    
+    // Add the touchmove listener
+    document.addEventListener('touchmove', preventTouchMove, { passive: false })
+    
+    return () => {
+      // Remove the touchmove listener
+      document.removeEventListener('touchmove', preventTouchMove)
+    }
+  }, [])
 
   // Handle radial progress update
   const handleRadialProgressUpdate = (progressPercentage: number) => {
@@ -139,18 +219,18 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
 
   return (
     <div 
-      ref={modalRef}
       className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden" 
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div 
+        ref={modalRef}
         className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
-          rounded-lg w-full max-w-md p-4 overflow-y-auto max-h-[90vh] relative isolate`}
+          rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
+        <h3 className="text-2xl font-bold mb-4">Deposit to {pool.name}</h3>
         
-        <div className="flex flex-col space-y-6">
+        <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Input and Circle Section */}
           <div>
             {/* Radial progress bar */}
@@ -178,47 +258,37 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
               <span className={theme === 'dark' ? 'text-white' : 'text-black'}>${yearlyYield.toFixed(2)}</span>
             </div>
           </div>
+        </div>
 
-          {/* For testing - uncomment to test balance changes */}
-          {/* <div className="mb-4">
-            <button 
-              onClick={() => setMaxBalance(prev => prev === 1000 ? 2000 : 1000)}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Toggle Max Balance ({maxBalance})
-            </button>
-          </div> */}
-
-          {/* Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              className={`flex-1 font-semibold py-3 rounded-lg relative ${
-                isSubmitting 
-                  ? "bg-gray-300 text-gray-500" 
-                  : "bg-green-400 text-black"
-              }`}
-              disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
-              onClick={handleConfirmDeposit}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="opacity-0">Confirm Deposit</span>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
-                  </div>
-                </>
-              ) : (
-                "Confirm Deposit"
-              )}
-            </button>
-          </div>
+        {/* Buttons - Fixed at the bottom */}
+        <div className="mt-4 flex gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={handleClose}
+            className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            className={`flex-1 font-semibold py-3 rounded-lg relative ${
+              isSubmitting 
+                ? "bg-gray-300 text-gray-500" 
+                : "bg-green-400 text-black"
+            }`}
+            disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
+            onClick={handleConfirmDeposit}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="opacity-0">Confirm Deposit</span>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+                </div>
+              </>
+            ) : (
+              "Confirm Deposit"
+            )}
+          </button>
         </div>
       </div>
     </div>
