@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast"
 import { CheckCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar"
-import '@/components/circular-progress-bar/styles.css'
 
 interface DepositModalProps {
   pool: {
@@ -21,11 +20,39 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0")
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [maxBalance, setMaxBalance] = useState(100)
   const { toast } = useToast()
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
-  const maxBalance = 1000 // Example max balance, would come from user's wallet in real app
+  
+  // Keep track of the previous maxBalance value to handle transitions
+  const prevMaxBalanceRef = useRef(maxBalance)
+
+  // For demo purposes - simulate balance changes
+  // useEffect(() => {
+  //   // Uncomment this to test balance changes
+  //    const timer = setTimeout(() => {
+  //      setMaxBalance(prev => prev === 1000 ? 2000 : 1000);
+  //    }, 5000);
+  //    return () => clearTimeout(timer);
+  // }, [maxBalance]);
+
+  // Handle maxBalance updates while maintaining the percentage
+  useEffect(() => {
+    if (pool) {
+      if (prevMaxBalanceRef.current !== maxBalance) {
+        // Store the previous maxBalance
+        prevMaxBalanceRef.current = maxBalance
+        
+        // The slider value (percentage) should remain the same
+        // Only the absolute amount needs to be recalculated
+        const currentPercentage = sliderValue
+        const newAmount = ((currentPercentage / 100) * maxBalance).toFixed(2)
+        setAmount(newAmount)
+      }
+    }
+  }, [maxBalance, pool, sliderValue])
 
   // Handle modal close and reset values
   const handleClose = () => {
@@ -34,37 +61,36 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
     onClose()
   }
 
-  // Set mounted state once hydration is complete and handle touch events
+  // Set mounted state and handle scroll lock
   useEffect(() => {
     setMounted(true)
     
-    // Prevent background scrolling when modal is open
     if (pool) {
+      // Save current body styles
+      const originalStyle = window.getComputedStyle(document.body)
+      const originalOverflow = originalStyle.overflow
+      
+      // Prevent background scrolling and interactions
       document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
       
-      // Add touch event listeners with passive: false
-      const preventTouch = (e: TouchEvent) => {
-        e.preventDefault()
-      }
-      
-      document.addEventListener('touchmove', preventTouch, { passive: false })
-      
-      // Clean up
       return () => {
-        document.body.style.overflow = 'auto'
-        document.removeEventListener('touchmove', preventTouch)
+        // Restore original body styles
+        document.body.style.overflow = originalOverflow
+        document.body.style.position = ''
+        document.body.style.width = ''
+        document.body.style.height = ''
       }
     }
   }, [pool])
 
-  // Update slider when input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setAmount(value)
-    const numValue = Number.parseFloat(value) || 0
-    // Ensure we don't exceed maxBalance
-    const limitedValue = Math.min(numValue, maxBalance)
-    setSliderValue((limitedValue / maxBalance) * 100)
+  // Handle radial progress update
+  const handleRadialProgressUpdate = (progressPercentage: number) => {
+    setSliderValue(progressPercentage)
+    const calculatedAmount = ((progressPercentage / 100) * maxBalance).toFixed(2)
+    setAmount(calculatedAmount)
   }
 
   // Calculate estimated yearly yield
@@ -105,18 +131,6 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
     }, 1000)
   }
 
-  // Handle radial progress update
-  const handleRadialProgressUpdate = (progressPercentage: number) => {
-    setSliderValue(progressPercentage)
-    const calculatedAmount = ((progressPercentage / 100) * maxBalance).toFixed(2)
-    setAmount(calculatedAmount)
-  }
-
-  // Watch for changes in the sliderValue
-  useEffect(() => {
-    // This effect is intentionally empty as we're just syncing the values in the UI
-  }, [sliderValue])
-
   // If theme isn't loaded yet or no pool selected, return nothing
   if (!mounted || !pool) return null
 
@@ -126,12 +140,12 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" 
+      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden" 
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div 
         className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
-          rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain touch-none`}
+          rounded-lg w-full max-w-md p-4 overflow-y-auto max-h-[90vh] relative isolate`}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
@@ -140,7 +154,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
           {/* Input and Circle Section */}
           <div>
             {/* Radial progress bar */}
-            <div className="flex flex-col items-center touch-none">
+            <div className="flex flex-col items-center">
               <RadialProgressBar 
                 initialAngle={initialAngle} 
                 maxBalance={maxBalance}
@@ -164,6 +178,16 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
               <span className={theme === 'dark' ? 'text-white' : 'text-black'}>${yearlyYield.toFixed(2)}</span>
             </div>
           </div>
+
+          {/* For testing - uncomment to test balance changes */}
+          {/* <div className="mb-4">
+            <button 
+              onClick={() => setMaxBalance(prev => prev === 1000 ? 2000 : 1000)}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Toggle Max Balance ({maxBalance})
+            </button>
+          </div> */}
 
           {/* Buttons */}
           <div className="flex gap-3">

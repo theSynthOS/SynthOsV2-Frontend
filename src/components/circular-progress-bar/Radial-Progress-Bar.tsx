@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { useDraggable } from './useDraggable';
+// Remove CSS import since we're using Tailwind classes
+// import './styles.css';
 
 interface RadialProgressBarProps {
-    initialAngle: number;
+    initialAngle: number; // 0-1 range from parent
     maxBalance: number;
-    onAngleChange?: (angle: number) => void;
+    onAngleChange?: (percentage: number) => void; // Calls back with 0-100 percentage
 }
 
 export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({ 
@@ -12,8 +14,12 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     maxBalance,
     onAngleChange 
 }) => {
+    // Keep track of the current angle internally
+    const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
+    
+    
     const [draggbleRef, dx, dy, angle] = useDraggable({
-        initialAngle,
+        initialAngle: currentAngle,
     });
 
     // Call the onAngleChange callback when angle changes
@@ -31,20 +37,19 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 
     return (
         <div 
-            className="radial-progress-bar"
+            className="rounded-full overflow-hidden relative h-48 w-48"
             style={{
-                background: `conic-gradient(#4ADE80 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`
+                background: `conic-gradient(rgb(86, 252, 150) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`
             }}
         >
-            <div className="radial-progress-bar__overlay" />
+            <div className="rounded-full bg-white absolute inset-4" />
 
-            <div className="radial-progress-bar__circle">
+            <div className="absolute inset-2 flex items-center justify-center">
                 <div
-                    className="draggable"
+                    className="bg-[rgb(0,105,32)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none"
                     ref={draggbleRef}
                     style={{
                         transform: `translate(${dx}px, ${dy}px)`,
-                        zIndex: 9999,
                     }}
                 />
                 <span className="text-xl font-bold">${amount}</span>

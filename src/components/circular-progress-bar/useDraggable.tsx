@@ -23,10 +23,14 @@ export const useDraggable = ({ initialAngle }: DraggableOptions): DraggableRetur
         if (node) setNode(node);
     }, []);
 
+    // This effect will run when initialAngle changes OR when the node is set
     React.useEffect(() => {
         if (!node) {
             return;
         }
+        // Update angle state with the new initialAngle
+        setAngle(initialAngle);
+        
         const width = node.getBoundingClientRect().width;
         const containerWidth = node.parentElement?.getBoundingClientRect().width || 0;
         const radius = containerWidth / 2;
