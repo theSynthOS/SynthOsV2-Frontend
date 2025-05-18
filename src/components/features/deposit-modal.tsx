@@ -88,20 +88,11 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div 
-        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain`}
+        className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} rounded-lg w-full max-w-md p-4 max-h-[90vh] overflow-y-auto overscroll-contain touch-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold mb-6">Deposit to {pool.name}</h3>
         <div className="mb-6">
-          <div className="flex justify-between text-sm mb-2">
-            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Current APY</span>
-            <span className="text-green-400">{pool.apy}%</span>
-          </div>
-          <div className="flex justify-between text-sm mb-4">
-            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Risk Level</span>
-            <span className={theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}>{pool.risk}</span>
-          </div>
-
           <div className="mb-6">
             <label className={`block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Amount to Deposit</label>
             <div className="relative">
@@ -117,15 +108,20 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
             </div>
 
             {/* Slider */}
-            <div className="mt-4 px-1">
+            <div className="mt-4 px-1 touch-auto">
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={sliderValue}
                 onChange={handleSliderChange}
-                className={`w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'} rounded-lg appearance-none cursor-pointer accent-green-400`}
+                className={`w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'} rounded-lg appearance-none cursor-pointer accent-green-400 touch-action-manipulation`}
                 disabled={isSubmitting}
+                style={{ 
+                  WebkitAppearance: 'none', 
+                  touchAction: 'manipulation',
+                  appearance: 'none'
+                }}
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
                 <span>0%</span>
