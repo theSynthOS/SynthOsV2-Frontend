@@ -20,7 +20,7 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0")
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [maxBalance, setMaxBalance] = useState(100)
+  const [maxBalance, setMaxBalance] = useState(1000)
   const { toast } = useToast()
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
