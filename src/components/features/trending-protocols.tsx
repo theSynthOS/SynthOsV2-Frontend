@@ -1,6 +1,6 @@
 "use client"
 
-import { Flame } from "lucide-react"
+import { Flame, Filter, ArrowUpDown } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useState } from "react"
@@ -9,6 +9,8 @@ import DepositModal from "./deposit-modal"
 export default function TrendingProtocols() {
   const { theme } = useTheme()
   const [selectedPool, setSelectedPool] = useState<any>(null)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [showFilter, setShowFilter] = useState(false)
   
   const trendingProtocols = [
     { id: "aave", name: "AAVE", apy: 6.13, tvl: "$1.1B", logo: "/aave.png", isUp: true, change: 1.27, riskScore: 2 },
@@ -47,21 +49,79 @@ export default function TrendingProtocols() {
     })
   }
 
+  const sortedProtocols = [...trendingProtocols].sort((a, b) => {
+    if (sortOrder === 'asc') {
+      return a.riskScore - b.riskScore;
+    } else {
+      return b.riskScore - a.riskScore;
+    }
+  });
+
   return (
     <>
       <div className="px-4 py-6">
-        <div className="flex items-center mb-6">
-          <Flame className={`w-5 h-5 mr-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
-          <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Protocol Lists</h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Flame className={`w-5 h-5 mr-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
+            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Protocol Lists</h2>
+          </div>
+          <div className="relative z-50">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className={`flex items-center px-4 py-2 rounded-lg ${
+                theme === 'dark' 
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-black'
+              } transition-colors duration-200`}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Sort by Risk
+              <ArrowUpDown className="w-4 h-4 ml-2" />
+            </button>
+            {showFilter && (
+              <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              } border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setSortOrder('asc')
+                      setShowFilter(false)
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      sortOrder === 'asc'
+                        ? (theme === 'dark' ? 'text-white bg-gray-700' : 'text-black bg-gray-100')
+                        : (theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100')
+                    }`}
+                  >
+                    Low to High Risk
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortOrder('desc')
+                      setShowFilter(false)
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      sortOrder === 'desc'
+                        ? (theme === 'dark' ? 'text-white bg-gray-700' : 'text-black bg-gray-100')
+                        : (theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100')
+                    }`}
+                  >
+                    High to Low Risk
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="space-y-4">
-          {trendingProtocols.map((protocol) => (
+          {sortedProtocols.map((protocol) => (
             <div 
               key={protocol.id}
               className={`flex flex-col cursor-pointer ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-[20vh]`}
               onClick={() => handleProtocolClick(protocol)}
             >
-              <div className={`absolute top-4 right-4 text-lg font-semibold ${getRiskColor(protocol.riskScore)}`}>
+              <div className={`absolute top-4 right-4 text-xl font-semibold ${getRiskColor(protocol.riskScore)}`}>
                 Risk: {protocol.riskScore}
               </div>
               <div className="flex items-center mb-4">
