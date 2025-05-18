@@ -14,7 +14,7 @@ interface SendModalProps {
 
 export default function SendModal({ isOpen, onClose, isAuthenticated, address }: SendModalProps) {
   const [isClosing, setIsClosing] = useState(false);
-  const [step, setStep] = useState(1); // Step 1: Amount, Step 2: Recipient
+  const [step, setStep] = useState(1); 
   const [amount, setAmount] = useState('0');
   const [recipientAddress, setRecipientAddress] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -23,10 +23,25 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
   const { toast } = useToast();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(0);
 
   // Set mounted state once hydration is complete
   useEffect(() => {
     setMounted(true);
+    
+    // Check if the device is mobile and update window height
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setWindowHeight(window.innerHeight);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
   
   // Control body scrolling based on modal open state
@@ -143,6 +158,14 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
   // If theme isn't loaded yet or modal not open, return nothing
   if (!mounted || !isOpen) return null;
 
+  // Calculate dynamic styles based on device height
+  const isSmallHeight = windowHeight < 700;
+  const modalMaxHeight = isSmallHeight ? '95vh' : '90vh';
+  const amountFontSize = isMobile ? (isSmallHeight ? 'text-5xl' : 'text-6xl') : 'text-7xl';
+  const keypadGap = isMobile ? (isSmallHeight ? 'gap-2' : 'gap-3') : 'gap-6';
+  const keypadFontSize = isMobile ? (isSmallHeight ? 'text-xl' : 'text-2xl') : 'text-3xl';
+  const sectionSpacing = isMobile ? (isSmallHeight ? 'mb-3' : 'mb-4') : 'mb-8';
+
   return (
     <div className="fixed inset-0 z-50 touch-none" onClick={handleClose}>
       {/* Backdrop */}
@@ -153,35 +176,40 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
       
       {/* Modal Content */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} max-h-[90%] z-50`}
+        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} z-50 overflow-hidden flex flex-col`}
+        style={{ maxHeight: modalMaxHeight }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
-        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-4`}></div>
+        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-3`}></div>
         
         {/* Close Button */}
         <button 
           onClick={handleClose} 
-          className={`absolute top-4 right-4 p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+          className={`absolute top-3 right-3 p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
         >
-          <X className="h-6 w-6" />
+          <X className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
         </button>
         
+        {/* Modal Header */}
+        <h2 className={`text-${isMobile ? 'xl' : '2xl'} font-bold text-center mt-2 mb-3`}>Send</h2>
+        
         {/* Modal Content - Scrollable Area */}
-        <div className="p-6 pb-28 overflow-y-auto overscroll-contain" style={{ maxHeight: 'calc(90% - 40px)' }}>
-          <h2 className="text-2xl font-bold mb-6 text-center">Send</h2>
-          
+        <div 
+          className={`px-4 pb-safe overflow-y-auto overscroll-contain flex-1`}
+          style={{ paddingBottom: isMobile ? '6rem' : '8rem' }}
+        >
           {!isAuthenticated ? (
-            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
               <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
                 Connect your wallet to send funds.
               </p>
               <ConnectWalletButton />
             </div>
           ) : showScanner ? (
-            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-6 text-center`}>
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
               <div className="mb-4">
-                <div className="w-full h-64 bg-black rounded-lg flex items-center justify-center mb-4">
+                <div className="w-full h-48 bg-black rounded-lg flex items-center justify-center mb-4">
                   <div className="text-white">Scanning QR Code...</div>
                 </div>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -198,52 +226,52 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
           ) : step === 1 ? (
             <div className="flex flex-col items-center">
               {/* Asset Selector */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full px-6 py-2 mb-8`}>
-                <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Balance: ${balance}</span>
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full px-4 py-1.5 ${sectionSpacing}`}>
+                <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${isMobile ? 'text-sm' : ''}`}>Balance: ${balance}</span>
               </div>
               
               {/* Amount Display */}
-              <div className="text-center mb-8">
-                <div className={`text-7xl font-light ${amount !== '0' ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-300')}`}>
+              <div className={`text-center ${sectionSpacing}`}>
+                <div className={`${amountFontSize} font-light ${amount !== '0' ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-300')}`}>
                   ${amount}
                 </div>
               </div>
               
               {/* Percentage Buttons */}
-              <div className="flex justify-between w-full mb-8 gap-2">
+              <div className={`flex justify-between w-full ${sectionSpacing} gap-2`}>
                 <button 
                   onClick={() => handlePercentage(10)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 text-center font-medium`}
+                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
                 >
                   10%
                 </button>
                 <button 
                   onClick={() => handlePercentage(25)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 text-center font-medium`}
+                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
                 >
                   25%
                 </button>
                 <button 
                   onClick={() => handlePercentage(50)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 text-center font-medium`}
+                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
                 >
                   50%
                 </button>
                 <button 
                   onClick={() => handlePercentage(100)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 text-center font-medium`}
+                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
                 >
                   MAX
                 </button>
               </div>
               
-              {/* Numeric Keypad */}
-              <div className="grid grid-cols-3 gap-6 w-full mb-8">
+              {/* Numeric Keypad - Fixed at the bottom */}
+              <div className={`grid grid-cols-3 ${keypadGap} w-full ${sectionSpacing} ${isSmallHeight ? 'mt-1' : ''}`}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num, index) => (
                   <button
                     key={index}
                     onClick={() => handleNumberPress(num.toString())}
-                    className="text-3xl font-medium text-center py-2"
+                    className={`${keypadFontSize} font-medium text-center py-1`}
                   >
                     {num}
                   </button>
@@ -252,7 +280,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
                   onClick={handleDelete}
                   className="flex items-center justify-center"
                 >
-                  <Delete className="h-6 w-6" />
+                  <Delete className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
                 </button>
               </div>
               
@@ -260,37 +288,37 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               <button 
                 onClick={handleNextStep}
                 disabled={parseFloat(amount) <= 0}
-                className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-4 px-6 flex items-center justify-between mb-8`}
+                className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 px-4 flex items-center justify-between ${sectionSpacing}`}
               >
                 <div className="w-6"></div> {/* Spacer for alignment */}
                 <div className="text-center flex-1">
                   Next 
                 </div>
                 <div className="flex items-center">
-                  <ChevronRight className={`h-6 w-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <ChevronRight className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                 </div>
               </button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Back Button */}
               <button 
                 onClick={handlePreviousStep}
-                className={`flex items-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}
+                className={`flex items-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-2`}
               >
-                <ArrowLeft className="h-5 w-5 mr-1" />
-                <span>Back</span>
+                <ArrowLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} mr-1`} />
+                <span className={`${isMobile ? 'text-sm' : ''}`}>Back</span>
               </button>
               
               {/* Amount Summary */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 mb-6`}>
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-3 mb-4`}>
                 <div className="flex justify-between items-center">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Amount</span>
+                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-sm' : ''}`}>Amount</span>
                   <div className="flex items-center">
-                    <span className="font-medium">${amount}</span>
+                    <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>${amount}</span>
                     <button 
                       onClick={handlePreviousStep} 
-                      className="ml-2 text-blue-500 text-sm"
+                      className={`ml-2 text-blue-500 ${isMobile ? 'text-xs' : 'text-sm'}`}
                     >
                       Edit
                     </button>
@@ -301,7 +329,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               {/* Recipient Address */}
               <div>
                 <div className='flex'>
-                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                <label className={`block ${isMobile ? 'text-xs' : 'text-sm'} font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Recipient Address
                 </label>
                 <p className='text-red-500'>*</p>
@@ -310,48 +338,48 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
                   <input 
                     type="text" 
                     placeholder="0x123...45AB5" 
-                    className={`flex-1 p-3 ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} rounded-l-lg`}
+                    className={`flex-1 p-2 ${isMobile ? 'text-sm' : ''} ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} rounded-l-lg`}
                     value={recipientAddress}
                     onChange={(e) => setRecipientAddress(e.target.value)}
                     required
                   />
                   <button 
                     onClick={handleScanClick}
-                    className={`${theme === 'dark' ? 'bg-gray-700 border-gray-700' : 'bg-gray-100 border-gray-300'} p-3 border border-l-0 rounded-r-lg`}
+                    className={`${theme === 'dark' ? 'bg-gray-700 border-gray-700' : 'bg-gray-100 border-gray-300'} p-2 border border-l-0 rounded-r-lg`}
                   >
-                    <Scan className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <Scan className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                   </button>
                 </div>
               </div>
               
               {/* Network Fee */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg p-4`}>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Network Fee</span>
-                  <span className="font-medium">~0.0001 ETH</span>
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg p-3 mt-4`}>
+                <div className="flex justify-between mb-2">
+                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Network Fee</span>
+                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>~0.0001 ETH</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Estimated Total</span>
-                  <span className="font-medium">${(parseFloat(amount) + 0.01).toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Estimated Total</span>
+                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>${(parseFloat(amount) + 0.01).toFixed(2)}</span>
                 </div>
               </div>
               
               {/* Chain Information */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 mb-6`}>
-                <div className="flex justify-between text-sm">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Network</span>
-                  <span className="font-medium">Scroll Sepolia</span>
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-3 mt-4`}>
+                <div className="flex justify-between">
+                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Network</span>
+                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Scroll Sepolia</span>
                 </div>
               </div>
               
               {/* Send Button */}
               <button 
-                className={`mt-4 w-full bg-green-600 text-white py-3 px-4 rounded-lg flex items-center justify-center disabled:bg-green-400 mb-8`}
+                className={`mt-4 w-full bg-green-600 text-white py-2.5 px-4 rounded-lg flex items-center justify-center disabled:bg-green-400 mb-4`}
                 disabled={!recipientAddress || parseFloat(amount) <= 0 || isSending}
                 onClick={handleSend}
               >
-                <span className="mr-2">{isSending ? 'Sending...' : 'Send'}</span>
-                {!isSending && <ArrowRight className="h-4 w-4" />}
+                <span className={`mr-2 ${isMobile ? 'text-sm' : ''}`}>{isSending ? 'Sending...' : 'Send'}</span>
+                {!isSending && <ArrowRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />}
               </button>
             </div>
           )}
