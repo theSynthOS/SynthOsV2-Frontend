@@ -109,9 +109,9 @@ export default function TrendingProtocols() {
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all) return "All Risks";
-    if (riskFilters.low) return "Low Risk";
-    if (riskFilters.medium) return "Medium Risk";
-    if (riskFilters.high) return "High Risk";
+    if (riskFilters.low) return "Low";
+    if (riskFilters.medium) return "Medium";
+    if (riskFilters.high) return "High";
     return "No Filter"; // Fallback, shouldn't happen
     
   }
@@ -180,7 +180,7 @@ export default function TrendingProtocols() {
                         }`}>
                           {riskFilters.low && <Check className="w-3 h-3 text-white" />}
                         </div>
-                        Low Risk (1-3)
+                        Low
                       </span>
                     </button>
                     <button
@@ -197,7 +197,7 @@ export default function TrendingProtocols() {
                         }`}>
                           {riskFilters.medium && <Check className="w-3 h-3 text-white" />}
                         </div>
-                        Medium Risk (4-7)
+                        Medium
                       </span>
                     </button>
                     <button
@@ -214,7 +214,7 @@ export default function TrendingProtocols() {
                         }`}>
                           {riskFilters.high && <Check className="w-3 h-3 text-white" />}
                         </div>
-                        High Risk (8-10)
+                        High
                       </span>
                     </button>
                   </div>
