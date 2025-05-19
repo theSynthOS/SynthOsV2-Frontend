@@ -3,6 +3,7 @@ import { X, Copy, Check } from 'lucide-react';
 import ConnectWalletButton from '../CustomConnectWallet';
 import QRCode from 'react-qr-code';
 import { useTheme } from 'next-themes';
+import Image from 'next/image';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
   const [isMobile, setIsMobile] = useState(false);
   const [windowHeight, setWindowHeight] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -71,6 +73,22 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
       };
     }
   }, [isOpen]);
+
+  // Ensure content is scrollable after modal opens
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      // Force a reflow to ensure scroll detection works properly
+      setTimeout(() => {
+        if (contentRef.current) {
+          const isScrollable = contentRef.current.scrollHeight > contentRef.current.clientHeight;
+          if (isScrollable) {
+            // Add a class to indicate scrollability for visual feedback if needed
+            contentRef.current.classList.add('is-scrollable');
+          }
+        }
+      }, 100);
+    }
+  }, [isOpen, address, isAuthenticated]);
 
   // Prevent touchmove events from propagating to body
   useEffect(() => {
@@ -150,10 +168,13 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
 
   // Calculate dynamic styles based on device height
   const isSmallHeight = windowHeight < 700;
-  const modalMaxHeight = isSmallHeight ? '95vh' : '90vh';
+  const modalMaxHeight = isSmallHeight ? '92vh' : '85vh';
   const contentPadding = isMobile ? (isSmallHeight ? 'p-3' : 'p-4') : 'p-6';
   const headingSize = isMobile ? (isSmallHeight ? 'text-lg' : 'text-xl') : 'text-2xl';
   const qrSize = isMobile ? (isSmallHeight ? 130 : 150) : 180;
+  
+  // Calculate logo size based on QR code size
+  const logoSize = Math.floor(qrSize * 0.40);
 
   return (
     <div className="fixed inset-0 z-50" onClick={handleClose}>
@@ -182,14 +203,16 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
         </button>
         
         {/* Fixed Header */}
-        <h2 className={`${headingSize} font-bold px-6 pt-1 pb-3 flex-shrink-0 text-center mt-1`}>Deposit Funds</h2>
+        <h2 className={`${headingSize} font-bold px-6 pt-1 pb-2 flex-shrink-0 text-center`}>Deposit Funds</h2>
         
         {/* Modal Content - Scrollable Area */}
         <div 
-          className="px-4 overflow-y-auto flex-grow overscroll-contain scrollbar-hide"
+          ref={contentRef}
+          className="px-4 flex-grow overflow-y-auto overscroll-contain scrollbar-hide touch-auto"
           style={{ 
             WebkitOverflowScrolling: 'touch',
-            paddingBottom: isMobile ? '4rem' : '6rem'
+            paddingBottom: isMobile ? '6rem' : '8rem',
+            minHeight: '100px', // Ensure there's enough height to trigger scrolling
           }}
         >
           {!isAuthenticated ? (
@@ -224,16 +247,42 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                   </button>
                 </div>
                 
-                {/* QR Code */}
+                {/* QR Code with Logo Overlay */}
                 <div className="flex justify-center mb-3">
                   {address ? (
-                    <div className={`bg-white ${isMobile ? 'p-2' : 'p-3'} rounded-lg`}>
+                    <div className={`bg-white ${isMobile ? 'p-2' : 'p-3'} rounded-lg relative`}>
                       <QRCode 
                         value={address} 
                         size={qrSize}
-                        level="H"
+                        level="H" // Use high error correction to allow for logo placement
                         className="mx-auto"
                       />
+                      {/* Logo Overlay */}
+                      <div 
+                        className="absolute" 
+                        style={{
+                          top: '50%', 
+                          left: '50%', 
+                          transform: 'translate(-50%, -50%)',
+                          width: `${logoSize}px`,
+                          height: `${logoSize}px`,
+                          background: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          padding: '1px',
+                          border: '6px solid #000000'
+                        }}
+                      >
+                        <Image
+                          src="/SynthOS-transparent.png"
+                          alt="SynthOS Logo"
+                          width={logoSize}
+                          height={logoSize}
+                          style={{ objectFit: 'contain' }}
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className={`w-[${qrSize}px] h-[${qrSize}px] ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>

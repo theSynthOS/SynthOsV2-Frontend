@@ -19,7 +19,7 @@ export default function HoldingPage() {
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState<"deposit" | "withdraw" | "send" | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
-  const [profileImage, setProfileImage] = useState<string>("/SynthOS-tranparent.png");
+  const [profileImage, setProfileImage] = useState<string>("/SynthOS-transparent.png");
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   
   // Set mounted to true on initial load to enable theme rendering

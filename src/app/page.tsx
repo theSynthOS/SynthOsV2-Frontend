@@ -24,7 +24,7 @@ export default function Home() {
   
   return (
     <div className={`flex flex-col items-center justify-center h-screen p-4 ${theme === 'dark' ? 'bg-[#0f0b22]' : 'bg-white'}`}>
-      <Image src="/SynthOS-tranparent.png" alt="SynthOS Logo" width={96} height={96} />
+      <Image src="/SynthOS-transparent.png" alt="SynthOS Logo" width={96} height={96} />
       <div className={`text-4xl font-bold  mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
         SynthOS
       </div>
