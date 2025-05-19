@@ -226,7 +226,7 @@ export default function TrendingProtocols() {
           </div>
           <div className="flex items-center py-1">
             <Flame className={`w-5 h-5 mr-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
-            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Suggested Pools</h2>
+            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Suggested Investments</h2>
           </div>
         </div>
         <div className="space-y-4">

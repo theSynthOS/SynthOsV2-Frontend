@@ -11,7 +11,27 @@ export default function Home() {
   const router = useRouter()
   const { isAuthenticated, address } = useAuth()
   const { theme } = useTheme()
+  const [balance, setBalance] = useState<string>("0.00")
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true)
   
+  // Fetch balance from backend
+  const fetchBalance = async (walletAddress: string) => {
+    try {
+      setIsLoadingBalance(true)
+      const response = await fetch(`/api/balance?address=${walletAddress}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch balance')
+      }
+      const data = await response.json()
+      setBalance(data.balance || "0.00")
+    } catch (error) {
+      console.error('Error fetching balance:', error)
+      setBalance("0.00")
+    } finally {
+      setIsLoadingBalance(false)
+    }
+  }
+
   // Redirect to root if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -19,6 +39,9 @@ export default function Home() {
       router.replace("/")
     } else {
       console.log("Authenticated on home page:", address)
+      if (address) {
+        fetchBalance(address)
+      }
     }
   }, [isAuthenticated, router, address])
 
@@ -74,7 +97,11 @@ export default function Home() {
               transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
               className="text-4xl font-bold"
             >
-              $0.00
+              {isLoadingBalance ? (
+                <span className="text-sm">Loading...</span>
+              ) : (
+                `$${balance}`
+              )}
             </motion.div>
             <motion.div 
               initial={{ opacity: 0 }}
