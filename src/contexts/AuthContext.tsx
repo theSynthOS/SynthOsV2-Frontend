@@ -19,7 +19,7 @@ type AuthData = {
 interface AuthContextType {
   isAuthenticated: boolean
   address: string | null
-  login: (address: string, walletId?: string, walletType?: string) => void
+  login: (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean) => void
   logout: () => void
 }
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Function to store auth data in localStorage
-  const login = (address: string, walletId?: string, walletType?: string) => {
+  const login = (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean) => {
     const data: AuthData = { address, walletId, walletType }
     
     // Store in state
@@ -63,11 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     console.log("Logged in with address:", address)
     
-    // Only redirect to home if not already there
-    if (window.location.pathname !== "/home") {
+    // Only redirect to home if not already there and if preventRedirect is not true
+    if (!preventRedirect && window.location.pathname !== "/home") {
       router.push("/home")
     } else {
-      console.log("Already on home page, no redirect needed")
+      console.log("Redirect prevented or already on home page, no redirect needed")
     }
   }
 

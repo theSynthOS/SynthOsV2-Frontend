@@ -32,8 +32,8 @@ export default function Navbar() {
           href="/home" 
           className={`flex flex-col items-center ${isActive('/home') ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-500' : 'text-gray-400')}`}
         >
-          <div className={`p-2 ${isActive('/home') ? 'bg-green-600/20 rounded-full' : ''}`}>
-            <Home className={`h-6 w-6 ${isActive('/home') ? 'text-green-500' : ''}`} />
+          <div className={`p-2 rounded-full ${isActive('/home') ? (theme === 'dark' ? 'bg-purple-600/20' : 'bg-green-600/20') : ''}`}>
+            <Home className={`h-6 w-6 ${isActive('/home') ? (theme === 'dark' ? 'text-purple-500' : 'text-green-500') : ''}`} />
           </div>
           <span className="text-xs mt-1">Home</span>
         </Link>
@@ -43,8 +43,8 @@ export default function Navbar() {
           href="/holding" 
           className={`flex flex-col items-center ${isActive('/holding') ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-500' : 'text-gray-400')}`}
         >
-          <div className={`p-2 ${isActive('/holding') ? 'bg-green-600/20 rounded-full' : ''}`}>
-            <Wallet className={`h-6 w-6 ${isActive('/holding') ? 'text-green-500' : ''}`} />
+          <div className={`p-2 rounded-full ${isActive('/holding') ? (theme === 'dark' ? 'bg-purple-600/20' : 'bg-green-600/20') : ''}`}>
+            <Wallet className={`h-6 w-6 ${isActive('/holding') ? (theme === 'dark' ? 'text-purple-500' : 'text-green-500') : ''}`} />
           </div>
           <span className="text-xs mt-1">Holdings</span>
         </Link>

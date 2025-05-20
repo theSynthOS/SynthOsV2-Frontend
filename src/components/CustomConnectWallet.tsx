@@ -17,7 +17,11 @@ type WalletOption = {
 
 type OAuthProvider = "google" | "apple" | "email" | "x" | "telegram";
 
-export default function ConnectWalletButton() {
+type ConnectWalletButtonProps = {
+  onConnected?: () => void;
+};
+
+export default function ConnectWalletButton({ onConnected }: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, address } = useAuth();
   
@@ -41,6 +45,13 @@ export default function ConnectWalletButton() {
       window.removeEventListener('keydown', handleEsc);
     };
   }, []);
+
+  // Trigger the onConnected callback when authentication status changes to true
+  useEffect(() => {
+    if (isAuthenticated && address && onConnected) {
+      onConnected();
+    }
+  }, [isAuthenticated, address, onConnected]);
   
   return (
     <div>
@@ -79,7 +90,7 @@ export default function ConnectWalletButton() {
             
             {/* Wallet Connection UI */}
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 40px)' }}>
-              <WalletConnectionUI onClose={closeModal} />
+              <WalletConnectionUI onClose={closeModal} onConnected={onConnected} />
             </div>
           </div>
         </div>
@@ -89,7 +100,7 @@ export default function ConnectWalletButton() {
 }
 
 // Separate component for the wallet connection UI
-function WalletConnectionUI({ onClose }: { onClose: () => void }) {
+function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onConnected?: () => void }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">("social");
   const [isConnecting, setIsConnecting] = useState(false);
@@ -140,7 +151,12 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           onClose();
           
           // Let the login function in AuthContext handle the redirect
-          login(account.address, walletId, "wallet");
+          login(account.address, walletId, "wallet", true);
+          
+          // Call onConnected callback if provided
+          if (onConnected) {
+            onConnected();
+          }
         }
         
         // Return the connected wallet
@@ -194,7 +210,12 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
             onClose();
             
             // Let the login function in AuthContext handle the redirect
-            login(account.address, undefined, provider);
+            login(account.address, undefined, provider, true);
+            
+            // Call onConnected callback if provided
+            if (onConnected) {
+              onConnected();
+            }
           }
         } else if (provider === "email") {
           // For email, we would need to implement the email verification flow
@@ -354,7 +375,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={wallet.id}
               onClick={() => handleConnectWallet(wallet.id)}
               disabled={isConnecting && currentWallet === wallet.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20  rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50 rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
               }`}
             >
@@ -366,7 +387,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               </div>
               
               {isConnecting && currentWallet === wallet.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-green-600  border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
@@ -383,7 +404,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={option.id}
               onClick={() => handleConnectWithSocial(option.id)}
               disabled={isConnecting && currentAuth === option.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50  rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentAuth !== option.id ? "opacity-50" : ""
               }`}
             >

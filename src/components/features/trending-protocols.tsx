@@ -5,9 +5,11 @@ import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
 import DepositModal from "./deposit-modal"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function TrendingProtocols() {
   const { theme } = useTheme()
+  const { isAuthenticated } = useAuth()
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [riskFilters, setRiskFilters] = useState({
     all: true,
@@ -16,6 +18,23 @@ export default function TrendingProtocols() {
     high: false
   })
   const [showFilter, setShowFilter] = useState(false)
+  const [investorProfile, setInvestorProfile] = useState<string | null>(null)
+  
+  // Fetch investor profile from localStorage on component mount
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem("investor_profile")
+      if (storedProfile) {
+        setInvestorProfile(JSON.parse(storedProfile).title)
+      } else {
+        // Default profile if none is found
+        setInvestorProfile("Degen Learner")
+      }
+    } catch (error) {
+      console.error("Error fetching investor profile:", error)
+      setInvestorProfile("Degen Learner")
+    }
+  }, [])
   
   const trendingProtocols = [
     { id: "fx", name: "FX", pair: 'USDT', type: 'supply', apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png",  riskScore: 3 },
@@ -120,7 +139,19 @@ export default function TrendingProtocols() {
     <>
       <div className="px-4 py-6">
         <div className="flex-col mb-6">
-          <div className="relative py-1 flex justify-end">
+          <div className="relative py-1 flex justify-between items-center">
+            {/* Investor Profile Badge */}
+            {investorProfile && (
+              <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                theme === 'dark' 
+                  ? 'bg-purple-900/30 text-purple-300' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {investorProfile}
+              </div>
+            )}
+            
+            {/* Risk Filter */}
             <button
               onClick={() => setShowFilter(!showFilter)}
               className={`flex items-center px-4 py-2 rounded-lg ${
