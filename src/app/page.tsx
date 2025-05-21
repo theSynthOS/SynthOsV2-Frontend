@@ -31,11 +31,11 @@ export default function Home() {
   
   // Check authentication state on initial load and redirect if needed
   useEffect(() => {
-    if (isAuthenticated && !initialAuthChecked) {
+    if (isAuthenticated) {
       router.replace("/home")
     }
     setInitialAuthChecked(true)
-  }, [isAuthenticated, router, initialAuthChecked])
+  }, [isAuthenticated, router])
   
   // Log authentication state changes
   useEffect(() => {
@@ -452,8 +452,8 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
-        
+      </div>
+
         <motion.button
           whileHover={{ scale: 1.05 }}
           onClick={handleQuizCompleted}
