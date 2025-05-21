@@ -234,7 +234,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               />
-              <span>Settings</span>
+              <span>Select chain</span>
             </div>
 
             <div
@@ -247,60 +247,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               />
-              <span>Payment Methods</span>
+              <span>View Funds</span>
             </div>
 
-            <div
-              className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
-              <Bell
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span>Notifications</span>
-            </div>
-
-            <div
-              className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
-              <Shield
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span>Security</span>
-            </div>
-
-            <div
-              className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
-              <Info
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span>About</span>
-            </div>
-
-            <div
-              className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
-              <MessageCircle
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span>Support</span>
-            </div>
 
             <button
               onClick={handleAuth}
