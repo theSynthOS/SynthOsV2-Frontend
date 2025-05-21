@@ -39,7 +39,11 @@ type WalletOption = {
 
 type OAuthProvider = "google" | "apple" | "email" | "x" | "telegram";
 
-export default function ConnectWalletButton() {
+type ConnectWalletButtonProps = {
+  onConnected?: () => void;
+};
+
+export default function ConnectWalletButton({ onConnected }: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, address } = useAuth();
 
@@ -64,18 +68,27 @@ export default function ConnectWalletButton() {
     };
   }, []);
 
+  // Trigger the onConnected callback when authentication status changes to true
+  useEffect(() => {
+    if (isAuthenticated && address && onConnected) {
+      onConnected();
+    }
+  }, [isAuthenticated, address, onConnected]);
+  
+
   return (
     <div>
       {/* Connect Wallet Button */}
-      <button
+      <button 
         onClick={openModal}
         className="bg-green-600 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
       >
-        {isAuthenticated && address
+        {isAuthenticated && address 
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : "Connect Wallet"}
+          : "Connect Wallet"
+        }
       </button>
-
+      
       {/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50">
@@ -89,7 +102,7 @@ export default function ConnectWalletButton() {
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up max-h-[90vh] overflow-hidden">
             {/* Drag Handle */}
             <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
-
+            
             {/* Close Button */}
             <button
               onClick={closeModal}
@@ -103,7 +116,7 @@ export default function ConnectWalletButton() {
               className="overflow-y-auto"
               style={{ maxHeight: "calc(90vh - 40px)" }}
             >
-              <WalletConnectionUI onClose={closeModal} />
+              <WalletConnectionUI onClose={closeModal} onConnected={onConnected} />
             </div>
           </div>
         </div>
@@ -113,11 +126,9 @@ export default function ConnectWalletButton() {
 }
 
 // Separate component for the wallet connection UI
-function WalletConnectionUI({ onClose }: { onClose: () => void }) {
+function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onConnected?: () => void }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">(
-    "social"
-  );
+  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">("social");
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
   const [currentAuth, setCurrentAuth] = useState<string>("");
@@ -126,35 +137,12 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
 
   const { login, isAuthenticated, address, logout } = useAuth();
   const { connect } = useConnect();
-
+  
   const wallets: WalletOption[] = [
-    {
-      id: "io.metamask",
-      name: "MetaMask",
-      icon: <span className="text-2xl">🦊</span>,
-    },
-    {
-      id: "com.coinbase.wallet",
-      name: "Coinbase Wallet",
-      icon: (
-        <Image
-          src="/icons/coinbase.png"
-          alt="Google"
-          width={100}
-          height={100}
-        />
-      ),
-    },
-    {
-      id: "me.rainbow",
-      name: "Rainbow",
-      icon: <span className="text-2xl">🌈</span>,
-    },
-    {
-      id: "walletconnect",
-      name: "WalletConnect",
-      icon: <span className="text-2xl">🔗</span>,
-    },
+    { id: "io.metamask", name: "MetaMask", icon: <span className="text-2xl">🦊</span> },
+    { id: "com.coinbase.wallet", name: "Coinbase Wallet", icon: <Image src="/icons/coinbase.png" alt="Google" width={100} height={100} /> },
+    { id: "me.rainbow", name: "Rainbow", icon: <span className="text-2xl">🌈</span> },
+    { id: "walletconnect", name: "WalletConnect", icon: <span className="text-2xl">🔗</span> },
   ];
 
   const socialOptions: {
@@ -221,7 +209,12 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           onClose();
 
           // Let the login function in AuthContext handle the redirect
-          login(account.address, walletId, "wallet");
+          login(account.address, walletId, "wallet", true);
+          
+          // Call onConnected callback if provided
+          if (onConnected) {
+            onConnected();
+          }
         }
 
         // Return the connected wallet
@@ -256,8 +249,9 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
             sponsorGas: true,
           },
         });
-
+        
         // Connect the wallet to the client with the specific strategy
+        // Each strategy requires different connection options
         if (provider === "google" || provider === "apple" || provider === "x") {
           const account = await wallet.connect({
             client,
@@ -266,9 +260,15 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
 
           // If connection is successful, store in auth context
           if (account) {
+            // Set session in sessionStorage to ensure persistence across refreshes
             sessionStorage.setItem("session_active", "true");
             onClose();
-            login(account.address, undefined, provider);
+            login(account.address, undefined, provider, true);
+            
+            // Call onConnected callback if provided
+            if (onConnected) {
+              onConnected();
+            }
           }
         } else if (provider === "email") {
           setError(
@@ -343,6 +343,16 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
         >
           Wallets
         </button>
+        {/* <button
+          className={`flex-1 py-3 px-4 text-lg font-medium ${
+            activeTab === "passkey" 
+              ? "text-green-500 border-b-2 border-green-500" 
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("passkey")}
+        >
+          Passkey
+        </button> */}
       </div>
 
       {/* Error Message */}
@@ -382,7 +392,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={wallet.id}
               onClick={() => handleConnectWallet(wallet.id)}
               disabled={isConnecting && currentWallet === wallet.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20  rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50 rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
               }`}
             >
@@ -394,7 +404,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               </div>
 
               {isConnecting && currentWallet === wallet.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-green-600  border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
@@ -411,7 +421,7 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
               key={option.id}
               onClick={() => handleConnectWithSocial(option.id)}
               disabled={isConnecting && currentAuth === option.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-400/20 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50  rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentAuth !== option.id ? "opacity-50" : ""
               }`}
             >
@@ -431,7 +441,37 @@ function WalletConnectionUI({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       )}
-
+      
+      {/* Passkey Options */}
+      {/* {activeTab === "passkey" && (
+        <div className="text-center p-4">
+          <div className="h-16 w-16 mx-auto mb-4 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 mb-4">
+            Connect securely using a passkey - a more secure alternative to
+            passwords that lets you sign in using your device's authentication
+            methods like fingerprint, face recognition, or screen lock.
+          </p>
+          <button
+            onClick={handleConnectWithPasskey}
+            disabled={isConnecting && currentAuth === "passkey"}
+            className={`w-full flex items-center justify-center p-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium ${
+              isConnecting && currentAuth === "passkey" ? "opacity-70" : ""
+            }`}
+          >
+            {isConnecting && currentAuth === "passkey" && (
+              <span className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+            )}
+            <span>
+              {isConnecting && currentAuth === "passkey" ? "Connecting..." : "Continue with Passkey"}
+            </span>
+          </button>
+        </div>
+      )} */}
+      
       <div className="mt-8 text-center text-xs text-gray-500">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div>
