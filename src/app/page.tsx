@@ -167,6 +167,14 @@ export default function Home() {
 
   // Determine what to render based on current step
   const renderContent = () => {
+    // Check if user needs to connect wallet
+    if ((onboardingStep === "quiz" || onboardingStep === "wallet-analysis" || 
+         onboardingStep === "preferences" || onboardingStep === "generating-preferences") && 
+        !isAuthenticated) {
+      // Force wallet connection if not authenticated
+      return renderWalletConnection()
+    }
+    
     switch(onboardingStep) {
       case "welcome":
         return renderWelcome()
