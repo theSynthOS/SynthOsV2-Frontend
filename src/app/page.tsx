@@ -29,20 +29,24 @@ export default function Home() {
   const [initialAuthChecked, setInitialAuthChecked] = useState(false)
   const [profile, setProfile] = useState<{title: string, description: string} | null>(null)
   
-  // Check authentication state on initial load and redirect if needed
+  // Check authentication state and onboarding status on initial load
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/home")
+      // Check if this user has completed onboarding before
+      const completedAddresses = JSON.parse(localStorage.getItem("completed_onboarding_addresses") || "[]")
+      
+      if (address && completedAddresses.includes(address)) {
+        // If this wallet address has completed onboarding, redirect to home
+        router.replace("/home")
+      }
     }
     setInitialAuthChecked(true)
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, address])
   
   // Log authentication state changes
   useEffect(() => {
     console.log("Landing page auth state:", { isAuthenticated, address })
-    // Remove automatic redirection from generating-preferences step
-    // Let users click the Continue to Dashboard button themselves
-  }, [isAuthenticated, address, router, onboardingStep])
+  }, [isAuthenticated, address])
   
   // Update profile when onboarding step changes to preferences
   useEffect(() => {
@@ -167,6 +171,14 @@ export default function Home() {
 
   // Determine what to render based on current step
   const renderContent = () => {
+    // Check if user needs to connect wallet for steps that require authentication
+    if ((onboardingStep === "quiz" || onboardingStep === "wallet-analysis" || 
+         onboardingStep === "preferences" || onboardingStep === "generating-preferences") && 
+        !isAuthenticated) {
+      // Force wallet connection if not authenticated
+      return renderWalletConnection()
+    }
+    
     switch(onboardingStep) {
       case "welcome":
         return renderWelcome()
@@ -352,6 +364,22 @@ export default function Home() {
   const renderPreferences = () => {
     const currentProfile = profile || { title: "", description: "" }
     
+    const handleContinueToDashboard = () => {
+      if (address) {
+        // Get existing completed addresses
+        const completedAddresses = JSON.parse(localStorage.getItem("completed_onboarding_addresses") || "[]")
+        
+        // Add current address if not already included
+        if (!completedAddresses.includes(address)) {
+          completedAddresses.push(address)
+          localStorage.setItem("completed_onboarding_addresses", JSON.stringify(completedAddresses))
+        }
+      }
+      
+      // Navigate to dashboard
+      router.push("/home")
+    }
+    
     return (
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -371,7 +399,7 @@ export default function Home() {
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
-          onClick={() => router.push("/home")}
+          onClick={handleContinueToDashboard}
           className="bg-green-600 hover:bg-green-500 text-white font-medium py-3 px-5 rounded-lg"
         >
           Continue to Dashboard
@@ -411,8 +439,8 @@ export default function Home() {
         ]
       }
     ]
-
-    return (
+  
+  return (
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
