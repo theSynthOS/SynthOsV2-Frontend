@@ -35,13 +35,17 @@ export default function Home() {
       // Check if this user has completed onboarding before
       const completedAddresses = JSON.parse(localStorage.getItem("completed_onboarding_addresses") || "[]")
       
-      if (address && completedAddresses.includes(address)) {
+      // Only redirect to home if they've completed onboarding before AND they're on the initial steps
+      // This allows users who are in the middle of the flow to continue
+      if (address && 
+          completedAddresses.includes(address) && 
+          (onboardingStep === "welcome" || onboardingStep === "path-selection")) {
         // If this wallet address has completed onboarding, redirect to home
         router.replace("/home")
       }
     }
     setInitialAuthChecked(true)
-  }, [isAuthenticated, router, address])
+  }, [isAuthenticated, router, address, onboardingStep])
   
   // Log authentication state changes
   useEffect(() => {
@@ -75,6 +79,15 @@ export default function Home() {
 
   // Handle wallet connected
   const handleWalletConnected = () => {
+    // Check if this user has completed onboarding before
+    const completedAddresses = JSON.parse(localStorage.getItem("completed_onboarding_addresses") || "[]")
+    
+    // If they're already in the middle of the flow (not at path selection), continue the flow
+    if (onboardingStep !== "wallet-connection") {
+      return;
+    }
+    
+    // If wallet is connected, proceed with the appropriate path
     if (userPath === "experienced") {
       setOnboardingStep("wallet-analysis")
       // Simulate AI analysis with timeout
