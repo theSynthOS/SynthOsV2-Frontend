@@ -27,7 +27,33 @@ export const scrollSepolia = defineChain({
   testnet: true,
 });
 
+// Define Ethereum mainnet chain
+export const ethereum = defineChain({
+  id: 1,
+  name: "Ethereum",
+  nativeCurrency: {
+    name: "Ether",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://eth.llamarpc.com"],
+    },
+    public: {
+      http: ["https://eth.llamarpc.com"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Etherscan",
+      url: "https://etherscan.io",
+    },
+  },
+  testnet: false,
+});
+
 // Create thirdweb client
 export const client = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || ''
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "",
 });
