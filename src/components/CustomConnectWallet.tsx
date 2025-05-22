@@ -43,7 +43,9 @@ type ConnectWalletButtonProps = {
   onConnected?: () => void;
 };
 
-export default function ConnectWalletButton({ onConnected }: ConnectWalletButtonProps) {
+export default function ConnectWalletButton({
+  onConnected,
+}: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, address } = useAuth();
 
@@ -74,21 +76,19 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
       onConnected();
     }
   }, [isAuthenticated, address, onConnected]);
-  
 
   return (
     <div>
       {/* Connect Wallet Button */}
-      <button 
+      <button
         onClick={openModal}
         className="bg-green-600 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
       >
-        {isAuthenticated && address 
+        {isAuthenticated && address
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : "Connect Wallet"
-        }
+          : "Connect Wallet"}
       </button>
-      
+
       {/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50">
@@ -102,7 +102,7 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up max-h-[90vh] overflow-hidden">
             {/* Drag Handle */}
             <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
-            
+
             {/* Close Button */}
             <button
               onClick={closeModal}
@@ -116,7 +116,10 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
               className="overflow-y-auto"
               style={{ maxHeight: "calc(90vh - 40px)" }}
             >
-              <WalletConnectionUI onClose={closeModal} onConnected={onConnected} />
+              <WalletConnectionUI
+                onClose={closeModal}
+                onConnected={onConnected}
+              />
             </div>
           </div>
         </div>
@@ -126,9 +129,17 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
 }
 
 // Separate component for the wallet connection UI
-function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onConnected?: () => void }) {
+function WalletConnectionUI({
+  onClose,
+  onConnected,
+}: {
+  onClose: () => void;
+  onConnected?: () => void;
+}) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">("social");
+  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">(
+    "social"
+  );
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
   const [currentAuth, setCurrentAuth] = useState<string>("");
@@ -137,12 +148,35 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
 
   const { login, isAuthenticated, address, logout } = useAuth();
   const { connect } = useConnect();
-  
+
   const wallets: WalletOption[] = [
-    { id: "io.metamask", name: "MetaMask", icon: <span className="text-2xl">🦊</span> },
-    { id: "com.coinbase.wallet", name: "Coinbase Wallet", icon: <Image src="/icons/coinbase.png" alt="Google" width={100} height={100} /> },
-    { id: "me.rainbow", name: "Rainbow", icon: <span className="text-2xl">🌈</span> },
-    { id: "walletconnect", name: "WalletConnect", icon: <span className="text-2xl">🔗</span> },
+    {
+      id: "io.metamask",
+      name: "MetaMask",
+      icon: <span className="text-2xl">🦊</span>,
+    },
+    {
+      id: "com.coinbase.wallet",
+      name: "Coinbase Wallet",
+      icon: (
+        <Image
+          src="/icons/coinbase.png"
+          alt="Google"
+          width={100}
+          height={100}
+        />
+      ),
+    },
+    {
+      id: "me.rainbow",
+      name: "Rainbow",
+      icon: <span className="text-2xl">🌈</span>,
+    },
+    {
+      id: "walletconnect",
+      name: "WalletConnect",
+      icon: <span className="text-2xl">🔗</span>,
+    },
   ];
 
   const socialOptions: {
@@ -210,7 +244,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
 
           // Let the login function in AuthContext handle the redirect
           login(account.address, walletId, "wallet", true);
-          
+
           // Call onConnected callback if provided
           if (onConnected) {
             onConnected();
@@ -249,7 +283,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
             sponsorGas: true,
           },
         });
-        
+
         // Connect the wallet to the client with the specific strategy
         // Each strategy requires different connection options
         if (provider === "google" || provider === "apple" || provider === "x") {
@@ -264,7 +298,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
             sessionStorage.setItem("session_active", "true");
             onClose();
             login(account.address, undefined, provider, true);
-            
+
             // Call onConnected callback if provided
             if (onConnected) {
               onConnected();
@@ -441,7 +475,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
           ))}
         </div>
       )}
-      
+
       {/* Passkey Options */}
       {/* {activeTab === "passkey" && (
         <div className="text-center p-4">
@@ -471,7 +505,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
           </button>
         </div>
       )} */}
-      
+
       <div className="mt-8 text-center text-xs text-gray-500">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div>
