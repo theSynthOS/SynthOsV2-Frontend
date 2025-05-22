@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext"
 
 export default function TrendingProtocols() {
   const { theme } = useTheme()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, address } = useAuth()
   const [selectedPool, setSelectedPool] = useState<any>(null)
   const [riskFilters, setRiskFilters] = useState({
     all: true,
@@ -19,6 +19,59 @@ export default function TrendingProtocols() {
   })
   const [showFilter, setShowFilter] = useState(false)
   const [investorProfile, setInvestorProfile] = useState<string | null>(null)
+  const [balance, setBalance] = useState<string>("0")
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false)
+  const [protocols, setProtocols] = useState<any[]>([])
+  const [isLoadingProtocols, setIsLoadingProtocols] = useState(true)
+  
+  // Fetch protocol pairs
+  useEffect(() => {
+    const fetchProtocols = async () => {
+      setIsLoadingProtocols(true)
+      try {
+        const response = await fetch('/api/protocol-pairs')
+        if (!response.ok) {
+          throw new Error('Failed to fetch protocols')
+        }
+        const data = await response.json()
+        setProtocols(data)
+      } catch (error) {
+        console.error('Error fetching protocols:', error)
+        setProtocols([])
+      } finally {
+        setIsLoadingProtocols(false)
+      }
+    }
+
+    fetchProtocols()
+  }, [])
+  
+  // Fetch balance when address changes
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address) {
+        setBalance("0")
+        return
+      }
+
+      setIsLoadingBalance(true)
+      try {
+        const response = await fetch(`/api/balance?address=${address}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch balance')
+        }
+        const data = await response.json()
+        setBalance(data.usdBalance || "0")
+      } catch (error) {
+        console.error('Error fetching balance:', error)
+        setBalance("0")
+      } finally {
+        setIsLoadingBalance(false)
+      }
+    }
+
+    fetchBalance()
+  }, [address])
   
   // Fetch investor profile from localStorage on component mount
   useEffect(() => {
@@ -36,50 +89,26 @@ export default function TrendingProtocols() {
     }
   }, [])
   
-  const trendingProtocols = [
-    { id: "fx", name: "FX", pair: 'USDT', type: 'supply', apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png",  riskScore: 3 },
-    { id: "quill", name: "Quill Finance", pair: 'ETH', type: 'earn', apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 4 },
-    { id: "fx", name: "FX ", pair: 'FXS', type: 'supply', apy: 5.45, tvl: "$892M", logo: "/compound.png", riskScore: 2 },
-    { id: "quill", name: "Quill Finance", pair: 'wstETH', type: 'earn', apy: 33.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 9 },
-    { id: "aave", name: "AAVE", pair: 'GHO/USDT', type: 'supply', apy: 1.13, tvl: "$1.1B", logo: "/aave.png",  riskScore: 1 },
-    { id: "ambient", name: "Ambient", pair: 'USDC/USDT', type: 'vault', apy: 2.19, tvl: "$487k", logo: "/ambient.png", riskScore: 2 },
-    { id: "ambient", name: "Ambient", pair: 'SCR/ETH', type: 'vault', apy: 27.98, tvl: "$15.06k", logo: "/ambient.png", riskScore: 10 },
-    { id: "ambient", name: "Ambient", pair: 'wstETH/wrsWTH', type: 'vault', apy: 3.45, tvl: "$15.92k", logo: "/ambient.png", riskScore: 5 },
-    { id: "aave", name: "AAVE", pair: 'GHO', type: 'supply', apy: 6.13, tvl: "$1.1B", logo: "/aave.png", riskScore: 2 },
-  ]
-
-  const getRiskCategory = (score: number) => {
-    if (score >= 1 && score <= 3) return "low";
-    if (score >= 4 && score <= 7) return "medium";
-    if (score >= 8 && score <= 10) return "high";
-    return "unknown";
+  const getRiskCategory = (type: string) => {
+    // Placeholder risk level for now
+    return "medium";
   }
 
-  const getRiskLabel = (score: number) => {
-    const category = getRiskCategory(score);
-    switch(category) {
-      case "low": return "Low";
-      case "medium": return "Medium";
-      case "high": return "High";
-      default: return "Unknown";
-    }
+  const getRiskLabel = (type: string) => {
+    // Placeholder risk label for now
+    return "Medium";
   }
 
-  const getRiskColor = (score: number) => {
-    const category = getRiskCategory(score);
-    switch(category) {
-      case "low": return "text-green-500";
-      case "medium": return "text-yellow-500";
-      case "high": return "text-red-500";
-      default: return "text-gray-500";
-    }
+  const getRiskColor = (type: string) => {
+    // Placeholder risk color for now
+    return "text-yellow-500";
   }
 
   const handleProtocolClick = (protocol: any) => {
     setSelectedPool({
       name: protocol.name,
-      apy: protocol.apy,
-      risk: getRiskLabel(protocol.riskScore)
+      apy: 0, // You might want to fetch this from another API endpoint
+      risk: "Medium" // Placeholder risk for now
     })
   }
 
@@ -96,34 +125,17 @@ export default function TrendingProtocols() {
     setShowFilter(false);
   }
 
-  // Debug version of the filtering function to track what's happening
-  const filteredProtocols = trendingProtocols
+  // Update the filtered protocols to use the API data
+  const filteredProtocols = protocols
     .filter(protocol => {
-      // If showing all, return all protocols
       if (riskFilters.all) return true;
-      
-      // Get the risk category of this protocol
-      const category = getRiskCategory(protocol.riskScore);
-      
-      // Only return protocols matching the selected category
-      let shouldKeep = false;
-      
-      if (riskFilters.low && category === "low") {
-        shouldKeep = true;
-      }
-      
-      if (riskFilters.medium && category === "medium") {
-        shouldKeep = true;
-      }
-      
-      if (riskFilters.high && category === "high") {
-        shouldKeep = true;
-      }
-      
-      return shouldKeep;
+      const category = getRiskCategory(protocol.type);
+      return (
+        (riskFilters.low && category === "low") ||
+        (riskFilters.medium && category === "medium") ||
+        (riskFilters.high && category === "high")
+      );
     })
-    .sort((a, b) => b.apy - a.apy) // Sort by APY (highest first)
-    // Only limit to 4 if not showing all
     .slice(0, riskFilters.all ? undefined : 4);
 
   const getActiveFiltersLabel = () => {
@@ -261,39 +273,55 @@ export default function TrendingProtocols() {
           </div>
         </div>
         <div className="space-y-4">
-          {filteredProtocols.map((protocol) => (
-            <div 
-              key={`${protocol.id}-${protocol.pair}`}
-              className={`flex flex-col cursor-pointer shadow-md ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-34`}
-              onClick={() => handleProtocolClick(protocol)}
-            >
-              <div className="flex items-center mb-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
-                  <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={56} height={56} />
-                </div>
-                <div className="flex-1">
-                  <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                    {protocol.pair} <span className="text-sm font-normal opacity-70">({protocol.name})</span>
-                  </div>
-                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{protocol.tvl} TVL</div>
-                </div>
-              </div>
-              <div className="flex justify-between items-center mt-auto">
-                <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                  {protocol.apy.toFixed(2)}%
-                  <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
-                </div>
-                <div className={`font-semibold text-md ${getRiskColor(protocol.riskScore)}`}>
-                  Risk: {getRiskLabel(protocol.riskScore)}
-                </div>
-              </div>
+          {isLoadingProtocols ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
             </div>
-          ))}
-
-          {filteredProtocols.length === 0 && (
+          ) : filteredProtocols.length === 0 ? (
             <div className={`py-8 text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               No pools match your selected risk filters
             </div>
+          ) : (
+            filteredProtocols.map((protocol) => (
+              <div 
+                key={protocol.id}
+                className={`flex flex-col cursor-pointer shadow-md ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-34`}
+                onClick={() => handleProtocolClick(protocol)}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
+                    <Image 
+                      src={`/${protocol.name.toLowerCase()}.png`} 
+                      alt={protocol.name} 
+                      width={56} 
+                      height={56}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                      {protocol.pair_or_vault_name} <span className="text-sm font-normal opacity-70">({protocol.name})</span>
+                    </div>
+                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {protocol.type.charAt(0).toUpperCase() + protocol.type.slice(1)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-auto">
+                  <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                    {/* You might want to fetch APY from another endpoint */}
+                    N/A
+                    <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
+                  </div>
+                  <div className={`font-semibold text-md ${getRiskColor(protocol.type)}`}>
+                    Risk: {getRiskLabel(protocol.type)}
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -301,6 +329,8 @@ export default function TrendingProtocols() {
       <DepositModal 
         pool={selectedPool}
         onClose={() => setSelectedPool(null)}
+        balance={balance}
+        isLoadingBalance={isLoadingBalance}
       />
     </>
   )

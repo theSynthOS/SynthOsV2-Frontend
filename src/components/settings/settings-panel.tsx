@@ -229,19 +229,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
               } rounded-lg`}
             >
-              <Settings
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span>Select chain</span>
-            </div>
-
-            <div
-              className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
               <CreditCard
                 className={`h-5 w-5 mr-3 ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"

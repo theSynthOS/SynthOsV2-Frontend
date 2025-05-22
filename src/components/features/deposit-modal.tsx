@@ -14,13 +14,15 @@ interface DepositModalProps {
     risk: string
   } | null
   onClose: () => void
+  balance: string
+  isLoadingBalance?: boolean
 }
 
-export default function DepositModal({ pool, onClose }: DepositModalProps) {
+export default function DepositModal({ pool, onClose, balance, isLoadingBalance = false }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0")
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [maxBalance, setMaxBalance] = useState(1000)
+  const [maxBalance, setMaxBalance] = useState(Number(balance) || 0)
   const { toast } = useToast()
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -28,6 +30,15 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
   
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance)
+
+  // Update maxBalance when balance prop changes
+  useEffect(() => {
+    const newBalance = Number(balance) || 0
+    setMaxBalance(newBalance)
+    // Reset amount and slider when balance changes
+    setAmount("0")
+    setSliderValue(0)
+  }, [balance])
 
   // For demo purposes - simulate balance changes
   // useEffect(() => {
@@ -243,7 +254,14 @@ export default function DepositModal({ pool, onClose }: DepositModalProps) {
             </div>
 
             <div className={`text-right text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1 w-full`}>
-              Balance: {maxBalance.toFixed(2)} USDC
+              Balance: {isLoadingBalance ? (
+                <span className="inline-flex items-center">
+                  <div className="h-3 w-3 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin mr-2"></div>
+                  Loading...
+                </span>
+              ) : (
+                `${maxBalance.toFixed(2)} USDC`
+              )}
             </div>
           </div>
 
