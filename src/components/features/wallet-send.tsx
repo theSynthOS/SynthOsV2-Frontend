@@ -237,33 +237,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
                 </div>
               </div>
               
-              {/* Percentage Buttons */}
-              <div className={`flex justify-between w-full ${sectionSpacing} gap-2`}>
-                <button 
-                  onClick={() => handlePercentage(10)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
-                >
-                  10%
-                </button>
-                <button 
-                  onClick={() => handlePercentage(25)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
-                >
-                  25%
-                </button>
-                <button 
-                  onClick={() => handlePercentage(50)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
-                >
-                  50%
-                </button>
-                <button 
-                  onClick={() => handlePercentage(100)}
-                  className={`flex-1 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-2 text-center font-medium ${isMobile ? 'text-sm' : ''}`}
-                >
-                  MAX
-                </button>
-              </div>
+             
               
               {/* Numeric Keypad - Fixed at the bottom */}
               <div className={`grid grid-cols-3 ${keypadGap} w-full ${sectionSpacing} ${isSmallHeight ? 'mt-1' : ''}`}>
