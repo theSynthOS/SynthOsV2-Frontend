@@ -86,7 +86,7 @@ export default function ConnectWalletButton({
       >
         {isAuthenticated && address
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : "Connect Wallet"}
+          : "Login"}
       </button>
 
       {/* Modal Overlay */}

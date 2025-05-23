@@ -149,7 +149,7 @@ export default function Home() {
           theme === "dark" ? "text-white" : "text-black"
         }`}
       >
-        We curate complex crypto APYs into simple plans that fit you.
+        Invest with confidence using personalized crypto yield plans.
       </motion.div>
 
       <motion.div
