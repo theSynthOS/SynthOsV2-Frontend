@@ -12,13 +12,17 @@ interface DepositModalProps {
     name: string
     apy: number
     risk: string
+    pair_or_vault_name: string
+    protocol_id?: string
+    protocol_pair_id?: string
   } | null
   onClose: () => void
   balance: string
   isLoadingBalance?: boolean
+  address: string
 }
 
-export default function DepositModal({ pool, onClose, balance, isLoadingBalance = false }: DepositModalProps) {
+export default function DepositModal({ pool, onClose, balance, isLoadingBalance = false, address }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0")
   const [sliderValue, setSliderValue] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -188,22 +192,37 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
   const yearlyYield = (Number.parseFloat(amount) * (pool?.apy || 0)) / 100
 
   // Handle deposit confirmation
-  const handleConfirmDeposit = () => {
+  const handleConfirmDeposit = async () => {
     setIsSubmitting(true)
 
-    // Log the deposit details
-    console.log({
-      action: 'Deposit Confirmation',
-      depositAmount: `$${amount}`,
-      poolName: pool?.name,
-      estimatedYearlyYield: `$${yearlyYield.toFixed(2)}`,
-      apy: `${pool?.apy}%`,
-      pair: `${pool?.name}`
+    console.log('Starting deposit with:', {
+      user_address: address,
+      protocol_id: pool?.protocol_id,
+      protocol_pair_id: pool?.protocol_pair_id,
+      amount: amount,
+      pool_name: pool?.name
     })
 
-    // Simulate API call with timeout
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      const response = await fetch('/api/deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_address: address,
+          protocol_id: pool?.protocol_id,
+          protocol_pair_id: pool?.protocol_pair_id,
+          amount: amount
+        })
+      })
+
+      const responseData = await response.json()
+      console.log('Deposit response:', responseData)
+
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Failed to process deposit')
+      }
 
       // Show success toast
       toast({
@@ -217,9 +236,18 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
 
       // Trigger haptic feedback if supported
       if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]) // Vibrate pattern: 100ms on, 50ms off, 100ms on
+        navigator.vibrate([100, 50, 100])
       }
-    }, 1000)
+    } catch (error) {
+      console.error('Deposit error:', error)
+      toast({
+        variant: "destructive",
+        title: "Deposit Failed",
+        description: error instanceof Error ? error.message : 'Failed to process deposit',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // If theme isn't loaded yet or no pool selected, return nothing
@@ -239,7 +267,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
           rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-2xl font-bold mb-4">Deposit to {pool.name}</h3>
+        <h3 className="text-2xl font-bold mb-4">Deposit to {pool.pair_or_vault_name}</h3>
         
         <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Input and Circle Section */}
@@ -256,8 +284,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
             <div className={`text-right text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1 w-full`}>
               Balance: {isLoadingBalance ? (
                 <span className="inline-flex items-center">
-                  <div className="h-3 w-3 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin mr-2"></div>
-                  Loading...
+                  <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                 </span>
               ) : (
                 `${maxBalance.toFixed(2)} USDC`

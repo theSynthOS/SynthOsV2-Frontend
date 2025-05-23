@@ -1,11 +1,29 @@
 "use client"
 
-import { Flame, Filter, ArrowUpDown, Check, X } from "lucide-react"
+import { Flame, Filter, ArrowUpDown, Check, X, ChevronDown, ChevronUp } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
 import DepositModal from "./deposit-modal"
 import { useAuth } from "@/contexts/AuthContext"
+
+interface Protocol {
+  id: number
+  name: string
+  logo_url: string
+  description: string
+  created_at: string
+}
+
+interface ProtocolPair {
+  id: string
+  name: string
+  pair_or_vault_name: string
+  type: string
+  chain_id: number
+  contract_address: string
+  created_at: string
+}
 
 export default function TrendingProtocols() {
   const { theme } = useTheme()
@@ -21,15 +39,17 @@ export default function TrendingProtocols() {
   const [investorProfile, setInvestorProfile] = useState<string | null>(null)
   const [balance, setBalance] = useState<string>("0")
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
-  const [protocols, setProtocols] = useState<any[]>([])
+  const [protocols, setProtocols] = useState<Protocol[]>([])
+  const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([])
   const [isLoadingProtocols, setIsLoadingProtocols] = useState(true)
+  const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(new Set())
   
-  // Fetch protocol pairs
+  // Fetch parent protocols
   useEffect(() => {
     const fetchProtocols = async () => {
       setIsLoadingProtocols(true)
       try {
-        const response = await fetch('/api/protocol-pairs')
+        const response = await fetch('/api/protocols')
         if (!response.ok) {
           throw new Error('Failed to fetch protocols')
         }
@@ -44,6 +64,25 @@ export default function TrendingProtocols() {
     }
 
     fetchProtocols()
+  }, [])
+
+  // Fetch protocol pairs
+  useEffect(() => {
+    const fetchProtocolPairs = async () => {
+      try {
+        const response = await fetch('/api/protocol-pairs')
+        if (!response.ok) {
+          throw new Error('Failed to fetch protocol pairs')
+        }
+        const data = await response.json()
+        setProtocolPairs(data)
+      } catch (error) {
+        console.error('Error fetching protocol pairs:', error)
+        setProtocolPairs([])
+      }
+    }
+
+    fetchProtocolPairs()
   }, [])
   
   // Fetch balance when address changes
@@ -104,11 +143,14 @@ export default function TrendingProtocols() {
     return "text-yellow-500";
   }
 
-  const handleProtocolClick = (protocol: any) => {
+  const handleProtocolClick = (protocol: any, pair: ProtocolPair) => {
     setSelectedPool({
       name: protocol.name,
       apy: 0, // You might want to fetch this from another API endpoint
-      risk: "Medium" // Placeholder risk for now
+      risk: "Medium", // Placeholder risk for now
+      pair_or_vault_name: pair.pair_or_vault_name,
+      protocol_id: protocol.id.toString(),
+      protocol_pair_id: pair.id
     })
   }
 
@@ -129,12 +171,7 @@ export default function TrendingProtocols() {
   const filteredProtocols = protocols
     .filter(protocol => {
       if (riskFilters.all) return true;
-      const category = getRiskCategory(protocol.type);
-      return (
-        (riskFilters.low && category === "low") ||
-        (riskFilters.medium && category === "medium") ||
-        (riskFilters.high && category === "high")
-      );
+      return false; // No risk filtering for parent protocols
     })
     .slice(0, riskFilters.all ? undefined : 4);
 
@@ -145,6 +182,24 @@ export default function TrendingProtocols() {
     if (riskFilters.high) return "High";
     return "No Filter"; // Fallback, shouldn't happen
     
+  }
+
+  const toggleProtocolExpand = (protocolName: string) => {
+    setExpandedProtocols(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(protocolName)) {
+        newSet.delete(protocolName)
+      } else {
+        newSet.add(protocolName)
+      }
+      return newSet
+    })
+  }
+
+  const getProtocolPairs = (protocolName: string) => {
+    return protocolPairs.filter(pair => 
+      pair.name.toLowerCase() === protocolName.toLowerCase()
+    )
   }
 
   return (
@@ -277,49 +332,98 @@ export default function TrendingProtocols() {
             <div className="flex justify-center items-center py-8">
               <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
             </div>
-          ) : filteredProtocols.length === 0 ? (
+          ) : protocols.length === 0 ? (
             <div className={`py-8 text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              No pools match your selected risk filters
+              No protocols available
             </div>
           ) : (
-            filteredProtocols.map((protocol) => (
-              <div 
-                key={protocol.id}
-                className={`flex flex-col cursor-pointer shadow-md ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-34`}
-                onClick={() => handleProtocolClick(protocol)}
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
-                    <Image 
-                      src={`/${protocol.name.toLowerCase()}.png`} 
-                      alt={protocol.name} 
-                      width={56} 
-                      height={56}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                      {protocol.pair_or_vault_name} <span className="text-sm font-normal opacity-70">({protocol.name})</span>
+            protocols.map((protocol) => (
+              <div key={protocol.id}>
+                <div 
+                  className={`flex flex-col cursor-pointer shadow-md ${
+                    theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'
+                  } p-5 rounded-xl transition-colors duration-200 relative`}
+                  onClick={() => toggleProtocolExpand(protocol.name)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
+                        <Image 
+                          src={protocol.logo_url || "/placeholder.svg"} 
+                          alt={protocol.name} 
+                          width={56} 
+                          height={56}
+                          onError={(e) => {
+                            console.log('Image failed to load:', protocol.logo_url);
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/placeholder.svg";
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                          {protocol.name}
+                        </div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {protocol.description}
+                        </div>
+                      </div>
                     </div>
-                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {protocol.type.charAt(0).toUpperCase() + protocol.type.slice(1)}
-                    </div>
+                    {expandedProtocols.has(protocol.name) ? (
+                      <ChevronUp className={`w-6 h-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
+                    ) : (
+                      <ChevronDown className={`w-6 h-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
+                    )}
                   </div>
                 </div>
-                <div className="flex justify-between items-center mt-auto">
-                  <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                    {/* You might want to fetch APY from another endpoint */}
-                    N/A
-                    <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
+
+                {/* Protocol Pairs */}
+                {expandedProtocols.has(protocol.name) && (
+                  <div className="mt-2 space-y-2 pl-4">
+                    {getProtocolPairs(protocol.name).map((pair) => (
+                      <div 
+                        key={pair.id}
+                        className={`flex flex-col cursor-pointer shadow-md ${
+                          theme === 'dark' ? 'bg-gray-800/50 hover:bg-gray-700/50' : 'bg-gray-100/30 hover:bg-gray-100'
+                        } p-5 rounded-xl transition-colors duration-200 relative h-34`}
+                        onClick={() => handleProtocolClick(protocol, pair)}
+                      >
+                        <div className="flex items-center mb-4">
+                          <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
+                            <Image 
+                              src={protocol.logo_url || "/placeholder.svg"} 
+                              alt={pair.name} 
+                              width={56} 
+                              height={56}
+                              onError={(e) => {
+                                console.log('Image failed to load:', protocol.logo_url);
+                                const target = e.target as HTMLImageElement;
+                                target.src = "/placeholder.svg";
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                              {pair.pair_or_vault_name} <span className="text-sm font-normal opacity-70">({pair.name})</span>
+                            </div>
+                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {pair.type.charAt(0).toUpperCase() + pair.type.slice(1)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-auto">
+                          <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                            N/A
+                            <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
+                          </div>
+                          <div className={`font-semibold text-md ${getRiskColor(pair.type)}`}>
+                            Risk: {getRiskLabel(pair.type)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className={`font-semibold text-md ${getRiskColor(protocol.type)}`}>
-                    Risk: {getRiskLabel(protocol.type)}
-                  </div>
-                </div>
+                )}
               </div>
             ))
           )}
@@ -331,6 +435,7 @@ export default function TrendingProtocols() {
         onClose={() => setSelectedPool(null)}
         balance={balance}
         isLoadingBalance={isLoadingBalance}
+        address={address || ''}
       />
     </>
   )
