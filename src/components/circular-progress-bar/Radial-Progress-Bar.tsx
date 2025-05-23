@@ -17,9 +17,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
 
   // Keep track of the selected percentage button
-  const [selectedPercentage, setSelectedPercentage] = React.useState<
-    number | null
-  >(null);
+  const [selectedPercentage, setSelectedPercentage] = React.useState<number | null>(null);
 
   const { theme } = useTheme();
 
@@ -45,6 +43,9 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     } else {
       setSelectedPercentage(null);
     }
+
+    // Update currentAngle when angle changes from dragging
+    setCurrentAngle(angle);
   }, [angle, onAngleChange]);
 
   // Animate currentAngle to target value
@@ -74,7 +75,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     }
   };
 
-  // Calculate the amount based on currentAngle (not angle)
+  // Calculate the amount based on currentAngle
   const amount = (currentAngle * maxBalance).toFixed(2);
 
   // Calculate angle in degrees for the conic gradient
@@ -83,7 +84,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   return (
     <div className="flex flex-col items-center w-full">
       <div
-        className="rounded-full overflow-hidden relative h-48 w-48 mb-4"
+        className="rounded-full overflow-hidden relative h-48 w-48 mb-4 cursor-pointer"
         style={{
           background: `conic-gradient(rgb(46, 240, 120) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`,
         }}
@@ -96,10 +97,12 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 
         <div className="absolute inset-2 flex items-center justify-center">
           <div
-            className="bg-[rgb(0,105,32)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none"
+            className="bg-[rgb(0,105,32)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none z-10"
             ref={draggbleRef}
             style={{
               transform: `translate(${dx}px, ${dy}px)`,
+              transition: 'none', // Remove transition for more precise tracking
+              boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.8)', // Add white border for better visibility
             }}
           />
           <span className="text-xl font-bold">${amount}</span>

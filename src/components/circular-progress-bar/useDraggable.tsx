@@ -25,57 +25,37 @@ export const useDraggable = ({
     if (node) setNode(node);
   }, []);
 
-  // This effect will run when initialAngle changes OR when the node is set
+  // Update position when initialAngle changes
   React.useEffect(() => {
-    if (!node) {
-      return;
-    }
-    // Only update if the difference is significant to prevent infinite loop
-    if (Math.abs(angle - initialAngle) > 0.001) {
-      setAngle(initialAngle);
-    }
+    if (!node) return;
 
     const width = node.getBoundingClientRect().width;
-    const containerWidth =
-      node.parentElement?.getBoundingClientRect().width || 0;
-    const radius = containerWidth / 2;
-    const center = radius - width / 2;
+      const containerWidth =
+        node.parentElement?.getBoundingClientRect().width || 0;
+      const radius = containerWidth / 2;
+      const center = radius - width / 2;
 
     // Calculate position from angle (0-1)
     const angleInRadians = initialAngle * 2 * Math.PI;
-    // Start from top (subtract π/2) and calculate position
     const dx = center + radius * Math.sin(angleInRadians);
     const dy = center - radius * Math.cos(angleInRadians);
     setOffset({ dx, dy });
-  }, [node, initialAngle, angle]);
+  }, [node, initialAngle]);
 
-  // Helper function to calculate angle from drag position
+  // Helper function to calculate angle from coordinates
   const calculateAngle = (x: number, y: number, center: number): number => {
-    // Calculate angle from top (12 o'clock position)
     const radians = Math.atan2(x - center, center - y);
-
-    // Convert to 0-2π range
     let normalizedRadians = radians;
     if (normalizedRadians < 0) {
       normalizedRadians += 2 * Math.PI;
     }
-
-    // Convert to 0-1 range
     return normalizedRadians / (2 * Math.PI);
   };
 
   const handleMouseDown = React.useCallback(
     (e: MouseEvent) => {
-      if (!node) {
-        return;
-      }
-      // Prevent any default behaviors
+      if (!node) return;
       e.preventDefault();
-
-      const startPos = {
-        x: e.clientX - dx,
-        y: e.clientY - dy,
-      };
 
       const width = node.getBoundingClientRect().width;
       const containerWidth =
@@ -85,51 +65,40 @@ export const useDraggable = ({
 
       const handleMouseMove = (e: MouseEvent) => {
         e.preventDefault();
-        let newDx = e.clientX - startPos.x;
-        let newDy = e.clientY - startPos.y;
-
-        // Ensure handle stays on circle perimeter
-        const centerDistance = Math.sqrt(
-          Math.pow(newDx - center, 2) + Math.pow(newDy - center, 2)
-        );
-        const sinValue = (newDy - center) / centerDistance;
-        const cosValue = (newDx - center) / centerDistance;
-        newDx = center + radius * cosValue;
-        newDy = center + radius * sinValue;
-
-        // Calculate new angle (0-1)
-        const newAngle = calculateAngle(newDx, newDy, center);
+        
+        // Get mouse position relative to container
+        const rect = node.parentElement?.getBoundingClientRect();
+        if (!rect) return;
+        
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate new angle
+        const newAngle = calculateAngle(x, y, center);
         setAngle(newAngle);
+        
+        // Calculate new position
+        const angleInRadians = newAngle * 2 * Math.PI;
+        const newDx = center + radius * Math.sin(angleInRadians);
+        const newDy = center - radius * Math.cos(angleInRadians);
         setOffset({ dx: newDx, dy: newDy });
-        updateCursor();
       };
 
-      const handleMouseUp = (e: MouseEvent) => {
-        e.preventDefault();
+      const handleMouseUp = () => {
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
-        resetCursor();
       };
 
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [node, dx, dy]
+    [node]
   );
 
   const handleTouchStart = React.useCallback(
     (e: TouchEvent) => {
-      if (!node) {
-        return;
-      }
-      // Prevent default touch behaviors (scrolling, zooming)
+      if (!node) return;
       e.preventDefault();
-
-      const touch = e.touches[0];
-      const startPos = {
-        x: touch.clientX - dx,
-        y: touch.clientY - dy,
-      };
 
       const width = node.getBoundingClientRect().width;
       const containerWidth =
@@ -138,70 +107,52 @@ export const useDraggable = ({
       const center = radius - width / 2;
 
       const handleTouchMove = (e: TouchEvent) => {
-        // Prevent scrolling while dragging
         e.preventDefault();
         const touch = e.touches[0];
-        let newDx = touch.clientX - startPos.x;
-        let newDy = touch.clientY - startPos.y;
-
-        // Ensure handle stays on circle perimeter
-        const centerDistance = Math.sqrt(
-          Math.pow(newDx - center, 2) + Math.pow(newDy - center, 2)
-        );
-        const sinValue = (newDy - center) / centerDistance;
-        const cosValue = (newDx - center) / centerDistance;
-        newDx = center + radius * cosValue;
-        newDy = center + radius * sinValue;
-
-        // Calculate new angle (0-1)
-        const newAngle = calculateAngle(newDx, newDy, center);
+        
+        // Get touch position relative to container
+        const rect = node.parentElement?.getBoundingClientRect();
+        if (!rect) return;
+        
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        
+        // Calculate new angle
+        const newAngle = calculateAngle(x, y, center);
         setAngle(newAngle);
+        
+        // Calculate new position
+        const angleInRadians = newAngle * 2 * Math.PI;
+        const newDx = center + radius * Math.sin(angleInRadians);
+        const newDy = center - radius * Math.cos(angleInRadians);
         setOffset({ dx: newDx, dy: newDy });
-        updateCursor();
       };
 
-      const handleTouchEnd = (e: TouchEvent) => {
-        e.preventDefault();
+      const handleTouchEnd = () => {
         document.removeEventListener("touchmove", handleTouchMove);
         document.removeEventListener("touchend", handleTouchEnd);
-        resetCursor();
       };
 
-      // Use passive: false to allow preventDefault()
-      document.addEventListener("touchmove", handleTouchMove, {
-        passive: false,
-      });
+      document.addEventListener("touchmove", handleTouchMove, { passive: false });
       document.addEventListener("touchend", handleTouchEnd);
     },
-    [node, dx, dy]
+    [node]
   );
 
-  const updateCursor = () => {
-    document.body.style.cursor = "move";
-    document.body.style.userSelect = "none";
-  };
-
-  const resetCursor = () => {
-    document.body.style.removeProperty("cursor");
-    document.body.style.removeProperty("user-select");
-  };
-
   React.useEffect(() => {
-    if (!node) {
-      return;
+    if (!node) return;
+
+    // Add event listeners to the parent element (the circle) instead of the handle
+    const parentElement = node.parentElement;
+    if (parentElement) {
+      parentElement.addEventListener("mousedown", handleMouseDown);
+      parentElement.addEventListener("touchstart", handleTouchStart, { passive: false });
+
+      return () => {
+        parentElement.removeEventListener("mousedown", handleMouseDown);
+        parentElement.removeEventListener("touchstart", handleTouchStart);
+      };
     }
-
-    const mouseDownHandler = (e: Event) => handleMouseDown(e as MouseEvent);
-    const touchStartHandler = (e: Event) => handleTouchStart(e as TouchEvent);
-
-    node.addEventListener("mousedown", mouseDownHandler);
-    // Use passive: false for touch events
-    node.addEventListener("touchstart", touchStartHandler, { passive: false });
-
-    return () => {
-      node.removeEventListener("mousedown", mouseDownHandler);
-      node.removeEventListener("touchstart", touchStartHandler);
-    };
   }, [node, handleMouseDown, handleTouchStart]);
 
   return [ref, dx, dy, angle];
