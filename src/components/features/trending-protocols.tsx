@@ -23,6 +23,7 @@ interface ProtocolPair {
   chain_id: number
   contract_address: string
   created_at: string
+  apy?: number
 }
 
 export default function TrendingProtocols() {
@@ -68,9 +69,9 @@ export default function TrendingProtocols() {
 
   // Fetch protocol pairs
   useEffect(() => {
-    const fetchProtocolPairs = async () => {
+    const fetchProtocolPairsApy = async () => {
       try {
-        const response = await fetch('/api/protocol-pairs')
+        const response = await fetch('/api/protocol-pairs-apy')
         if (!response.ok) {
           throw new Error('Failed to fetch protocol pairs')
         }
@@ -82,7 +83,7 @@ export default function TrendingProtocols() {
       }
     }
 
-    fetchProtocolPairs()
+    fetchProtocolPairsApy()
   }, [])
   
   // Fetch balance when address changes
@@ -414,7 +415,7 @@ export default function TrendingProtocols() {
                         </div>
                         <div className="flex justify-between items-center mt-auto">
                           <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                            N/A
+                            {pair.apy ? `${pair.apy}%` : 'N/A'}
                             <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
                           </div>
                           <div className={`font-semibold text-md ${getRiskColor(pair.type)}`}>
