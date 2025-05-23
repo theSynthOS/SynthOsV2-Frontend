@@ -232,7 +232,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                 
                 <div className={`flex items-start justify-between ${theme === 'dark' ? 'bg-gray-600 border-gray-500' : 'bg-white border-gray-200'} border rounded-lg ${isMobile ? 'p-2' : 'p-3'} mb-4`}>
                   <div className={`font-mono ${isMobile ? 'text-xs' : 'text-sm'} break-all flex-1 min-h-[40px] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {address || "Connect wallet"}
+                    {address || "Log In/Sign Up"}
                   </div>
                   <button 
                     onClick={copyToClipboard}

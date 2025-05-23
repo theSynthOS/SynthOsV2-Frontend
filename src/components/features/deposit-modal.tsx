@@ -182,15 +182,12 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
           }
           scrollableParent = scrollableParent.parentElement as HTMLElement
         }
-
         // If we're not in a scrollable container within the modal, prevent default
         e.preventDefault()
       }
     }
-
     // Add the touchmove listener
     document.addEventListener('touchmove', preventTouchMove, { passive: false })
-
     return () => {
       // Remove the touchmove listener
       document.removeEventListener('touchmove', preventTouchMove)
@@ -261,23 +258,19 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         // Send the transaction using ThirdWeb wallet
         sendBatchTransaction([tx]);
 
-        if (receipt.status === 1) {
-          // Transaction successful
-          toast({
-            variant: "success",
-            title: "Deposit Successful",
-            description: `$${amount} deposited into ${pool?.name}`,
-          })
+        // Transaction sent
+        toast({
+          variant: "success",
+          title: "Deposit Successful",
+          description: `$${amount} deposited into ${pool?.name}`,
+        })
 
-          // Close modal and reset values
-          handleClose()
+        // Close modal and reset values
+        handleClose()
 
-          // Trigger haptic feedback if supported
-          if (navigator.vibrate) {
-            navigator.vibrate([100, 50, 100])
-          }
-        } else {
-          throw new Error('Transaction failed')
+        // Trigger haptic feedback if supported
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100])
         }
       } catch (error) {
         console.error('Deposit execution error:', error)

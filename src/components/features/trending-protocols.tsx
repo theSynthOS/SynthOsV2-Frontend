@@ -396,7 +396,7 @@ export default function TrendingProtocols() {
                               width={56} 
                               height={56}
                               onError={(e) => {
-                                console.log('Image failed to load:', protocol.logo_url);
+                                console.log('Image failed to load:', pair.name);
                                 const target = e.target as HTMLImageElement;
                                 target.src = "/placeholder.svg";
                               }}

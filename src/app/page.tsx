@@ -208,7 +208,7 @@ export default function Home() {
           <motion.div
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
-            transition={{ duration: 2.5 }}
+            transition={{ duration: 3.5 }}
             className="h-full bg-green-500 rounded-full"
           ></motion.div>
         </div>
