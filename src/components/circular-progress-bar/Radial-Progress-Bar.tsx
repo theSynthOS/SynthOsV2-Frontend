@@ -110,7 +110,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
       </div>
 
       {/* Percentage Buttons */}
-      <div className="flex justify-between w-full mt-2 px-4 gap-2">
+      <div className="flex justify-between w-full mt-2  gap-2">
         <button
           onClick={() => handlePercentageClick(25)}
           className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
