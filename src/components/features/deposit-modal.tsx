@@ -6,6 +6,19 @@ import { useToast } from "@/hooks/use-toast"
 import { CheckCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar"
+import { useActiveAccount, useActiveWallet, useSendBatchTransaction } from "thirdweb/react"
+import { client } from "@/client"
+import { scrollSepolia } from "@/client"
+import { prepareTransaction, sendBatchTransaction } from "thirdweb"
+
+// Add Ethereum window type
+declare global {
+  interface Window {
+    ethereum?: {
+      request: (args: { method: string; params: any[] }) => Promise<any>;
+    };
+  }
+}
 
 interface DepositModalProps {
   pool: {
@@ -31,7 +44,10 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
-  
+
+  const { mutate: sendBatchTransaction, data: batchTxData } =
+    useSendBatchTransaction();
+
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance)
 
@@ -59,7 +75,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
       if (prevMaxBalanceRef.current !== maxBalance) {
         // Store the previous maxBalance
         prevMaxBalanceRef.current = maxBalance
-        
+
         // The slider value (percentage) should remain the same
         // Only the absolute amount needs to be recalculated
         const currentPercentage = sliderValue
@@ -79,7 +95,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
   // Set mounted state and handle scroll lock
   useEffect(() => {
     setMounted(true)
-    
+
     if (pool) {
       // Save current body styles and position
       const scrollY = window.scrollY
@@ -90,14 +106,14 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         width: document.body.style.width,
         height: document.body.style.height
       }
-      
+
       // Prevent background scrolling and interactions
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
       document.body.style.top = `-${scrollY}px`
       document.body.style.width = '100%'
       document.body.style.height = '100%'
-      
+
       return () => {
         // Restore original body styles
         document.body.style.overflow = originalStyle.overflow
@@ -105,7 +121,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         document.body.style.top = originalStyle.top
         document.body.style.width = originalStyle.width
         document.body.style.height = originalStyle.height
-        
+
         // Restore scroll position
         window.scrollTo(0, scrollY)
       }
@@ -116,7 +132,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
   useEffect(() => {
     const preventTouchMove = (e: TouchEvent) => {
       const target = e.target as HTMLElement
-      
+
       // Check if we're inside the modal content
       if (modalRef.current && modalRef.current.contains(target)) {
         // Allow scrolling within scrollable elements inside the modal
@@ -127,10 +143,10 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
           const overflowYStyle = window.getComputedStyle(el).overflowY
           // Check if overflow is set to something scrollable
           const isOverflowScrollable = ['scroll', 'auto'].includes(overflowYStyle)
-          
+
           return hasScrollableContent && isOverflowScrollable
         }
-        
+
         // Find if we're inside a scrollable container
         let scrollableParent = target
         while (scrollableParent && modalRef.current.contains(scrollableParent)) {
@@ -138,26 +154,26 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
             // If we're at the top or bottom edge of the scrollable container, prevent default behavior
             const atTop = scrollableParent.scrollTop <= 0
             const atBottom = scrollableParent.scrollHeight - scrollableParent.scrollTop <= scrollableParent.clientHeight + 1
-            
+
             // Check scroll direction using touch position
             if (e.touches.length > 0) {
               const touch = e.touches[0]
               const touchY = touch.clientY
-              
+
               // Store the last touch position
               const lastTouchY = scrollableParent.getAttribute('data-last-touch-y')
               scrollableParent.setAttribute('data-last-touch-y', touchY.toString())
-              
+
               if (lastTouchY) {
                 const touchDelta = touchY - parseFloat(lastTouchY)
                 const scrollingUp = touchDelta > 0
                 const scrollingDown = touchDelta < 0
-                
+
                 // Only prevent default if trying to scroll past the edges
                 if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
                   e.preventDefault()
                 }
-                
+
                 // Allow scrolling within the container
                 return
               }
@@ -166,15 +182,15 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
           }
           scrollableParent = scrollableParent.parentElement as HTMLElement
         }
-        
+
         // If we're not in a scrollable container within the modal, prevent default
         e.preventDefault()
       }
     }
-    
+
     // Add the touchmove listener
     document.addEventListener('touchmove', preventTouchMove, { passive: false })
-    
+
     return () => {
       // Remove the touchmove listener
       document.removeEventListener('touchmove', preventTouchMove)
@@ -220,30 +236,63 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
       const responseData = await response.json()
       console.log('Deposit response:', responseData)
 
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Failed to process deposit')
-      }
+      // Execute the deposit payload
+      try {
+        // Create the deposit transaction
+        const depositTx = {
+          chain: scrollSepolia,
+          client: client,
+          to: pool?.protocol_id, // The protocol contract address
+          value: amount,
+          data: {
+            protocol_pair_id: pool?.protocol_pair_id,
+            amount: amount
+          }
+        }
 
-      // Show success toast
-      toast({
-        variant: "success",
-        title: "Deposit Successful",
-        description: `$${amount} deposited into ${pool?.name}`,
-      })
+        const tx = prepareTransaction({
+          to: responseData.to,
+          data: responseData.data,
+          chain: scrollSepolia,
+          client: client,
+          value: BigInt(0)
+        })
 
-      // Close modal and reset values
-      handleClose()
+        // Send the transaction using ThirdWeb wallet
+        sendBatchTransaction([tx]);
 
-      // Trigger haptic feedback if supported
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100])
+        if (receipt.status === 1) {
+          // Transaction successful
+          toast({
+            variant: "success",
+            title: "Deposit Successful",
+            description: `$${amount} deposited into ${pool?.name}`,
+          })
+
+          // Close modal and reset values
+          handleClose()
+
+          // Trigger haptic feedback if supported
+          if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100])
+          }
+        } else {
+          throw new Error('Transaction failed')
+        }
+      } catch (error) {
+        console.error('Deposit execution error:', error)
+        toast({
+          variant: "destructive",
+          title: "Deposit Failed",
+          description: error instanceof Error ? error.message : 'Failed to execute deposit',
+        })
       }
     } catch (error) {
-      console.error('Deposit error:', error)
+      console.error('Deposit execution error:', error)
       toast({
         variant: "destructive",
         title: "Deposit Failed",
-        description: error instanceof Error ? error.message : 'Failed to process deposit',
+        description: error instanceof Error ? error.message : 'Failed to execute deposit',
       })
     } finally {
       setIsSubmitting(false)
@@ -257,25 +306,25 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
   const initialAngle = sliderValue / 100;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden" 
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div 
+      <div
         ref={modalRef}
         className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
           rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold mb-4">Deposit to {pool.pair_or_vault_name}</h3>
-        
+
         <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Input and Circle Section */}
           <div>
             {/* Radial progress bar */}
             <div className="flex flex-col items-center">
-              <RadialProgressBar 
-                initialAngle={initialAngle} 
+              <RadialProgressBar
+                initialAngle={initialAngle}
                 maxBalance={maxBalance}
                 onAngleChange={handleRadialProgressUpdate}
               />
@@ -315,11 +364,10 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
             Cancel
           </button>
           <button
-            className={`flex-1 font-semibold py-3 rounded-lg relative ${
-              isSubmitting 
-                ? "bg-gray-300 text-gray-500" 
-                : "bg-green-400 text-black"
-            }`}
+            className={`flex-1 font-semibold py-3 rounded-lg relative ${isSubmitting
+              ? "bg-gray-300 text-gray-500"
+              : "bg-green-400 text-black"
+              }`}
             disabled={Number.parseFloat(amount) <= 0 || isSubmitting}
             onClick={handleConfirmDeposit}
           >
