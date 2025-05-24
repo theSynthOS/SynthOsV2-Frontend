@@ -421,7 +421,8 @@ export default function DepositModal({
           data: responseData.data,
           chain: scrollSepolia,
           client: client,
-          value: BigInt(responseData.value),
+          // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
+          value: responseData.value ? BigInt(responseData.value) : BigInt(0)
         });
 
         // Send the transaction and wait for confirmation
