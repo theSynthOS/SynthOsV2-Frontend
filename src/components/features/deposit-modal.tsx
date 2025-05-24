@@ -9,7 +9,7 @@ import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Pro
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
-import { prepareTransaction, sendTransaction } from "thirdweb";
+import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
 
 // Add Ethereum window type
 declare global {
@@ -425,7 +425,7 @@ export default function DepositModal({
         });
 
         // Send the transaction and wait for confirmation
-        const result = await sendTransaction({
+        const result = await sendAndConfirmTransaction({
           transaction: tx,
           account,
         });
