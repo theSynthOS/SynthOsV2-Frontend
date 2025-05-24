@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, ExternalLink } from "lucide-react"
-import { useTheme } from "next-themes"
-import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar"
-import { useActiveAccount, useActiveWallet } from "thirdweb/react"
-import { client } from "@/client"
-import { scrollSepolia } from "@/client"
-import { prepareTransaction, sendTransaction } from "thirdweb"
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, ExternalLink } from "lucide-react";
+import { useTheme } from "next-themes";
+import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
+import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import { client } from "@/client";
+import { scrollSepolia } from "@/client";
+import { prepareTransaction, sendTransaction } from "thirdweb";
 
 // Add Ethereum window type
 declare global {
@@ -22,56 +22,62 @@ declare global {
 
 interface DepositModalProps {
   pool: {
-    name: string
-    apy: number
-    risk: string
-    pair_or_vault_name: string
-    protocol_id?: string
-    protocol_pair_id?: string
-  } | null
-  onClose: () => void
-  balance: string
-  isLoadingBalance?: boolean
-  address: string
+    name: string;
+    apy: number;
+    risk: string;
+    pair_or_vault_name: string;
+    protocol_id?: string;
+    protocol_pair_id?: string;
+  } | null;
+  onClose: () => void;
+  balance: string;
+  isLoadingBalance?: boolean;
+  address: string;
 }
 
-export default function DepositModal({ pool, onClose, balance, isLoadingBalance = false, address }: DepositModalProps) {
-  const [amount, setAmount] = useState<string>("0")
-  const [sliderValue, setSliderValue] = useState<number>(0)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [maxBalance, setMaxBalance] = useState(Number(balance) || 0)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [percentageButtonClicked, setPercentageButtonClicked] = useState(false)
-  const isProcessingRef = useRef(false)
-  const lastCalculatedAmountRef = useRef<string>("0")
-  const submittedAmountRef = useRef<string>("0")
-  const [currentApy, setCurrentApy] = useState<number | null>(null)
-  const [isLoadingApy, setIsLoadingApy] = useState(false)
-  const [txHash, setTxHash] = useState<string>("")
-  const [processingPoolId, setProcessingPoolId] = useState<string | null>(null)
-  const { toast } = useToast()
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const modalRef = useRef<HTMLDivElement>(null)
-  const successModalRef = useRef<HTMLDivElement>(null)
+export default function DepositModal({
+  pool,
+  onClose,
+  balance,
+  isLoadingBalance = false,
+  address,
+}: DepositModalProps) {
+  const [amount, setAmount] = useState<string>("0");
+  const [sliderValue, setSliderValue] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [maxBalance, setMaxBalance] = useState(Number(balance) || 0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [percentageButtonClicked, setPercentageButtonClicked] = useState(false);
+  const isProcessingRef = useRef(false);
+  const lastCalculatedAmountRef = useRef<string>("0");
+  const submittedAmountRef = useRef<string>("0");
+  const [currentApy, setCurrentApy] = useState<number | null>(null);
+  const [isLoadingApy, setIsLoadingApy] = useState(false);
+  const [txHash, setTxHash] = useState<string>("");
+  const [processingPoolId, setProcessingPoolId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const successModalRef = useRef<HTMLDivElement>(null);
 
   const wallet = useActiveWallet();
   const account = useActiveAccount();
 
   // Keep track of the previous maxBalance value to handle transitions
-  const prevMaxBalanceRef = useRef(maxBalance)
+  const prevMaxBalanceRef = useRef(maxBalance);
 
   // Reset state when the modal is opened with a different pool
   useEffect(() => {
     if (pool) {
       // Only reset state if this is a different pool than the one being processed
       if (!processingPoolId || processingPoolId !== pool.protocol_pair_id) {
-        setAmount("0")
-        lastCalculatedAmountRef.current = "0"
-        setSliderValue(0)
-        setPercentageButtonClicked(false)
-        setIsSubmitting(false)
-        isProcessingRef.current = false
+        setAmount("0");
+        lastCalculatedAmountRef.current = "0";
+        setSliderValue(0);
+        setPercentageButtonClicked(false);
+        setIsSubmitting(false);
+        isProcessingRef.current = false;
       }
     }
   }, [pool, processingPoolId]);
@@ -82,16 +88,18 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
       const fetchApy = async () => {
         setIsLoadingApy(true);
         try {
-          const response = await fetch(`/api/protocol-pairs-apy?id=${pool.protocol_pair_id}`);
+          const response = await fetch(
+            `/api/protocol-pairs-apy?id=${pool.protocol_pair_id}`
+          );
           if (!response.ok) {
-            throw new Error('Failed to fetch APY data');
+            throw new Error("Failed to fetch APY data");
           }
           const data = await response.json();
           // Find the matching protocol pair
-          const pairData = Array.isArray(data) ? 
-            data.find(pair => pair.id === pool.protocol_pair_id) : 
-            null;
-          
+          const pairData = Array.isArray(data)
+            ? data.find((pair) => pair.id === pool.protocol_pair_id)
+            : null;
+
           if (pairData && pairData.apy !== undefined) {
             setCurrentApy(pairData.apy);
           } else {
@@ -99,7 +107,7 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
             setCurrentApy(pool.apy || 0);
           }
         } catch (error) {
-          console.error('Error fetching APY:', error);
+          console.error("Error fetching APY:", error);
           // Fallback to the APY provided in the pool prop
           setCurrentApy(pool.apy || 0);
         } finally {
@@ -113,265 +121,293 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
       setCurrentApy(pool?.apy || 0);
     }
   }, [pool]);
-  
+
   // Update maxBalance when balance prop changes
   useEffect(() => {
-    const newBalance = Number(balance) || 0
-    setMaxBalance(newBalance)
+    const newBalance = Number(balance) || 0;
+    setMaxBalance(newBalance);
     // Reset amount and slider when balance changes
-    setAmount("0")
-    lastCalculatedAmountRef.current = "0"
-    setSliderValue(0)
-    setPercentageButtonClicked(false)
-  }, [balance])
+    setAmount("0");
+    lastCalculatedAmountRef.current = "0";
+    setSliderValue(0);
+    setPercentageButtonClicked(false);
+  }, [balance]);
 
   // Handle maxBalance updates while maintaining the percentage
   useEffect(() => {
     if (pool) {
       if (prevMaxBalanceRef.current !== maxBalance) {
         // Store the previous maxBalance
-        prevMaxBalanceRef.current = maxBalance
+        prevMaxBalanceRef.current = maxBalance;
 
         // The slider value (percentage) should remain the same
         // Only the absolute amount needs to be recalculated
-        const currentPercentage = sliderValue
-        const newAmount = ((currentPercentage / 100) * maxBalance).toFixed(2)
-        setAmount(newAmount)
-        lastCalculatedAmountRef.current = newAmount
+        const currentPercentage = sliderValue;
+        const newAmount = ((currentPercentage / 100) * maxBalance).toFixed(2);
+        setAmount(newAmount);
+        lastCalculatedAmountRef.current = newAmount;
       }
     }
-  }, [maxBalance, pool, sliderValue])
+  }, [maxBalance, pool, sliderValue]);
 
   // Handle modal close and reset values
   const handleClose = () => {
     // Only reset if we're not in the middle of processing
     if (!isSubmitting) {
-      setAmount("0")
-      lastCalculatedAmountRef.current = "0"
-      setSliderValue(0)
-      setPercentageButtonClicked(false)
+      setAmount("0");
+      lastCalculatedAmountRef.current = "0";
+      setSliderValue(0);
+      setPercentageButtonClicked(false);
       // Don't reset processingPoolId here as it might still be processing
     }
-    onClose()
-  }
-  
+    onClose();
+  };
+
   // Handle closing both modals
   const handleCloseAll = () => {
-    setShowSuccessModal(false)
-    isProcessingRef.current = false
-    setProcessingPoolId(null) // Clear the processing pool ID
-    handleClose()
-  }
+    setShowSuccessModal(false);
+    isProcessingRef.current = false;
+    setProcessingPoolId(null); // Clear the processing pool ID
+    handleClose();
+  };
 
   // Set mounted state and handle scroll lock
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
 
     if (pool) {
       // Save current body styles and position
-      const scrollY = window.scrollY
+      const scrollY = window.scrollY;
       const originalStyle = {
         overflow: document.body.style.overflow,
         position: document.body.style.position,
         top: document.body.style.top,
         width: document.body.style.width,
-        height: document.body.style.height
-      }
+        height: document.body.style.height,
+      };
 
       // Prevent background scrolling and interactions
-      document.body.style.overflow = 'hidden'
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.width = '100%'
-      document.body.style.height = '100%'
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
 
       return () => {
         // Restore original body styles
-        document.body.style.overflow = originalStyle.overflow
-        document.body.style.position = originalStyle.position
-        document.body.style.top = originalStyle.top
-        document.body.style.width = originalStyle.width
-        document.body.style.height = originalStyle.height
+        document.body.style.overflow = originalStyle.overflow;
+        document.body.style.position = originalStyle.position;
+        document.body.style.top = originalStyle.top;
+        document.body.style.width = originalStyle.width;
+        document.body.style.height = originalStyle.height;
 
         // Restore scroll position
-        window.scrollTo(0, scrollY)
-      }
+        window.scrollTo(0, scrollY);
+      };
     }
-  }, [pool])
+  }, [pool]);
 
   // Prevent touchmove events from propagating to body
   useEffect(() => {
     const preventTouchMove = (e: TouchEvent) => {
-      const target = e.target as HTMLElement
+      const target = e.target as HTMLElement;
 
       // Check if we're inside the modal content
-      if ((modalRef.current && modalRef.current.contains(target)) || 
-          (successModalRef.current && successModalRef.current.contains(target))) {
+      if (
+        (modalRef.current && modalRef.current.contains(target)) ||
+        (successModalRef.current && successModalRef.current.contains(target))
+      ) {
         // Allow scrolling within scrollable elements inside the modal
         const isScrollable = (el: HTMLElement) => {
           // Check if the element has a scrollbar
-          const hasScrollableContent = el.scrollHeight > el.clientHeight
+          const hasScrollableContent = el.scrollHeight > el.clientHeight;
           // Get the computed overflow-y style
-          const overflowYStyle = window.getComputedStyle(el).overflowY
+          const overflowYStyle = window.getComputedStyle(el).overflowY;
           // Check if overflow is set to something scrollable
-          const isOverflowScrollable = ['scroll', 'auto'].includes(overflowYStyle)
+          const isOverflowScrollable = ["scroll", "auto"].includes(
+            overflowYStyle
+          );
 
-          return hasScrollableContent && isOverflowScrollable
-        }
+          return hasScrollableContent && isOverflowScrollable;
+        };
 
         // Find if we're inside a scrollable container
-        let scrollableParent = target
-        let currentModalRef = modalRef.current?.contains(target) ? modalRef.current : successModalRef.current
-        
-        while (scrollableParent && currentModalRef && currentModalRef.contains(scrollableParent)) {
+        let scrollableParent = target;
+        let currentModalRef = modalRef.current?.contains(target)
+          ? modalRef.current
+          : successModalRef.current;
+
+        while (
+          scrollableParent &&
+          currentModalRef &&
+          currentModalRef.contains(scrollableParent)
+        ) {
           if (isScrollable(scrollableParent)) {
             // If we're at the top or bottom edge of the scrollable container, prevent default behavior
-            const atTop = scrollableParent.scrollTop <= 0
-            const atBottom = scrollableParent.scrollHeight - scrollableParent.scrollTop <= scrollableParent.clientHeight + 1
+            const atTop = scrollableParent.scrollTop <= 0;
+            const atBottom =
+              scrollableParent.scrollHeight - scrollableParent.scrollTop <=
+              scrollableParent.clientHeight + 1;
 
             // Check scroll direction using touch position
             if (e.touches.length > 0) {
-              const touch = e.touches[0]
-              const touchY = touch.clientY
+              const touch = e.touches[0];
+              const touchY = touch.clientY;
 
               // Store the last touch position
-              const lastTouchY = scrollableParent.getAttribute('data-last-touch-y')
-              scrollableParent.setAttribute('data-last-touch-y', touchY.toString())
+              const lastTouchY =
+                scrollableParent.getAttribute("data-last-touch-y");
+              scrollableParent.setAttribute(
+                "data-last-touch-y",
+                touchY.toString()
+              );
 
               if (lastTouchY) {
-                const touchDelta = touchY - parseFloat(lastTouchY)
-                const scrollingUp = touchDelta > 0
-                const scrollingDown = touchDelta < 0
+                const touchDelta = touchY - parseFloat(lastTouchY);
+                const scrollingUp = touchDelta > 0;
+                const scrollingDown = touchDelta < 0;
 
                 // Only prevent default if trying to scroll past the edges
                 if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
-                  e.preventDefault()
+                  e.preventDefault();
                 }
 
                 // Allow scrolling within the container
-                return
+                return;
               }
             }
-            return
+            return;
           }
-          scrollableParent = scrollableParent.parentElement as HTMLElement
+          scrollableParent = scrollableParent.parentElement as HTMLElement;
         }
         // If we're not in a scrollable container within the modal, prevent default
-        e.preventDefault()
+        e.preventDefault();
       }
-    }
+    };
     // Add the touchmove listener
-    document.addEventListener('touchmove', preventTouchMove, { passive: false })
+    document.addEventListener("touchmove", preventTouchMove, {
+      passive: false,
+    });
     return () => {
       // Remove the touchmove listener
-      document.removeEventListener('touchmove', preventTouchMove)
-    }
-  }, [])
+      document.removeEventListener("touchmove", preventTouchMove);
+    };
+  }, []);
 
   // Handle radial progress update
   const handleRadialProgressUpdate = (progressPercentage: number) => {
     if (isProcessingRef.current) {
       return;
     }
-    
+
     // Make sure progressPercentage is valid
     if (progressPercentage === undefined || progressPercentage === null) {
       return;
     }
-    
+
     // Check if this is coming from one of the percentage buttons
-    const isPercentageButton = progressPercentage === 25 || 
-                               progressPercentage === 50 || 
-                               progressPercentage === 75 || 
-                               progressPercentage === 100;
-    
+    const isPercentageButton =
+      progressPercentage === 25 ||
+      progressPercentage === 50 ||
+      progressPercentage === 75 ||
+      progressPercentage === 100;
+
     // If it's from a percentage button, set our flag
     if (isPercentageButton) {
       setPercentageButtonClicked(true);
     }
-    
+
     // If it's a real drag interaction, clear the percentage button flag
     if (!isPercentageButton && progressPercentage > 0) {
       setPercentageButtonClicked(false);
     }
-    
+
     // Use exact percentage value without forcing minimum
     const validPercentage = progressPercentage;
-    
+
     // Update the slider value state
     setSliderValue(validPercentage);
-    
+
     // Calculate the new amount based on the percentage of maxBalance
     // Ensure we get at least 2 decimal places
     const calculatedAmount = ((validPercentage / 100) * maxBalance).toFixed(2);
-    
+
     // Store in ref immediately (not affected by React's async state updates)
     lastCalculatedAmountRef.current = calculatedAmount;
-    
+
     // Update the amount state - ensure it's a string with at least 2 decimal places
     setAmount(calculatedAmount);
-   
-  }
+  };
 
   // Calculate estimated yearly yield using the fetched APY
-  const yearlyYield = (Number.parseFloat(amount) * (currentApy || 0)) / 100
+  const yearlyYield = (Number.parseFloat(amount) * (currentApy || 0)) / 100;
 
   // Handle deposit confirmation
   const handleConfirmDeposit = async () => {
     // Get the current amount value from our ref for consistent access
     // This ensures we use the most recent amount calculation, even if state hasn't updated yet
     const depositAmount = lastCalculatedAmountRef.current || amount;
-    
+
     // Store the final submitted amount for success screen
     submittedAmountRef.current = depositAmount;
-    
-    console.log('handleConfirmDeposit called, amount from state:', amount, 'amount from ref:', lastCalculatedAmountRef.current, 'using:', depositAmount);
-    
+
+    console.log(
+      "handleConfirmDeposit called, amount from state:",
+      amount,
+      "amount from ref:",
+      lastCalculatedAmountRef.current,
+      "using:",
+      depositAmount
+    );
+
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
-      console.log('Invalid amount:', depositAmount);
+      console.log("Invalid amount:", depositAmount);
       toast({
         variant: "destructive",
         title: "Invalid Amount",
         description: "Please enter a valid deposit amount",
-      })
-      return
+      });
+      return;
     }
-    
+
     // Set processing flag to prevent RadialProgressBar updates
     isProcessingRef.current = true;
-    
-    // Start the loading state and track which pool is being processed
-    setIsSubmitting(true)
-    if (pool?.protocol_pair_id) {
-      setProcessingPoolId(pool.protocol_pair_id)
-    }
-    console.log('Setting isSubmitting to true for pool:', pool?.protocol_pair_id);
 
-    console.log('Starting deposit with:', {
+    // Start the loading state and track which pool is being processed
+    setIsSubmitting(true);
+    if (pool?.protocol_pair_id) {
+      setProcessingPoolId(pool.protocol_pair_id);
+    }
+    console.log(
+      "Setting isSubmitting to true for pool:",
+      pool?.protocol_pair_id
+    );
+
+    console.log("Starting deposit with:", {
       user_address: address,
       protocol_id: pool?.protocol_id,
       protocol_pair_id: pool?.protocol_pair_id,
       amount: depositAmount,
-      pool_name: pool?.name
-    })
+      pool_name: pool?.name,
+    });
 
     try {
-      const response = await fetch('/api/deposit', {
-        method: 'POST',
+      const response = await fetch("/api/deposit", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_address: address,
           protocol_id: pool?.protocol_id,
           protocol_pair_id: pool?.protocol_pair_id,
-          amount: depositAmount
-        })
-      })
+          amount: depositAmount,
+        }),
+      });
 
-      const responseData = await response.json()
-      console.log('Deposit response:', responseData)
+      const responseData = await response.json();
+      console.log("Deposit response:", responseData);
 
       // Execute the deposit payload
       try {
@@ -385,57 +421,61 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
           data: responseData.data,
           chain: scrollSepolia,
           client: client,
-          value: BigInt(0)
+          value: BigInt(responseData.value),
         });
 
         // Send the transaction and wait for confirmation
         const result = await sendTransaction({
           transaction: tx,
-          account
+          account,
         });
 
         console.log("Transaction sent:", result);
-        
+
         // Store the transaction hash for the success screen
         setTxHash(result.transactionHash);
 
         // Add a slight delay to make the loading state more visible
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Show success modal
-        setShowSuccessModal(true)
-        
+        setShowSuccessModal(true);
+
         // Also show toast notification
         toast({
           variant: "success",
           title: "Deposit Successful",
           description: `$${depositAmount} deposited into ${pool?.name}`,
-        })
+        });
 
         // Trigger haptic feedback if supported
         if (navigator.vibrate) {
-          navigator.vibrate([100, 50, 100])
+          navigator.vibrate([100, 50, 100]);
         }
       } catch (error) {
-        console.error('Deposit execution error:', error)
+        console.error("Deposit execution error:", error);
         toast({
           variant: "destructive",
           title: "Deposit Failed",
-          description: error instanceof Error ? error.message : 'Failed to execute deposit',
-        })
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to execute deposit",
+        });
       }
     } catch (error) {
-      console.error('Deposit execution error:', error)
+      console.error("Deposit execution error:", error);
       toast({
         variant: "destructive",
         title: "Deposit Failed",
-        description: error instanceof Error ? error.message : 'Failed to execute deposit',
-      })
+        description:
+          error instanceof Error ? error.message : "Failed to execute deposit",
+      });
     } finally {
       // Only reset submission state if this specific modal is still open
       // and matches the processing pool ID
       if (pool?.protocol_pair_id === processingPoolId) {
-        setIsSubmitting(false)
+        setIsSubmitting(false);
         // Only reset processing flags if we're not showing success modal
         if (!showSuccessModal) {
           isProcessingRef.current = false;
@@ -443,16 +483,14 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         }
       }
     }
-  }
+  };
 
- 
   // If theme isn't loaded yet or no pool selected, return nothing
-  if (!mounted || !pool) return null
+  if (!mounted || !pool) return null;
 
   // Calculate the initial angle for the radial progress bar (0-1 range)
   const initialAngle = sliderValue / 100;
 
-  
   return (
     <>
       {/* Main Deposit Modal */}
@@ -463,13 +501,22 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         >
           <div
             ref={modalRef}
-            className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
+            className={`${
+              theme === "dark"
+                ? "bg-gray-800 text-white"
+                : "bg-white text-black"
+            } 
               rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-bold mb-4">Deposit to {pool.pair_or_vault_name}</h3>
+            <h3 className="text-2xl font-bold mb-4">
+              Deposit to {pool.pair_or_vault_name}
+            </h3>
 
-            <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div
+              className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               {/* Input and Circle Section */}
               <div>
                 {/* Radial progress bar */}
@@ -480,10 +527,14 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
                     onAngleChange={handleRadialProgressUpdate}
                   />
                 </div>
-  
 
-                <div className={`text-right text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1 w-full`}>
-                  Balance: {isLoadingBalance ? (
+                <div
+                  className={`text-right text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  } mt-1 w-full`}
+                >
+                  Balance:{" "}
+                  {isLoadingBalance ? (
                     <span className="inline-flex items-center">
                       <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                     </span>
@@ -494,9 +545,19 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
               </div>
 
               {/* Statistics */}
-              <div className={`${theme === 'dark' ? 'bg-[#0f0b22]/30' : 'bg-gray-100/50'} rounded-lg p-4`}>
+              <div
+                className={`${
+                  theme === "dark" ? "bg-[#0f0b22]/30" : "bg-gray-100/50"
+                } rounded-lg p-4`}
+              >
                 <div className="flex justify-between text-sm mb-2">
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Estimated APY</span>
+                  <span
+                    className={
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }
+                  >
+                    Estimated APY
+                  </span>
                   {isLoadingApy ? (
                     <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                   ) : (
@@ -504,8 +565,18 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
                   )}
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Estimated Yearly Yield</span>
-                  <span className={theme === 'dark' ? 'text-white' : 'text-black'}>${yearlyYield.toFixed(2)}</span>
+                  <span
+                    className={
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }
+                  >
+                    Estimated Yearly Yield
+                  </span>
+                  <span
+                    className={theme === "dark" ? "text-white" : "text-black"}
+                  >
+                    ${yearlyYield.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -524,20 +595,31 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
                   // Only show as processing if this specific pool is being processed
                   isSubmitting && pool?.protocol_pair_id === processingPoolId
                     ? "bg-gray-300 text-gray-500"
-                    : parseFloat(amount) > 0 
-                      ? "bg-green-400 text-black hover:bg-green-500" 
-                      : "bg-gray-300 text-gray-500"
+                    : parseFloat(amount) > 0
+                    ? "bg-green-400 text-black hover:bg-green-500"
+                    : "bg-gray-300 text-gray-500"
                 }`}
-                disabled={(parseFloat(amount) <= 0 || (isSubmitting && pool?.protocol_pair_id === processingPoolId))}
+                disabled={
+                  parseFloat(amount) <= 0 ||
+                  (isSubmitting && pool?.protocol_pair_id === processingPoolId)
+                }
                 onClick={() => {
                   // Ensure we capture the most recent amount calculation directly from the ref
-                  const currentAmount = lastCalculatedAmountRef.current || amount;
-                  console.log('Confirm button clicked, amount from state:', amount, 
-                    'amount from ref:', lastCalculatedAmountRef.current, 
-                    'using:', currentAmount, 
-                    'as number:', parseFloat(currentAmount),
-                    'for pool:', pool?.protocol_pair_id);
-                  
+                  const currentAmount =
+                    lastCalculatedAmountRef.current || amount;
+                  console.log(
+                    "Confirm button clicked, amount from state:",
+                    amount,
+                    "amount from ref:",
+                    lastCalculatedAmountRef.current,
+                    "using:",
+                    currentAmount,
+                    "as number:",
+                    parseFloat(currentAmount),
+                    "for pool:",
+                    pool?.protocol_pair_id
+                  );
+
                   // Make sure the amount in the ref is immediately available for handleConfirmDeposit
                   handleConfirmDeposit();
                 }}
@@ -565,7 +647,11 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         >
           <div
             ref={successModalRef}
-            className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} 
+            className={`${
+              theme === "dark"
+                ? "bg-gray-800 text-white"
+                : "bg-white text-black"
+            } 
               rounded-lg w-full max-w-md p-6 text-center`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -573,41 +659,55 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
                 <CheckCircle className="w-12 h-12 text-green-500" />
               </div>
-              
+
               <h3 className="text-2xl font-bold mb-2">Deposit Successful!</h3>
-              
+
               <div className="mb-6">
                 <p className="text-lg mb-1">You've deposited</p>
-                <p className="text-3xl font-bold text-green-500">${submittedAmountRef.current} USDC</p>
-                <p className="text-sm mt-2 opacity-80">into {pool.pair_or_vault_name}</p>
+                <p className="text-3xl font-bold text-green-500">
+                  ${submittedAmountRef.current} USDC
+                </p>
+                <p className="text-sm mt-2 opacity-80">
+                  into {pool.pair_or_vault_name}
+                </p>
               </div>
-              
-              <div className={`w-full ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} p-4 rounded-lg mb-6`}>
+
+              <div
+                className={`w-full ${
+                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                } p-4 rounded-lg mb-6`}
+              >
                 <div className="flex justify-between mb-2">
                   <span className="opacity-70">Expected APY</span>
-                  <span className="font-semibold text-green-500">{currentApy || 0}%</span>
+                  <span className="font-semibold text-green-500">
+                    {currentApy || 0}%
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="opacity-70">Estimated Yearly Yield</span>
-                  <span className="font-semibold">${yearlyYield.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    ${yearlyYield.toFixed(2)}
+                  </span>
                 </div>
               </div>
-              
+
               {/* Transaction Link */}
               {txHash && (
-                <a 
-                  href={`https://sepolia.scrollscan.dev/tx/${txHash}`} 
-                  target="_blank" 
+                <a
+                  href={`https://sepolia.scrollscan.dev/tx/${txHash}`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-center w-full ${
-                    theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                    theme === "dark"
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-100 hover:bg-gray-200"
                   } py-3 px-4 rounded-lg mb-4 transition-colors`}
                 >
                   <span className="mr-2">View Transaction</span>
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
-              
+
               <button
                 onClick={handleCloseAll}
                 className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors"
@@ -619,5 +719,5 @@ export default function DepositModal({ pool, onClose, balance, isLoadingBalance 
         </div>
       )}
     </>
-  )
+  );
 }
