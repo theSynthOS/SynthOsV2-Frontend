@@ -15,18 +15,53 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 }) => {
   // Keep track of the current angle internally
   const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
+  
+  // Keep track of whether the component was just mounted
+  const isInitialMount = React.useRef(true);
 
   // Keep track of the selected percentage button
   const [selectedPercentage, setSelectedPercentage] = React.useState<number | null>(null);
 
   const { theme } = useTheme();
 
+  // Track if we're currently processing a percentage button click
+  const processingPercentageClick = React.useRef(false);
+
   const [draggbleRef, dx, dy, angle] = useDraggable({
     initialAngle: currentAngle,
   });
 
+  // Update currentAngle when initialAngle changes from parent
+  React.useEffect(() => {
+    // Only update on non-initial renders if the change is significant
+    // This prevents tiny initialAngle changes from resetting our UI
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      // Only apply changes if we're not processing a button click
+      if (!processingPercentageClick.current) {
+        setCurrentAngle(initialAngle);
+      }
+    }
+  }, [initialAngle, currentAngle]);
+
   // Call the onAngleChange callback when angle changes
   React.useEffect(() => {
+    // Don't update during percentage button clicks to avoid feedback loops
+    if (processingPercentageClick.current) {
+      return;
+    }
+    
+    // Handle zero angle explicitly
+    if (angle === 0) {
+      if (onAngleChange) {
+        onAngleChange(0);
+      }
+      setSelectedPercentage(null);
+      setCurrentAngle(0);
+      return;
+    }
+    
     if (onAngleChange) {
       onAngleChange(angle * 100);
     }
@@ -60,6 +95,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
         requestAnimationFrame(animate);
       } else {
         setCurrentAngle(to); // Ensure it ends exactly at the target
+        // Animation is complete, allow angle changes again
+        processingPercentageClick.current = false;
       }
     };
     requestAnimationFrame(animate);
@@ -67,16 +104,23 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 
   // Handle percentage button clicks
   const handlePercentageClick = (percentage: number) => {
+    // Set flag to prevent feedback loops during animation
+    processingPercentageClick.current = true;
+    
     const targetAngle = percentage / 100;
     animateAngle(currentAngle, targetAngle);
     setSelectedPercentage(percentage);
+    
+    // Call onAngleChange directly with the exact percentage
     if (onAngleChange) {
+      // Make sure we're passing the exact percentage value (25, 50, 75, 100)
+      console.log('Percentage button clicked:', percentage);
       onAngleChange(percentage);
     }
   };
 
   // Calculate the amount based on currentAngle
-  const amount = (currentAngle * maxBalance).toFixed(2);
+  const amount = currentAngle === 0 ? "0.00" : (currentAngle * maxBalance).toFixed(2);
 
   // Calculate angle in degrees for the conic gradient
   const angleDegrees = currentAngle * 360;

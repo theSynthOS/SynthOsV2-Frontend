@@ -30,10 +30,10 @@ export const useDraggable = ({
     if (!node) return;
 
     const width = node.getBoundingClientRect().width;
-      const containerWidth =
-        node.parentElement?.getBoundingClientRect().width || 0;
-      const radius = containerWidth / 2;
-      const center = radius - width / 2;
+    const containerWidth =
+      node.parentElement?.getBoundingClientRect().width || 0;
+    const radius = containerWidth / 2;
+    const center = radius - width / 2;
 
     // Calculate position from angle (0-1)
     const angleInRadians = initialAngle * 2 * Math.PI;
