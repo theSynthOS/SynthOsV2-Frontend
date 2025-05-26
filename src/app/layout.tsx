@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeFi Protocol Tracker",
-  description: "Track DeFi protocols and their APY/APR rates",
+  title: "SynthOS",
+  description: "Invest with confidence using personalized yield plans.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>SynthOS V2</title>
+        <title>SynthOS</title>
         <meta name="description" content="SynthOS V2 - Your gateway to the future of DeFi" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
