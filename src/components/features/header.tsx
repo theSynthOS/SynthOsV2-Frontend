@@ -4,7 +4,7 @@ import { Home, Award, Wallet, Settings, History } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useState } from "react"
-import SettingsPanel from "@/components/settings/settings-panel"
+import SettingsPanel from "@/components/profile/settings-panel"
 
 export default function Header() {
     const router = useRouter()

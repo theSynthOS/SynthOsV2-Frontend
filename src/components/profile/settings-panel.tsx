@@ -14,6 +14,8 @@ import {
   LogIn,
   Moon,
   Sun,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -25,6 +27,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useToast } from "@/hooks/use-toast";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -39,9 +42,11 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const router = useRouter();
   const { isAuthenticated, address, logout, login } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -111,6 +116,24 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       onClose();
       setIsExiting(false);
     }, 300);
+  };
+
+  // Handle copy address to clipboard
+  const handleCopyAddress = () => {
+    if (displayAddress) {
+      navigator.clipboard.writeText(displayAddress)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          toast({
+            title: "Address copied",
+            description: "Wallet address copied to clipboard",
+          });
+        })
+        .catch(err => {
+          console.error('Failed to copy address: ', err);
+        });
+    }
   };
 
   if (!isOpen) return null;
@@ -184,6 +207,29 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   ? formatAddress(displayAddress)
                   : "Not connected"}
               </h2>
+              {displayAddress && (
+                <div className="flex items-center mt-1">
+                  <button 
+                    onClick={handleCopyAddress}
+                    className={`flex items-center text-sm ${
+                      theme === "dark" ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-700"
+                    } transition-colors`}
+                    aria-label="Copy wallet address"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1 text-green-500" />
+                        <span className="text-green-500">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-1" />
+                        <span>Copy address</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
