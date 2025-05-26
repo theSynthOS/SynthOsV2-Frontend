@@ -9,7 +9,7 @@ import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Pro
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
-import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
+import { prepareTransaction, sendAndConfirmTransaction, sendBatchTransaction } from "thirdweb";
 
 // Add Ethereum window type
 declare global {
@@ -416,18 +416,27 @@ export default function DepositModal({
         }
 
         // Prepare the transaction using the calldata from the API
-        const tx = prepareTransaction({
-          to: responseData.to,
-          data: responseData.data,
+
+        const approvalTx = prepareTransaction({
+          to: responseData[0].to,
+          data: responseData[0].data,
+          value: responseData[0].value ? BigInt(responseData[0].value) : BigInt(0),
+          chain: scrollSepolia,
+          client: client,
+        });
+        
+        const depositIntoVaultTx = prepareTransaction({
+          to: responseData[1].to,
+          data: responseData[1].data,
           chain: scrollSepolia,
           client: client,
           // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
-          value: responseData.value ? BigInt(responseData.value) : BigInt(0)
+          value: responseData[1].value ? BigInt(responseData[1].value) : BigInt(0)
         });
 
         // Send the transaction and wait for confirmation
-        const result = await sendAndConfirmTransaction({
-          transaction: tx,
+        const result = await sendBatchTransaction({
+          transactions: [approvalTx, depositIntoVaultTx],
           account,
         });
 
