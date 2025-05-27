@@ -6,12 +6,16 @@ interface RadialProgressBarProps {
   initialAngle: number; // 0-1 range from parent
   maxBalance: number;
   onAngleChange?: (percentage: number) => void; // Calls back with 0-100 percentage
+  onWheel?: (e: React.WheelEvent) => void;
+  onTouchMove?: (e: React.TouchEvent) => void;
 }
 
 export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   initialAngle,
   maxBalance,
   onAngleChange,
+  onWheel,
+  onTouchMove,
 }) => {
   // Keep track of the current angle internally
   const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
@@ -126,7 +130,11 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   const angleDegrees = currentAngle * 360;
 
   return (
-    <div className="flex flex-col items-center w-full">
+    <div 
+      className="flex flex-col items-center w-full"
+      onWheel={onWheel}
+      onTouchMove={onTouchMove}
+    >
       <div
         className="rounded-full overflow-hidden relative h-48 w-48 mb-4 cursor-pointer"
         style={{

@@ -33,6 +33,7 @@ interface DepositModalProps {
   balance: string;
   isLoadingBalance?: boolean;
   address: string;
+  refreshBalance?: () => void;
 }
 
 export default function DepositModal({
@@ -41,6 +42,7 @@ export default function DepositModal({
   balance,
   isLoadingBalance = false,
   address,
+  refreshBalance,
 }: DepositModalProps) {
   const [amount, setAmount] = useState<string>("0");
   const [sliderValue, setSliderValue] = useState<number>(0);
@@ -60,16 +62,35 @@ export default function DepositModal({
   const [mounted, setMounted] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const successModalRef = useRef<HTMLDivElement>(null);
-
   const wallet = useActiveWallet();
   const account = useActiveAccount();
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
 
+  // Add a reference to track if modal is closed during processing
+  const modalClosedDuringProcessingRef = useRef(false);
+
+  // Add a reference to track deposit status for each pool
+  // This will help maintain state even when modal is closed and reopened
+  const [completedDeposits, setCompletedDeposits] = useState<{[poolId: string]: {
+    success: boolean;
+    amount: string;
+    txHash: string;
+  }}>({});
+
+  // Add a ref to store the yearly yield at the time of submission
+  const submittedYearlyYieldRef = useRef<number>(0);
+
   // Reset state when the modal is opened with a different pool
   useEffect(() => {
     if (pool) {
+      // Check if this pool has a completed deposit
+      if (pool.protocol_pair_id && completedDeposits[pool.protocol_pair_id]) {
+        // Don't reset state for completed deposits, as we'll show the success modal
+        return;
+      }
+      
       // Only reset state if this is a different pool than the one being processed
       if (!processingPoolId || processingPoolId !== pool.protocol_pair_id) {
         setAmount("0");
@@ -78,9 +99,11 @@ export default function DepositModal({
         setPercentageButtonClicked(false);
         setIsSubmitting(false);
         isProcessingRef.current = false;
+        // Reset the modalClosedDuringProcessingRef flag when opening a new modal
+        modalClosedDuringProcessingRef.current = false;
       }
     }
-  }, [pool, processingPoolId]);
+  }, [pool, processingPoolId, completedDeposits]);
 
   // Fetch APY for the selected pool
   useEffect(() => {
@@ -152,22 +175,53 @@ export default function DepositModal({
 
   // Handle modal close and reset values
   const handleClose = () => {
-    // Only reset if we're not in the middle of processing
-    if (!isSubmitting) {
+    // If submitting, mark that modal was closed during processing but don't reset state
+    if (isSubmitting) {
+      // Just mark that the modal was closed during processing
+      modalClosedDuringProcessingRef.current = true;
+      
+      // Show a toast notification that transaction is still processing
+      toast({
+        title: "Transaction in progress",
+        description: "Your deposit is still processing in the background.",
+        duration: 5000,
+      });
+    } else if (!showSuccessModal) {
+      // Only reset values if not showing success modal and not submitting
       setAmount("0");
       lastCalculatedAmountRef.current = "0";
       setSliderValue(0);
       setPercentageButtonClicked(false);
-      // Don't reset processingPoolId here as it might still be processing
     }
+    // Always call onClose to close the modal
     onClose();
   };
 
-  // Handle closing both modals
+  // Handle closing success modal and reset all values
   const handleCloseAll = () => {
     setShowSuccessModal(false);
     isProcessingRef.current = false;
     setProcessingPoolId(null); // Clear the processing pool ID
+    setAmount("0");
+    lastCalculatedAmountRef.current = "0";
+    setSliderValue(0);
+    setPercentageButtonClicked(false);
+    modalClosedDuringProcessingRef.current = false;
+    
+    // Refresh balance one more time before closing
+    if (refreshBalance) {
+      refreshBalance();
+    }
+    
+    // Clear completed deposit status for this pool
+    if (pool?.protocol_pair_id) {
+      setCompletedDeposits(prev => {
+        const newState = {...prev};
+        delete newState[pool.protocol_pair_id as string];
+        return newState;
+      });
+    }
+    
     handleClose();
   };
 
@@ -350,15 +404,11 @@ export default function DepositModal({
 
     // Store the final submitted amount for success screen
     submittedAmountRef.current = depositAmount;
+    
+    // Store the yearly yield calculation for success screen
+    submittedYearlyYieldRef.current = (Number.parseFloat(depositAmount) * (currentApy || 0)) / 100;
 
-    console.log(
-      "handleConfirmDeposit called, amount from state:",
-      amount,
-      "amount from ref:",
-      lastCalculatedAmountRef.current,
-      "using:",
-      depositAmount
-    );
+    
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
@@ -445,42 +495,88 @@ export default function DepositModal({
         // Store the transaction hash for the success screen
         setTxHash(result.transactionHash);
 
+        // Refresh the balance
+        if (refreshBalance) {
+          refreshBalance();
+        }
+
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Show success modal
-        setShowSuccessModal(true);
+        // Store this successful deposit in our state so we can show it if user reopens the modal
+        if (pool?.protocol_pair_id) {
+          const poolId = pool.protocol_pair_id;
+          setCompletedDeposits(prev => ({
+            ...prev,
+            [poolId]: {
+              success: true,
+              amount: depositAmount,
+              txHash: result.transactionHash
+            }
+          }));
+        }
 
-        // Also show toast notification
-        toast({
-          variant: "success",
-          title: "Deposit Successful",
-          description: `$${depositAmount} deposited into ${pool?.name}`,
-        });
+        // If the modal wasn't closed during processing, show success modal immediately
+        if (!modalClosedDuringProcessingRef.current) {
+          setShowSuccessModal(true);
+        } else {
+          // If modal was closed, just show a success toast
+          // Success modal will be shown when they click the pool again
+          toast({
+            variant: "success",
+            title: "Deposit Successful",
+            description: `$${depositAmount} deposited into ${pool?.name}`,
+          });
+        }
 
-        // Trigger haptic feedback if supported
+        // Always trigger haptic feedback if supported
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100]);
         }
       } catch (error) {
         console.error("Deposit execution error:", error);
-        toast({
-          variant: "destructive",
-          title: "Deposit Failed",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Failed to execute deposit",
-        });
+        
+        // Store the failed deposit in our state
+        if (pool?.protocol_pair_id) {
+          const poolId = pool.protocol_pair_id;
+          setCompletedDeposits(prev => ({
+            ...prev,
+            [poolId]: {
+              success: false,
+              amount: depositAmount,
+              txHash: ""
+            }
+          }));
+        }
+        
+        // Only show error toast if the modal is still open
+        if (!modalClosedDuringProcessingRef.current) {
+          toast({
+            variant: "destructive",
+            title: "Deposit Failed",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Failed to execute deposit",
+          });
+        }
       }
     } catch (error) {
       console.error("Deposit execution error:", error);
-      toast({
-        variant: "destructive",
-        title: "Deposit Failed",
-        description:
-          error instanceof Error ? error.message : "Failed to execute deposit",
-      });
+      
+      // Store the failed deposit in our state
+      if (pool?.protocol_pair_id) {
+        const poolId = pool.protocol_pair_id;
+        setCompletedDeposits(prev => ({
+          ...prev,
+          [poolId]: {
+            success: false,
+            amount: depositAmount,
+            txHash: ""
+          }
+        }));
+      }
+      
     } finally {
       // Only reset submission state if this specific modal is still open
       // and matches the processing pool ID
@@ -495,6 +591,38 @@ export default function DepositModal({
     }
   };
 
+  // Check for completed deposits when pool changes
+  useEffect(() => {
+    if (pool?.protocol_pair_id && completedDeposits[pool.protocol_pair_id]) {
+      // If this pool has a completed deposit, show the appropriate modal
+      const depositData = completedDeposits[pool.protocol_pair_id];
+      
+      // Set the submitted amount for display
+      submittedAmountRef.current = depositData.amount;
+      
+      if (depositData.success) {
+        // Set transaction hash for the link
+        setTxHash(depositData.txHash);
+        // Show success modal
+        setShowSuccessModal(true);
+      } else {
+        // For failed deposits, show an error toast
+        toast({
+          variant: "destructive",
+          title: "Previous Deposit Failed",
+          description: "Your last deposit attempt for this pool failed. Please try again.",
+        });
+        
+        // Clear the failed deposit status
+        setCompletedDeposits(prev => {
+          const newState = {...prev};
+          delete newState[pool.protocol_pair_id as string];
+          return newState;
+        });
+      }
+    }
+  }, [pool, completedDeposits, toast]);
+
   // If theme isn't loaded yet or no pool selected, return nothing
   if (!mounted || !pool) return null;
 
@@ -507,6 +635,7 @@ export default function DepositModal({
       {!showSuccessModal ? (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden"
+          // Allow closing by clicking outside even during processing
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <div
@@ -596,7 +725,6 @@ export default function DepositModal({
               <button
                 onClick={handleClose}
                 className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
-                disabled={isSubmitting}
               >
                 Cancel
               </button>
@@ -696,7 +824,7 @@ export default function DepositModal({
                 <div className="flex justify-between">
                   <span className="opacity-70">Estimated Yearly Yield</span>
                   <span className="font-semibold">
-                    ${yearlyYield.toFixed(2)}
+                    ${submittedYearlyYieldRef.current.toFixed(2)}
                   </span>
                 </div>
               </div>
