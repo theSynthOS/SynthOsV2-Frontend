@@ -1,64 +1,67 @@
-'use client'
+"use client";
 
-import dynamic from 'next/dynamic'
-import { ReactNode, useState, useEffect } from 'react'
-import PullToRefresh from "@/components/features/pull-to-refresh"
-import { useRouter, usePathname } from 'next/navigation'
-import { ThemeProvider } from 'next-themes'
-import { useActiveAccount } from 'thirdweb/react'
+import dynamic from "next/dynamic";
+import { ReactNode, useState, useEffect } from "react";
+import PullToRefresh from "@/components/features/pull-to-refresh";
+import { useRouter, usePathname } from "next/navigation";
+import { ThemeProvider } from "next-themes";
+import { useActiveAccount } from "thirdweb/react";
 
 // Lazy load components that aren't needed immediately
-const AuthProvider = dynamic(() => import("@/contexts/AuthContext").then(mod => mod.AuthProvider), {
-  ssr: false
-})
+const AuthProvider = dynamic(
+  () => import("@/contexts/AuthContext").then((mod) => mod.AuthProvider),
+  {
+    ssr: false,
+  }
+);
 const Navbar = dynamic(() => import("@/components/features/navigation"), {
-  ssr: false
-})
+  ssr: false,
+});
 const Header = dynamic(() => import("@/components/features/header"), {
-  ssr: false
-})
+  ssr: false,
+});
 
 interface ClientProvidersProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const account = useActiveAccount()
-  
+  const router = useRouter();
+  const pathname = usePathname();
+  const account = useActiveAccount();
+
   // Check if current page is the landing page
-  const isLandingPage = pathname === '/'
-  
+  const isLandingPage = pathname === "/";
+
   // Log active account for debugging
   useEffect(() => {
     if (account?.address) {
-      console.log("ThirdWeb active account:", account.address)
-      
+      console.log("ThirdWeb active account:", account.address);
+
       // We could store this in localStorage for AuthContext to pick up
-      const existingAuth = localStorage.getItem("user_auth")
+      const existingAuth = localStorage.getItem("user_auth");
       if (!existingAuth) {
         const newAuth = {
-          address: account.address
-        }
-        localStorage.setItem("user_auth", JSON.stringify(newAuth))
+          address: account.address,
+        };
+        localStorage.setItem("user_auth", JSON.stringify(newAuth));
       }
     }
-  }, [account])
-  
+  }, [account]);
+
   // Handle refresh action for global pull-to-refresh
   const handleGlobalRefresh = async () => {
-    console.log("Global refresh triggered")
-    
+    console.log("Global refresh triggered");
+
     // Simulate API call or data refresh
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Refresh the current page
-    router.refresh()
-    
-    console.log("Global refresh complete")
-  }
-  
+    router.refresh();
+
+    console.log("Global refresh complete");
+  };
+
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <AuthProvider>
@@ -68,11 +71,11 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
             <Header />
           </div>
         )}
-        
+
         <PullToRefresh onRefresh={handleGlobalRefresh}>
           {children}
         </PullToRefresh>
-        
+
         {/* Only show navbar on non-landing pages */}
         {!isLandingPage && (
           <div className="fixed bottom-0 left-0 right-0">
@@ -81,5 +84,5 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
         )}
       </AuthProvider>
     </ThemeProvider>
-  )
-} 
+  );
+}
