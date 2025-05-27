@@ -26,7 +26,7 @@ interface ProtocolPair {
   apy?: number
 }
 
-export default function TrendingProtocols() {
+export default function TrendingProtocols({ refreshBalance }: { refreshBalance?: () => void }) {
   const { theme } = useTheme()
   const { isAuthenticated, address } = useAuth()
   const [selectedPool, setSelectedPool] = useState<any>(null)
@@ -433,6 +433,33 @@ export default function TrendingProtocols() {
         balance={balance}
         isLoadingBalance={isLoadingBalance}
         address={address || ''}
+        refreshBalance={() => {
+          // First call the component's own fetchBalance
+          if (address) {
+            setIsLoadingBalance(true);
+            fetch(`/api/balance?address=${address}`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Failed to fetch balance');
+                }
+                return response.json();
+              })
+              .then(data => {
+                setBalance(data.usdBalance || "0");
+              })
+              .catch(error => {
+                console.error('Error refreshing balance:', error);
+              })
+              .finally(() => {
+                setIsLoadingBalance(false);
+              });
+          }
+          
+          // Then call the parent's refreshBalance if provided
+          if (refreshBalance) {
+            refreshBalance();
+          }
+        }}
       />
     </>
   )

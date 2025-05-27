@@ -132,7 +132,13 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <DynamicFeatures />
+          <DynamicFeatures 
+            refreshBalance={() => {
+              if (address) {
+                fetchBalance(address);
+              }
+            }} 
+          />
         </motion.div>
       </div>
     </motion.div>
