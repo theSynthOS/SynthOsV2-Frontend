@@ -350,15 +350,12 @@ export default function TrendingProtocols() {
                     <div className="flex items-center">
                       <div className="w-32 h-32 rounded-full overflow-hidden mr-4">
                         <Image 
-                          src={protocol.logo_url || "/aave.png"} 
+                          src={protocol.logo_url || ""} 
                           alt={protocol.name} 
                           width={100} 
                           height={100}
                           onError={(e) => {
                             console.log('Image failed to load:', protocol.logo_url);
-                            const target = e.target as HTMLImageElement;
-                            target.src = "/aave.png";
-                          
                           }}
                         />
                       </div>
@@ -393,14 +390,12 @@ export default function TrendingProtocols() {
                         <div className="flex items-center mb-4">
                           <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
                             <Image 
-                              src={protocol.logo_url || "/aave.png"} 
+                              src={protocol.logo_url || ""} 
                               alt={pair.name} 
                               width={56} 
                               height={56}
                               onError={(e) => {
                                 console.log('Image failed to load:', pair.name);
-                                const target = e.target as HTMLImageElement;
-                                target.src = "/aave.png";
                               }}
                             />
                           </div>

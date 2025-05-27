@@ -17,12 +17,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SynthOS",
-  description: "Invest with confidence using personalized yield plans.",
+  description: "Invest with confidence using personalized crypto yield plans.",
+  // add image
+  icons: {
+    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "DeFi Tracker",
+    title: "SynthOS",
   },
 };
 
