@@ -77,7 +77,7 @@ export default function Home() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
       className={`flex flex-col min-h-screen ${
-        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
+        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f3f3f3] text-black"
       }`}
     >
       <div className="flex flex-col min-h-screen">
