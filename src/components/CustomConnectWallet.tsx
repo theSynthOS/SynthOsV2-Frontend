@@ -92,14 +92,21 @@ export default function ConnectWalletButton({
       {/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
+          {/* Backdrop - use opacity transition instead of animation */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
             onClick={closeModal}
           ></div>
 
-          {/* Modal Content */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up max-h-[90vh] overflow-hidden">
+          {/* Modal Content - Optimize animation */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
+            style={{ 
+              maxHeight: '90vh',
+              willChange: 'transform',
+              transform: 'translateZ(0)' // Force GPU acceleration 
+            }}
+          >
             {/* Drag Handle */}
             <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
 
@@ -114,7 +121,11 @@ export default function ConnectWalletButton({
             {/* Wallet Connection UI */}
             <div
               className="overflow-y-auto"
-              style={{ maxHeight: "calc(90vh - 40px)" }}
+              style={{ 
+                maxHeight: "calc(90vh - 40px)",
+                transform: 'translateZ(0)', // Force GPU acceleration
+                backfaceVisibility: 'hidden' // Prevent flickering
+              }}
             >
               <WalletConnectionUI
                 onClose={closeModal}
