@@ -453,9 +453,8 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
         <div className="space-y-4">
           {isLoadingProtocols ? (
             <div className="flex flex-col gap-4 py-8">
-              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
             </div>
           ) : protocols.length === 0 ? (
             <div
