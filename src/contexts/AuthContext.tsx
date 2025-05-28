@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 import { createWallet } from "thirdweb/wallets"
 import { client } from "@/client"
 import { useRouter } from "next/navigation"
+import { useActiveAccount } from "thirdweb/react"
 
 // Session storage keys
 const AUTH_STORAGE_KEY = "user_auth"
@@ -21,6 +22,7 @@ interface AuthContextType {
   address: string | null
   login: (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean) => void
   logout: () => void
+  syncWallet: (newAddress: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authData, setAuthData] = useState<AuthData | null>(null)
   const router = useRouter()
+  const activeAccount = useActiveAccount()
 
   // Get address from auth data
   const address = authData?.address || null
@@ -71,6 +74,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Function to sync with wallet changes without changing login status
+  const syncWallet = (newAddress: string) => {
+    if (!authData || !isAuthenticated) return
+    
+    console.log("Syncing wallet address from:", authData.address, "to:", newAddress)
+    
+    // Update auth data with new address but keep other properties
+    const updatedData: AuthData = { 
+      ...authData, 
+      address: newAddress 
+    }
+    
+    // Update state
+    setAuthData(updatedData)
+    
+    // Update localStorage
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedData))
+    
+    console.log("Wallet address updated to:", newAddress)
+  }
+
   // Function to clear auth data
   const logout = () => {
     console.log("AuthContext: logout called")
@@ -105,6 +129,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     console.log("AuthContext: Logged out completely, address cleared")
   }
+
+  // Listen for wallet changes from ThirdWeb
+  useEffect(() => {
+    if (activeAccount && isAuthenticated && authData) {
+      // If ThirdWeb account changes and different from current stored address
+      if (activeAccount.address !== authData.address) {
+        console.log("ThirdWeb account changed, syncing with AuthContext:", activeAccount.address)
+        syncWallet(activeAccount.address)
+      }
+    }
+  }, [activeAccount, isAuthenticated, authData])
 
   // Auto-login on component mount if we have stored auth data
   useEffect(() => {
@@ -183,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, address, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, address, login, logout, syncWallet }}>
       {children}
     </AuthContext.Provider>
   )

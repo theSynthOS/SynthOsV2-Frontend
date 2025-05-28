@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useConnect } from "thirdweb/react";
+import { useConnect, useActiveAccount } from "thirdweb/react";
 import { createWallet, inAppWallet, type Wallet } from "thirdweb/wallets";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
@@ -157,8 +157,23 @@ function WalletConnectionUI({
   const [error, setError] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
 
-  const { login, isAuthenticated, address, logout } = useAuth();
+  const { login, isAuthenticated, address, logout, syncWallet } = useAuth();
   const { connect } = useConnect();
+  const activeAccount = useActiveAccount();
+
+  // Monitor active account changes and sync with auth context
+  useEffect(() => {
+    if (activeAccount?.address && isAuthenticated && address) {
+      // If the active account address is different from the auth context address
+      if (activeAccount.address !== address) {
+        console.log("Account changed in wallet UI:", {
+          from: address,
+          to: activeAccount.address
+        });
+        syncWallet(activeAccount.address);
+      }
+    }
+  }, [activeAccount, isAuthenticated, address, syncWallet]);
 
   const wallets: WalletOption[] = [
     {

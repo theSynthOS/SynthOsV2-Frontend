@@ -6,6 +6,7 @@ import PullToRefresh from "@/components/features/pull-to-refresh";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { useActiveAccount } from "thirdweb/react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Lazy load components that aren't needed immediately
 const AuthProvider = dynamic(
@@ -28,26 +29,9 @@ interface ClientProvidersProps {
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const account = useActiveAccount();
-
+  
   // Check if current page is the landing page
   const isLandingPage = pathname === "/";
-
-  // Log active account for debugging
-  useEffect(() => {
-    if (account?.address) {
-      console.log("ThirdWeb active account:", account.address);
-
-      // We could store this in localStorage for AuthContext to pick up
-      const existingAuth = localStorage.getItem("user_auth");
-      if (!existingAuth) {
-        const newAuth = {
-          address: account.address,
-        };
-        localStorage.setItem("user_auth", JSON.stringify(newAuth));
-      }
-    }
-  }, [account]);
 
   // Handle refresh action for global pull-to-refresh
   const handleGlobalRefresh = async () => {
@@ -73,7 +57,9 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
         )}
 
         <PullToRefresh onRefresh={handleGlobalRefresh}>
-          {children}
+          <AccountSyncWrapper>
+            {children}
+          </AccountSyncWrapper>
         </PullToRefresh>
 
         {/* Only show navbar on non-landing pages */}
@@ -85,4 +71,48 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
       </AuthProvider>
     </ThemeProvider>
   );
+}
+
+// Separate component to handle account syncing after AuthProvider is mounted
+function AccountSyncWrapper({ children }: { children: ReactNode }) {
+  const account = useActiveAccount();
+  const { isAuthenticated, address, syncWallet } = useAuth();
+
+  // Monitor active account and sync with AuthContext when it changes
+  useEffect(() => {
+    if (account?.address) {
+      console.log("ThirdWeb active account:", account.address);
+
+      // If authenticated and account address is different from auth address,
+      // sync the wallet address in the auth context
+      if (isAuthenticated && address && account.address !== address) {
+        console.log("Syncing wallet address change:", {
+          from: address,
+          to: account.address
+        });
+        syncWallet(account.address);
+      }
+      
+      // Store the account in localStorage for persistence
+      const existingAuth = localStorage.getItem("user_auth");
+      if (!existingAuth) {
+        const newAuth = {
+          address: account.address,
+        };
+        localStorage.setItem("user_auth", JSON.stringify(newAuth));
+      } else {
+        try {
+          const authData = JSON.parse(existingAuth);
+          if (authData.address !== account.address) {
+            authData.address = account.address;
+            localStorage.setItem("user_auth", JSON.stringify(authData));
+          }
+        } catch (e) {
+          console.error("Error updating localStorage with account address:", e);
+        }
+      }
+    }
+  }, [account, isAuthenticated, address, syncWallet]);
+
+  return <>{children}</>;
 }

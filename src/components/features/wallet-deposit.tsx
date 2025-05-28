@@ -4,6 +4,7 @@ import ConnectWalletButton from '../CustomConnectWallet';
 import QRCode from 'react-qr-code';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
+import { useActiveAccount } from 'thirdweb/react';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
   const [windowHeight, setWindowHeight] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const activeAccount = useActiveAccount();
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -39,6 +42,17 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
       window.removeEventListener('resize', checkMobile);
     };
   }, []);
+  
+  // Determine which address to display - prioritize ThirdWeb account if available
+  useEffect(() => {
+    if (activeAccount?.address) {
+      setDisplayAddress(activeAccount.address);
+    } else if (address) {
+      setDisplayAddress(address);
+    } else {
+      setDisplayAddress(null);
+    }
+  }, [activeAccount, address]);
   
   // Control body scrolling based on modal open state - improved for mobile Safari
   useEffect(() => {
@@ -88,7 +102,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
         }
       }, 100);
     }
-  }, [isOpen, address, isAuthenticated]);
+  }, [isOpen, displayAddress, isAuthenticated]);
 
   // Prevent touchmove events from propagating to body
   useEffect(() => {
@@ -156,8 +170,8 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
 
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal close
-    if (address) {
-      navigator.clipboard.writeText(address);
+    if (displayAddress) {
+      navigator.clipboard.writeText(displayAddress);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
@@ -232,12 +246,12 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                 
                 <div className={`flex items-start justify-between ${theme === 'dark' ? 'bg-gray-600 border-gray-500' : 'bg-white border-gray-200'} border rounded-lg ${isMobile ? 'p-2' : 'p-3'} mb-4`}>
                   <div className={`font-mono ${isMobile ? 'text-xs' : 'text-sm'} break-all flex-1 min-h-[40px] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {address || "Log In/Sign Up"}
+                    {displayAddress || "Log In/Sign Up"}
                   </div>
                   <button 
                     onClick={copyToClipboard}
                     className={`ml-2 ${isMobile ? 'p-1' : 'p-1.5'} rounded-full ${theme === 'dark' ? 'hover:bg-gray-500' : 'hover:bg-gray-100'} transition-colors flex-shrink-0`}
-                    disabled={!address}
+                    disabled={!displayAddress}
                   >
                     {copied ? (
                       <Check className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-500`} />
@@ -249,10 +263,10 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
                 
                 {/* QR Code with Logo Overlay */}
                 <div className="flex justify-center mb-3">
-                  {address ? (
+                  {displayAddress ? (
                     <div className={`bg-white ${isMobile ? 'p-2' : 'p-3'} rounded-lg relative`}>
                       <QRCode 
-                        value={address} 
+                        value={displayAddress} 
                         size={qrSize}
                         level="H" // Use high error correction to allow for logo placement
                         className="mx-auto"
