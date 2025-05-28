@@ -8,7 +8,7 @@ import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useActiveAccount } from "thirdweb/react";
-import { prepareTransaction, sendBatchTransaction } from "thirdweb";
+import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
 import { client, scrollSepolia } from "@/client";
 import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 
@@ -212,34 +212,27 @@ export default function Home() {
       setTxSuccess(false);
       setTxHash(null);
       
-      // Prepare the transactions
-      const transactions = [
-        // Faucet drip transaction
-        prepareTransaction({
-          to: "0x602396FFA43b7FfAdc80e01c5A11fc74F3BA59f5",
-          data: "0x434ab101",
-          chain: scrollSepolia,
-          client: client,
-          value: BigInt(0),
-        }),
-        // USDC mint transaction
-        prepareTransaction({
-          to: "0x2F826FD1a0071476330a58dD1A9B36bcF7da832d",
-          data: `0xc6c3bbe60000000000000000000000002c9678042d52b97d27f2bd2947f7111d93f3dd0d000000000000000000000000${account.address.slice(
-            2
-          )}00000000000000000000000000000000000000000000000000000002540be400`,
-          chain: scrollSepolia,
-          client: client,
-          value: BigInt(0),
-        }),
-      ];
+      // Create transaction for USDC minting with proper types
+      const data = `0xc6c3bbe60000000000000000000000002c9678042d52b97d27f2bd2947f7111d93f3dd0d000000000000000000000000${account.address.slice(
+        2
+      )}00000000000000000000000000000000000000000000000000000002540be400`;
+      
+      // Use the correct API: prepareTransaction first, then sendAndConfirmTransaction
+      // This is safer than sendBatchTransaction and works with more wallet types
+      const tx = prepareTransaction({
+        to: "0x2F826FD1a0071476330a58dD1A9B36bcF7da832d",
+        data: data as `0x${string}`,
+        chain: scrollSepolia,
+        client: client,
+        value: BigInt(0),
+      });
 
-      console.log("Transactions prepared:", transactions);
+      console.log("Transaction prepared:", tx);
 
-      // Send batch transaction
-      const result = await sendBatchTransaction({
-        transactions: transactions,
-        account: account,
+      // Use sendAndConfirmTransaction with the correct API signature
+      const result = await sendAndConfirmTransaction({
+        transaction: tx,
+        account: account
       });
 
       console.log("Transaction sent:", result);
@@ -366,7 +359,7 @@ export default function Home() {
                   <div>
                     <h3 className={`font-medium 
                       ${theme === "dark" ? "text-red-100" : "text-red-800"}`}>
-                      You have claimed your test funds, please wait for the next 24 hours to claim again.
+                      Please try again later or reconnect your wallet.
                     </h3>
                     
                   </div>
