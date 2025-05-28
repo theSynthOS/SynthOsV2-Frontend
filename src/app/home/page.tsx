@@ -39,17 +39,17 @@ export default function Home() {
   // Check if claim is allowed based on last claim time
   const isClaimAllowed = () => {
     if (!lastClaimTime) return true;
-    
+
     const now = Date.now();
     const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
-    
+
     // Allow claiming once every 24 hours
     return hoursSinceLastClaim >= 24;
   };
 
   // Load last claim time from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && address) {
+    if (typeof window !== "undefined" && address) {
       try {
         const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
         if (storedData) {
@@ -65,7 +65,7 @@ export default function Home() {
   // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
     try {
-      console.log('Fetching balance for:', walletAddress);
+      console.log("Fetching balance for:", walletAddress);
       setIsLoadingBalance(true);
       const response = await fetch(`/api/balance?address=${walletAddress}`);
       if (!response.ok) {
@@ -73,14 +73,14 @@ export default function Home() {
       }
       const data = await response.json();
       setBalance(data.usdBalance || "0.00");
-      console.log('Balance loaded:', data.usdBalance || "0.00");
+      console.log("Balance loaded:", data.usdBalance || "0.00");
       return data.usdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("0.00");
       return "0.00";
     } finally {
-      console.log('Finished loading balance');
+      console.log("Finished loading balance");
       setIsLoadingBalance(false);
     }
   };
@@ -91,39 +91,39 @@ export default function Home() {
       // Show the banner
       setBannerVisible(true);
       setProgressValue(100);
-      
+
       // Start countdown timer for progress bar
       let timeLeft = 100;
       progressTimerRef.current = setInterval(() => {
         timeLeft -= 1;
         setProgressValue(timeLeft);
-        
+
         if (timeLeft <= 0) {
           if (progressTimerRef.current) clearInterval(progressTimerRef.current);
           setBannerVisible(false);
         }
       }, 100); // Update every 100ms for smooth animation
-      
+
       // Refresh balance after transaction success
       if (address) {
         // Initial refresh
         fetchBalance(address);
-        
+
         // Set up additional refresh attempts with increasing delays
         const refreshTimeouts = [
           setTimeout(() => fetchBalance(address), 3000),
           setTimeout(() => fetchBalance(address), 6000),
         ];
-        
+
         return () => {
           if (progressTimerRef.current) {
             clearInterval(progressTimerRef.current);
           }
           // Clear all refresh timeouts
-          refreshTimeouts.forEach(timeout => clearTimeout(timeout));
+          refreshTimeouts.forEach((timeout) => clearTimeout(timeout));
         };
       }
-      
+
       return () => {
         if (progressTimerRef.current) {
           clearInterval(progressTimerRef.current);
@@ -139,7 +139,7 @@ export default function Home() {
       errorTimerRef.current = setTimeout(() => {
         setErrorBannerVisible(false);
       }, 10000); // 10 seconds
-      
+
       return () => {
         if (errorTimerRef.current) {
           clearTimeout(errorTimerRef.current);
@@ -174,10 +174,10 @@ export default function Home() {
   // Check balance and claim funds if needed
   const checkAndClaimFunds = async (balanceValue: string) => {
     if (
-      account && 
-      account.address && 
-      parseFloat(balanceValue) === 0 && 
-      !hasAttemptedClaim && 
+      account &&
+      account.address &&
+      parseFloat(balanceValue) === 0 &&
+      !hasAttemptedClaim &&
       !isTxProcessing
     ) {
       // Check if claiming is allowed based on time
@@ -185,7 +185,7 @@ export default function Home() {
         console.log("Auto-claim skipped: Already claimed within 24 hours");
         return;
       }
-      
+
       console.log("Balance is zero, auto-claiming test funds...");
       setHasAttemptedClaim(true);
       await handleClaimTestFunds();
@@ -198,10 +198,9 @@ export default function Home() {
       console.log("No wallet connected");
       return;
     }
-    
+
     // Check if claiming is allowed based on time
     if (!isClaimAllowed()) {
-      
       const errorMsg = `Please try again later or reconnect your wallet.`;
       showError(errorMsg);
       return;
@@ -212,12 +211,12 @@ export default function Home() {
       setIsTxProcessing(true);
       setTxSuccess(false);
       setTxHash(null);
-      
+
       // Create transaction for USDC minting with proper types
       const data = `0xc6c3bbe60000000000000000000000002c9678042d52b97d27f2bd2947f7111d93f3dd0d000000000000000000000000${account.address.slice(
         2
       )}00000000000000000000000000000000000000000000000000000002540be400`;
-      
+
       // Use the correct API: prepareTransaction first, then sendAndConfirmTransaction
       // This is safer than sendBatchTransaction and works with more wallet types
       const tx = prepareTransaction({
@@ -233,22 +232,21 @@ export default function Home() {
       // Use sendAndConfirmTransaction with the correct API signature
       const result = await sendAndConfirmTransaction({
         transaction: tx,
-        account: account
+        account: account,
       });
 
       console.log("Transaction sent:", result);
-      
+
       // Set success state and transaction hash
       setTxSuccess(true);
       setTxHash(result.transactionHash);
-      
     } catch (error) {
       console.error("Transaction error:", error);
       const cleanErrorMessage =
         error instanceof Error
           ? error.message.split("contract:")[0].trim()
           : "Unknown error";
-          
+
       showError(cleanErrorMessage);
     } finally {
       setIsTxProcessing(false);
@@ -293,29 +291,45 @@ export default function Home() {
       <div className="flex flex-col min-h-screen">
         {/* Transaction Success Banner */}
         {bannerVisible && (
-          <div className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
             ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
-            rounded-lg shadow-lg overflow-hidden`}>
+            rounded-lg shadow-lg overflow-hidden`}
+          >
             <div className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
-                  <div className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}>
-                    <Check className={`h-5 w-5 
-                      ${theme === "dark" ? "text-green-300" : "text-green-600"}`} />
+                  <div
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
+                  >
+                    <Check
+                      className={`h-5 w-5 
+                      ${
+                        theme === "dark" ? "text-green-300" : "text-green-600"
+                      }`}
+                    />
                   </div>
                   <div>
-                    <h3 className={`font-medium 
-                      ${theme === "dark" ? "text-green-100" : "text-green-800"}`}>
+                    <h3
+                      className={`font-medium 
+                      ${
+                        theme === "dark" ? "text-green-100" : "text-green-800"
+                      }`}
+                    >
                       Funds Claimed Successfully
                     </h3>
                     <div className="mt-1 flex items-center">
-                      <a 
+                      <a
                         href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`text-xs flex items-center
-                          ${theme === "dark" ? "text-green-300 hover:text-green-200" : "text-green-700 hover:text-green-800"}`}
+                          ${
+                            theme === "dark"
+                              ? "text-green-300 hover:text-green-200"
+                              : "text-green-700 hover:text-green-800"
+                          }`}
                       >
                         View Transaction
                         <ExternalLink className="h-3 w-3 ml-1" />
@@ -323,19 +337,25 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setBannerVisible(false)}
                   className={`rounded-full p-1 
-                    ${theme === "dark" ? "hover:bg-green-800" : "hover:bg-green-200"}`}
+                    ${
+                      theme === "dark"
+                        ? "hover:bg-green-800"
+                        : "hover:bg-green-200"
+                    }`}
                 >
-                  <X className={`h-4 w-4 
-                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`} />
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
+                  />
                 </button>
               </div>
-              
+
               {/* Progress bar */}
               <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-green-500 transition-all duration-100 ease-linear"
                   style={{ width: `${progressValue}%` }}
                 ></div>
@@ -343,35 +363,46 @@ export default function Home() {
             </div>
           </div>
         )}
-        
+
         {/* Error Banner */}
         {errorBannerVisible && (
-          <div className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
             ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
-            rounded-lg shadow-lg overflow-hidden`}>
+            rounded-lg shadow-lg overflow-hidden`}
+          >
             <div className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
-                  <div className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}>
-                    <AlertCircle className={`h-5 w-5 
-                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`} />
+                  <div
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
+                  >
+                    <AlertCircle
+                      className={`h-5 w-5 
+                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                    />
                   </div>
                   <div>
-                    <h3 className={`font-medium 
-                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}>
+                    <h3
+                      className={`font-medium 
+                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
+                    >
                       Please try again later or reconnect your wallet.
                     </h3>
-                    
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setErrorBannerVisible(false)}
                   className={`rounded-full p-1 
-                    ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
+                    ${
+                      theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+                    }`}
                 >
-                  <X className={`h-4 w-4 
-                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`} />
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                  />
                 </button>
               </div>
             </div>
@@ -400,9 +431,10 @@ export default function Home() {
               onClick={handleClaimTestFunds}
               disabled={isTxProcessing}
               className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
-                ${theme === "dark" 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "bg-white hover:bg-gray-400 text-black border border-gray-200"
+                ${
+                  theme === "dark"
+                    ? "bg-purple-600 hover:bg-purple-700 text-white"
+                    : "bg-white hover:bg-gray-400 text-black border border-gray-200"
                 } transition-colors
                 ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
               `}
@@ -418,7 +450,7 @@ export default function Home() {
               className="text-4xl font-bold"
             >
               {isLoadingBalance ? (
-                <Skeleton className="w-32 h-7 rounded-sm bg-gray-400 dark:bg-gray-800" />
+                <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800" />
               ) : (
                 `$${balance}`
               )}
@@ -432,12 +464,12 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <DynamicFeatures 
+          <DynamicFeatures
             refreshBalance={() => {
               if (address) {
                 fetchBalance(address);
               }
-            }} 
+            }}
           />
         </motion.div>
       </div>

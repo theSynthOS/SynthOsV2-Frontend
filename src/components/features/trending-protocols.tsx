@@ -35,10 +35,14 @@ interface ProtocolPair {
   apy?: number;
 }
 
-export default function TrendingProtocols({ refreshBalance }: { refreshBalance?: () => void }) {
-  const { theme } = useTheme()
-  const { isAuthenticated, address } = useAuth()
-  const [selectedPool, setSelectedPool] = useState<any>(null)
+export default function TrendingProtocols({
+  refreshBalance,
+}: {
+  refreshBalance?: () => void;
+}) {
+  const { theme } = useTheme();
+  const { isAuthenticated, address } = useAuth();
+  const [selectedPool, setSelectedPool] = useState<any>(null);
   const [riskFilters, setRiskFilters] = useState({
     all: true,
     low: false,
@@ -208,11 +212,17 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
       return <span className="text-gray-700 dark:text-white">All Risks</span>;
-    if (riskFilters.low) return <span className="text-purple-700 dark:text-purple-300">Low</span>;
+    if (riskFilters.low)
+      return <span className="text-purple-700 dark:text-purple-300">Low</span>;
     if (riskFilters.medium)
-      return <span className="text-purple-700 dark:text-purple-300">Medium</span>;
-    if (riskFilters.high) return <span className="text-purple-700 dark:text-purple-300">High</span>;
-    return <span className="text-purple-700 dark:text-purple-300">No Filter</span>;
+      return (
+        <span className="text-purple-700 dark:text-purple-300">Medium</span>
+      );
+    if (riskFilters.high)
+      return <span className="text-purple-700 dark:text-purple-300">High</span>;
+    return (
+      <span className="text-purple-700 dark:text-purple-300">No Filter</span>
+    );
   };
 
   const toggleProtocolExpand = (protocolName: string) => {
@@ -466,12 +476,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
             </div>
           ) : (
             protocols.map((protocol) => (
-              <div
-                key={protocol.id}
-                className={`mb-6 rounded-lg ${
-                  theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
-                }`}
-              >
+              <div key={protocol.id} className={`mb-6 rounded-lg`}>
                 <div
                   className={`flex flex-col cursor-pointer ${
                     theme === "dark"
@@ -483,13 +488,16 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-32 h-32 rounded-full overflow-hidden mr-4">
-                        <Image 
-                          src={protocol.logo_url || ""} 
-                          alt={protocol.name} 
-                          width={100} 
+                        <Image
+                          src={protocol.logo_url || ""}
+                          alt={protocol.name}
+                          width={100}
                           height={100}
                           onError={(e) => {
-                            console.log('Image failed to load:', protocol.logo_url);
+                            console.log(
+                              "Image failed to load:",
+                              protocol.logo_url
+                            );
                           }}
                         />
                       </div>
@@ -525,7 +533,6 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                     )}
                   </div>
                 </div>
-
                 {/* Protocol Pairs */}
                 {expandedProtocols.has(protocol.name) && (
                   <div className="mt-2 space-y-2 pl-4">
@@ -541,13 +548,13 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                       >
                         <div className="flex items-center mb-4">
                           <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
-                            <Image 
-                              src={protocol.logo_url || ""} 
-                              alt={pair.name} 
-                              width={56} 
+                            <Image
+                              src={protocol.logo_url || ""}
+                              alt={pair.name}
+                              width={56}
                               height={56}
                               onError={(e) => {
-                                console.log('Image failed to load:', pair.name);
+                                console.log("Image failed to load:", pair.name);
                               }}
                             />
                           </div>
@@ -603,40 +610,51 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                     ))}
                   </div>
                 )}
+                {/* Coming Soon Box */}
+                <div
+                  className={`flex flex-col ${
+                    theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
+                  } p-5 rounded-xl mt-4`}
+                >
+                  <div className="flex items-center justify-center">
+                    <div className="text-lg font-semibold text-black dark:text-white">
+                      More investments coming soon...
+                    </div>
+                  </div>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
-
       <DepositModal
         pool={selectedPool}
         onClose={() => setSelectedPool(null)}
         balance={balance}
         isLoadingBalance={isLoadingBalance}
-        address={address || ''}
+        address={address || ""}
         refreshBalance={() => {
           // First call the component's own fetchBalance
           if (address) {
             setIsLoadingBalance(true);
             fetch(`/api/balance?address=${address}`)
-              .then(response => {
+              .then((response) => {
                 if (!response.ok) {
-                  throw new Error('Failed to fetch balance');
+                  throw new Error("Failed to fetch balance");
                 }
                 return response.json();
               })
-              .then(data => {
+              .then((data) => {
                 setBalance(data.usdBalance || "0");
               })
-              .catch(error => {
-                console.error('Error refreshing balance:', error);
+              .catch((error) => {
+                console.error("Error refreshing balance:", error);
               })
               .finally(() => {
                 setIsLoadingBalance(false);
               });
           }
-          
+
           // Then call the parent's refreshBalance if provided
           if (refreshBalance) {
             refreshBalance();

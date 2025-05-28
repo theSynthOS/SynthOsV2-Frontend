@@ -48,7 +48,9 @@ export default function Home() {
     title: string;
     description: string;
   } | null>(null);
-  const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(null);
+  const [walletAnalysis, setWalletAnalysis] = useState<WalletAnalysis | null>(
+    null
+  );
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [estimatedTimeLeft, setEstimatedTimeLeft] = useState(0);
@@ -91,7 +93,8 @@ export default function Home() {
     if (walletAnalysis && walletAnalysis.profile) {
       setProfile({
         title: walletAnalysis.profile.profileType || "New to DeFi",
-        description: walletAnalysis.profile.personalizedDescription || 
+        description:
+          walletAnalysis.profile.personalizedDescription ||
           "You're just getting started with DeFi. We'll help you navigate the ecosystem safely.",
       });
     }
@@ -110,50 +113,55 @@ export default function Home() {
       setAnalysisError(null);
       setAnalysisProgress(0);
       setEstimatedTimeLeft(5); // Start with 5 seconds estimate
-      
+
       // Start progress animation
       const startTime = Date.now();
       const estimatedDuration = 5000; // 5 seconds estimate
-      
+
       // Update progress periodically
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95% until complete
         setAnalysisProgress(progress);
-        
-        const remainingTime = Math.max(Math.ceil((estimatedDuration - elapsed) / 1000), 0);
+
+        const remainingTime = Math.max(
+          Math.ceil((estimatedDuration - elapsed) / 1000),
+          0
+        );
         setEstimatedTimeLeft(remainingTime);
       }, 100);
-      
+
       // Call the API
       const response = await fetch(`/api/ai-analyser?address=${walletAddress}`);
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       clearInterval(progressInterval);
-      
+
       // Set progress to 100% when complete
       setAnalysisProgress(100);
       setWalletAnalysis(data);
-      
+
       // Proceed to preferences after a short delay
       setTimeout(() => {
         setOnboardingStep("preferences");
       }, 500);
-      
     } catch (error) {
       console.error("Error analyzing wallet:", error);
-      setAnalysisError(error instanceof Error ? error.message : "Failed to analyze wallet");
-      
+      setAnalysisError(
+        error instanceof Error ? error.message : "Failed to analyze wallet"
+      );
+
       // Fallback to basic profile if analysis fails
       setProfile({
         title: "New to DeFi",
-        description: "You're just getting started with DeFi. We'll help you navigate the ecosystem safely.",
+        description:
+          "You're just getting started with DeFi. We'll help you navigate the ecosystem safely.",
       });
-      
+
       // Still proceed to preferences after a delay
       setTimeout(() => {
         setOnboardingStep("preferences");
@@ -295,7 +303,7 @@ export default function Home() {
             theme === "dark" ? "bg-gray-700" : "bg-gray-200"
           }`}
         >
-          <div 
+          <div
             className="h-full bg-purple-500 rounded-full transition-all duration-300 ease-linear"
             style={{ width: `${analysisProgress}%` }}
           ></div>
@@ -307,20 +315,30 @@ export default function Home() {
         }`}
       >
         {analysisError ? (
-          <span className="text-red-500">Error: {analysisError}</span>
+          <div className="flex items-center justify-center space-x-2 text-red-500">
+            <span className="animate-pulse">⚠️</span>
+            <span>Error: {analysisError}</span>
+          </div>
         ) : (
-          <>
-            Examining transaction history, protocol interactions, and asset preferences...
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <span className="animate-spin">⚡</span>
+              <span>
+                Analyzing your wallet activity and investment patterns...
+              </span>
+            </div>
             {estimatedTimeLeft > 0 ? (
-              <div className="mt-2">
-                Estimated time left: {estimatedTimeLeft} seconds
+              <div className="mt-2 flex items-center space-x-2 text-purple-500">
+                <span>⏱️</span>
+                <span>Time remaining: {estimatedTimeLeft}s</span>
               </div>
             ) : analysisProgress < 100 ? (
-              <div className="mt-2 font-medium text-purple-500 animate-pulse">
-                AI is analyzing, please be patient.
+              <div className="mt-2 flex items-center space-x-2 font-medium text-purple-500 animate-pulse">
+                <span>🤖</span>
+                <span>AI analysis in progress...</span>
               </div>
             ) : null}
-          </>
+          </div>
         )}
       </div>
     </motion.div>
@@ -369,7 +387,7 @@ export default function Home() {
         >
           Here's what we found:
         </div>
-        
+
         {/* Profile Information Card */}
         <div
           className={`p-6 rounded-xl mb-4 w-full ${
@@ -379,13 +397,17 @@ export default function Home() {
           }`}
         >
           <p className="mb-3 text-xl font-medium">
-            You are <span className="text-purple-500 font-bold">{walletAnalysis?.profile?.profileType || currentProfile.title}</span>
+            You are{" "}
+            <span className="text-purple-500 font-bold">
+              {walletAnalysis?.profile?.profileType || currentProfile.title}
+            </span>
           </p>
           <p className="text-md">
-            {walletAnalysis?.profile?.personalizedDescription || currentProfile.description}
+            {walletAnalysis?.profile?.personalizedDescription ||
+              currentProfile.description}
           </p>
         </div>
-        
+
         {/* Analysis Summary Card */}
         {walletAnalysis && (
           <div
@@ -395,14 +417,17 @@ export default function Home() {
                 : "bg-purple-50 text-purple-900"
             }`}
           >
-            <p className="mb-3 text-lg font-bold text-left">Analysis Summary:</p>
+            <p className="mb-3 text-lg font-bold text-left">
+              Analysis Summary:
+            </p>
             {/* <p className="text-sm mb-3 text-left">{walletAnalysis.analysis.summary}</p> */}
-            <p className="text-sm mb-3 text-left">Detected on chain Tx: {walletAnalysis.analysis.details.totalTransactions}</p>
-            
-           
+            <p className="text-sm mb-3 text-left">
+              Detected on chain Tx:{" "}
+              {walletAnalysis.analysis.details.totalTransactions}
+            </p>
           </div>
         )}
-        
+
         {/* Profile Details Card */}
         {walletAnalysis?.profile && (
           <div
@@ -433,11 +458,11 @@ export default function Home() {
             </div>
           </div>
         )}
-        
+
         <div className="text-sm mb-8 text-gray-500 dark:text-gray-400">
           AI-powered results tailored to your wallet activity
         </div>
-        
+
         <motion.button
           whileHover={{ scale: 1.05 }}
           onClick={handleContinueToDashboard}
@@ -468,8 +493,6 @@ export default function Home() {
 
       {/* Dynamic content based on current onboarding step */}
       {renderContent()}
-
-      
     </div>
   );
 }

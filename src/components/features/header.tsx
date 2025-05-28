@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import SettingsPanel from "@/components/profile/settings-panel";
+import HistoryPanel from "@/components/features/history-panel";
 
 export default function Header() {
   const router = useRouter();
   const { theme } = useTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   return (
     <div
@@ -23,6 +25,7 @@ export default function Header() {
         className={`w-8 h-8 rounded-full ${
           theme === "dark" ? "bg-gray-800" : "bg-gray-100"
         } flex items-center justify-center`}
+        onClick={() => setIsHistoryOpen(true)}
       >
         <History
           className={`h-4 w-4 ${
@@ -47,6 +50,11 @@ export default function Header() {
       <SettingsPanel
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
       />
     </div>
   );

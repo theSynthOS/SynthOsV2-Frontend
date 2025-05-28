@@ -121,7 +121,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Handle copy address to clipboard
   const handleCopyAddress = () => {
     if (displayAddress) {
-      navigator.clipboard.writeText(displayAddress)
+      navigator.clipboard
+        .writeText(displayAddress)
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
@@ -130,8 +131,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             description: "Wallet address copied to clipboard",
           });
         })
-        .catch(err => {
-          console.error('Failed to copy address: ', err);
+        .catch((err) => {
+          console.error("Failed to copy address: ", err);
         });
     }
   };
@@ -209,10 +210,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </h2>
               {displayAddress && (
                 <div className="flex items-center mt-1">
-                  <button 
+                  <button
                     onClick={handleCopyAddress}
                     className={`flex items-center text-sm ${
-                      theme === "dark" ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-700"
+                      theme === "dark"
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-500 hover:text-gray-700"
                     } transition-colors`}
                     aria-label="Copy wallet address"
                   >
@@ -270,10 +273,20 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </button>
             </div>
 
-            <div
+            <Link
+              href="/holding"
               className={`flex items-center p-3 ${
                 theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
+              } rounded-lg hover:bg-opacity-80 transition-colors`}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsExiting(true);
+                setTimeout(() => {
+                  onClose();
+                  setIsExiting(false);
+                  router.push("/holding");
+                }, 300);
+              }}
             >
               <CreditCard
                 className={`h-5 w-5 mr-3 ${
@@ -281,8 +294,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 }`}
               />
               <span>View Funds</span>
-            </div>
-
+            </Link>
 
             <button
               onClick={handleAuth}
