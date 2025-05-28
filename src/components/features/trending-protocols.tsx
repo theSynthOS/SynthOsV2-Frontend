@@ -14,6 +14,7 @@ import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
 import DepositModal from "./deposit-modal";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Protocol {
   id: number;
@@ -208,8 +209,6 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
     if (riskFilters.all)
       return <span className="text-gray-700 dark:text-white">All Risks</span>;
     if (riskFilters.low) return <span className="text-purple-700 dark:text-purple-300">Low</span>;
-      return <span>All Risks</span>;
-    if (riskFilters.low) return <span className="text-green-600">Low</span>;
     if (riskFilters.medium)
       return <span className="text-purple-700 dark:text-purple-300">Medium</span>;
     if (riskFilters.high) return <span className="text-purple-700 dark:text-purple-300">High</span>;
@@ -376,7 +375,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                           <div
                             className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
                               riskFilters.medium
-                                ? "bg-green-500 border-green-500"
+                                ? "bg-purple-500 border-purple-500"
                                 : `border-gray-400 ${
                                     theme === "dark"
                                       ? "bg-gray-700"
@@ -409,7 +408,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                           <div
                             className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
                               riskFilters.high
-                                ? "bg-green-500 border-green-500"
+                                ? "bg-purple-500 border-purple-500"
                                 : `border-gray-400 ${
                                     theme === "dark"
                                       ? "bg-gray-700"
@@ -453,8 +452,10 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
         </div>
         <div className="space-y-4">
           {isLoadingProtocols ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+            <div className="flex flex-col gap-4 py-8">
+              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-16 rounded-sm bg-gray-300 dark:bg-gray-800" />
             </div>
           ) : protocols.length === 0 ? (
             <div
