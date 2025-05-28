@@ -399,6 +399,19 @@ export default function Home() {
             } flex justify-between items-center`}
           >
             <span>Total balance</span>
+            <button
+              onClick={handleClaimTestFunds}
+              disabled={isTxProcessing}
+              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
+                ${theme === "dark" 
+                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                  : "bg-white hover:bg-gray-400 text-black border border-gray-200"
+                } transition-colors
+                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
+              `}
+            >
+              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
+            </button>
           </motion.div>
           <div className="flex items-center">
             <motion.div
