@@ -40,9 +40,7 @@ export default function Navbar() {
           href="/home"
           className={`flex flex-col items-center ${
             isActive("/home")
-              ? theme === "dark"
-                ? "text-purple-500"
-                : "text-green-500"
+              ? "text-purple-500"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
@@ -51,9 +49,7 @@ export default function Navbar() {
           <Home
             className={`h-6 w-6 ${
               isActive("/home")
-                ? theme === "dark"
-                  ? "text-purple-500"
-                  : "text-green-500"
+                ? "text-purple-500"
                 : ""
             }`}
           />
@@ -64,9 +60,7 @@ export default function Navbar() {
           href="/holding"
           className={`flex flex-col items-center ${
             isActive("/holding")
-              ? theme === "dark"
-                ? "text-purple-500"
-                : "text-green-500"
+              ? "text-purple-500"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
@@ -75,9 +69,7 @@ export default function Navbar() {
           <Wallet
             className={`h-6 w-6 ${
               isActive("/holding")
-                ? theme === "dark"
-                  ? "text-purple-500"
-                  : "text-green-500"
+                ? "text-purple-500"
                 : ""
             }`}
           />

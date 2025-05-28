@@ -206,7 +206,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
-      return <span className="text-gray-700">All Risks</span>;
+      return <span>All Risks</span>;
     if (riskFilters.low) return <span className="text-green-600">Low</span>;
     if (riskFilters.medium)
       return <span className="text-green-600">Medium</span>;
@@ -322,7 +322,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                           </div>
                           <span
                             className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
+                              theme === "dark" ? "text-white" : "text-black"
                             }
                           >
                             All Risks
