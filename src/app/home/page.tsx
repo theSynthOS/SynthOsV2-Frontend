@@ -201,11 +201,8 @@ export default function Home() {
     
     // Check if claiming is allowed based on time
     if (!isClaimAllowed()) {
-      const nextClaimTime = new Date(lastClaimTime! + 24 * 60 * 60 * 1000);
-      const formattedTime = nextClaimTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const formattedDate = nextClaimTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
       
-      const errorMsg = `You've already claimed test funds. Please try again in the next 24 hours.`;
+      const errorMsg = `Please try again later or reconnect your wallet.`;
       showError(errorMsg);
       return;
     }
