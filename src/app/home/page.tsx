@@ -11,6 +11,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
 import { client, scrollSepolia } from "@/client";
 import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Storage key for last claim timestamp
 const LAST_CLAIM_KEY = "last_claim_timestamp";
@@ -64,6 +65,7 @@ export default function Home() {
   // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
     try {
+      console.log('Fetching balance for:', walletAddress);
       setIsLoadingBalance(true);
       const response = await fetch(`/api/balance?address=${walletAddress}`);
       if (!response.ok) {
@@ -71,12 +73,14 @@ export default function Home() {
       }
       const data = await response.json();
       setBalance(data.usdBalance || "0.00");
+      console.log('Balance loaded:', data.usdBalance || "0.00");
       return data.usdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("0.00");
       return "0.00";
     } finally {
+      console.log('Finished loading balance');
       setIsLoadingBalance(false);
     }
   };
@@ -395,19 +399,6 @@ export default function Home() {
             } flex justify-between items-center`}
           >
             <span>Total balance</span>
-            <button
-              onClick={handleClaimTestFunds}
-              disabled={isTxProcessing}
-              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
-                ${theme === "dark" 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "bg-white hover:bg-gray-400 text-black border border-gray-200"
-                } transition-colors
-                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
-              `}
-            >
-              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
-            </button>
           </motion.div>
           <div className="flex items-center">
             <motion.div
@@ -417,20 +408,10 @@ export default function Home() {
               className="text-4xl font-bold"
             >
               {isLoadingBalance ? (
-                <span className="text-sm">Loading...</span>
+                <Skeleton className="w-32 h-7 rounded-sm bg-gray-400 dark:bg-gray-800" />
               ) : (
                 `$${balance}`
               )}
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.4 }}
-              className={`ml-2 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              ▶
             </motion.div>
           </div>
         </motion.div>

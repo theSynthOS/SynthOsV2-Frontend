@@ -111,7 +111,6 @@ export default function WithdrawModal({
           style={{ maxHeight: "calc(90% - 40px)" }}
         >
           <h2 className="text-2xl font-bold mb-6">Withdraw Funds</h2>
-
           {!isAuthenticated ? (
             <div
               className={`${
@@ -128,44 +127,66 @@ export default function WithdrawModal({
               <ConnectWalletButton />
             </div>
           ) : (
-            <div
-              className={`${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-50"
-              } rounded-lg p-6 text-center`}
-            >
-              <p
+            <div className="relative">
+              <div
                 className={`${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                } rounded-lg p-6 text-center filter blur-sm`}
               >
-                Select an asset to withdraw to your wallet.
-              </p>
+                <p
+                  className={`${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Select an asset to withdraw to your wallet.
+                </p>
 
-              <div className="mt-4 text-left">
-                <label
-                  className={`block text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  } mb-1`}
-                >
-                  Amount to withdraw
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className={`w-full p-2 border ${
-                    theme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-black"
-                  } rounded-lg`}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <button
-                  className="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                  onClick={handleWithdraw}
-                >
-                  Withdraw
-                </button>
+                <div className="mt-4 text-left">
+                  <label
+                    className={`block text-sm font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    } mb-1`}
+                  >
+                    Amount to withdraw
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    className={`w-full p-2 border ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-black"
+                    } rounded-lg`}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                  <button
+                    className="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                    onClick={handleWithdraw}
+                  >
+                    Withdraw
+                  </button>
+                </div>
+              </div>
+
+              {/* Overlay with "Coming Soon" */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p
+                    className={`text-xl font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Coming Soon
+                  </p>
+                  <p
+                    className={`mt-2 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Withdrawals will be available in a future update
+                  </p>
+                </div>
               </div>
             </div>
           )}

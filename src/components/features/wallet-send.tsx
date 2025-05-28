@@ -224,54 +224,68 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
               </button>
             </div>
           ) : step === 1 ? (
-            <div className="flex flex-col items-center">
-              {/* Asset Selector */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full px-4 py-1.5 ${sectionSpacing}`}>
-                <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${isMobile ? 'text-sm' : ''}`}>Balance: ${balance}</span>
-              </div>
-              
-              {/* Amount Display */}
-              <div className={`text-center ${sectionSpacing}`}>
-                <div className={`${amountFontSize} font-light ${amount !== '0' ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-300')}`}>
-                  ${amount}
-                </div>
-              </div>
-              
-             
-              
-              {/* Numeric Keypad - Fixed at the bottom */}
-              <div className={`grid grid-cols-3 ${keypadGap} w-full ${sectionSpacing} ${isSmallHeight ? 'mt-1' : ''}`}>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleNumberPress(num.toString())}
-                    className={`${keypadFontSize} font-medium text-center py-1`}
+            <div className="relative">
+              {/* Blurred Content */}
+              <div className="filter blur-sm">
+                <div className="flex flex-col items-center">
+                  {/* Asset Selector */}
+                  <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full px-4 py-1.5 ${sectionSpacing}`}>
+                    <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${isMobile ? 'text-sm' : ''}`}>Balance: ${balance}</span>
+                  </div>
+                  
+                  {/* Amount Display */}
+                  <div className={`text-center ${sectionSpacing}`}>
+                    <div className={`${amountFontSize} font-light ${amount !== '0' ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-300')}`}>
+                      ${amount}
+                    </div>
+                  </div>
+                  {/* Numeric Keypad - Fixed at the bottom */}
+                  <div className={`grid grid-cols-3 ${keypadGap} w-full ${sectionSpacing} ${isSmallHeight ? 'mt-1' : ''}`}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleNumberPress(num.toString())}
+                        className={`${keypadFontSize} font-medium text-center py-1`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      onClick={handleDelete}
+                      className="flex items-center justify-center"
+                    >
+                      <Delete className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
+                    </button>
+                  </div>
+                  
+                  {/* Continue Button */}
+                  <button 
+                    onClick={handleNextStep}
+                    disabled={parseFloat(amount) <= 0}
+                    className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 px-4 flex items-center justify-between ${sectionSpacing}`}
                   >
-                    {num}
+                    <div className="w-6"></div> {/* Spacer for alignment */}
+                    <div className="text-center flex-1">
+                      Next 
+                    </div>
+                    <div className="flex items-center">
+                      <ChevronRight className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                    </div>
                   </button>
-                ))}
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center justify-center"
-                >
-                  <Delete className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
-                </button>
+                </div>
               </div>
-              
-              {/* Continue Button */}
-              <button 
-                onClick={handleNextStep}
-                disabled={parseFloat(amount) <= 0}
-                className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 px-4 flex items-center justify-between ${sectionSpacing}`}
-              >
-                <div className="w-6"></div> {/* Spacer for alignment */}
-                <div className="text-center flex-1">
-                  Next 
+
+              {/* Coming Soon Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className={`text-xl font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    Coming Soon
+                  </p>
+                  <p className={`mt-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                    Send functionality will be available in a future update
+                  </p>
                 </div>
-                <div className="flex items-center">
-                  <ChevronRight className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                </div>
-              </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
