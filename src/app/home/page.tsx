@@ -10,7 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useActiveAccount } from "thirdweb/react";
 import { prepareTransaction, sendBatchTransaction } from "thirdweb";
 import { client, scrollSepolia } from "@/client";
-import { Check, X, ExternalLink } from "lucide-react";
+import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
+
+// Storage key for last claim timestamp
+const LAST_CLAIM_KEY = "last_claim_timestamp";
 
 export default function Home() {
   const router = useRouter();
@@ -24,9 +27,39 @@ export default function Home() {
   const [bannerVisible, setBannerVisible] = useState(false);
   const [progressValue, setProgressValue] = useState(100);
   const [hasAttemptedClaim, setHasAttemptedClaim] = useState(false);
+  const [lastClaimTime, setLastClaimTime] = useState<number | null>(null);
+  const [errorBannerVisible, setErrorBannerVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
+
+  // Check if claim is allowed based on last claim time
+  const isClaimAllowed = () => {
+    if (!lastClaimTime) return true;
+    
+    const now = Date.now();
+    const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
+    
+    // Allow claiming once every 24 hours
+    return hoursSinceLastClaim >= 24;
+  };
+
+  // Load last claim time from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && address) {
+      try {
+        const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
+        if (storedData) {
+          const timestamp = parseInt(storedData, 10);
+          setLastClaimTime(timestamp);
+        }
+      } catch (error) {
+        console.error("Error loading last claim time:", error);
+      }
+    }
+  }, [address]);
 
   // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
@@ -95,6 +128,22 @@ export default function Home() {
     }
   }, [txSuccess, txHash, address]);
 
+  // Effect to handle error banner
+  useEffect(() => {
+    if (errorBannerVisible) {
+      // Auto-hide error banner after 10 seconds
+      errorTimerRef.current = setTimeout(() => {
+        setErrorBannerVisible(false);
+      }, 10000); // 10 seconds
+      
+      return () => {
+        if (errorTimerRef.current) {
+          clearTimeout(errorTimerRef.current);
+        }
+      };
+    }
+  }, [errorBannerVisible]);
+
   // Redirect to root if not authenticated and check balance for auto-claiming
   useEffect(() => {
     if (!isAuthenticated) {
@@ -112,6 +161,12 @@ export default function Home() {
     }
   }, [isAuthenticated, router, address]);
 
+  // Show error message
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setErrorBannerVisible(true);
+  };
+
   // Check balance and claim funds if needed
   const checkAndClaimFunds = async (balanceValue: string) => {
     if (
@@ -121,6 +176,12 @@ export default function Home() {
       !hasAttemptedClaim && 
       !isTxProcessing
     ) {
+      // Check if claiming is allowed based on time
+      if (!isClaimAllowed()) {
+        console.log("Auto-claim skipped: Already claimed within 24 hours");
+        return;
+      }
+      
       console.log("Balance is zero, auto-claiming test funds...");
       setHasAttemptedClaim(true);
       await handleClaimTestFunds();
@@ -131,6 +192,17 @@ export default function Home() {
   const handleClaimTestFunds = async () => {
     if (!account || !account.address) {
       console.log("No wallet connected");
+      return;
+    }
+    
+    // Check if claiming is allowed based on time
+    if (!isClaimAllowed()) {
+      const nextClaimTime = new Date(lastClaimTime! + 24 * 60 * 60 * 1000);
+      const formattedTime = nextClaimTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const formattedDate = nextClaimTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      
+      const errorMsg = `You've already claimed test funds. Please try again in the next 24 hours.`;
+      showError(errorMsg);
       return;
     }
 
@@ -183,11 +255,7 @@ export default function Home() {
           ? error.message.split("contract:")[0].trim()
           : "Unknown error";
           
-      toast({
-        title: "Transaction failed",
-        description: cleanErrorMessage,
-        variant: "destructive",
-      });
+      showError(cleanErrorMessage);
     } finally {
       setIsTxProcessing(false);
     }
@@ -277,6 +345,40 @@ export default function Home() {
                   className="h-full bg-green-500 transition-all duration-100 ease-linear"
                   style={{ width: `${progressValue}%` }}
                 ></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Error Banner */}
+        {errorBannerVisible && (
+          <div className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+            ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
+            rounded-lg shadow-lg overflow-hidden`}>
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}>
+                    <AlertCircle className={`h-5 w-5 
+                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`} />
+                  </div>
+                  <div>
+                    <h3 className={`font-medium 
+                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}>
+                      You have claimed your test funds, please wait for the next 24 hours to claim again.
+                    </h3>
+                    
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setErrorBannerVisible(false)}
+                  className={`rounded-full p-1 
+                    ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
+                >
+                  <X className={`h-4 w-4 
+                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`} />
+                </button>
               </div>
             </div>
           </div>
