@@ -23,6 +23,7 @@ export default function Home() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [progressValue, setProgressValue] = useState(100);
+  const [hasAttemptedClaim, setHasAttemptedClaim] = useState(false);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
@@ -37,26 +38,15 @@ export default function Home() {
       }
       const data = await response.json();
       setBalance(data.usdBalance || "0.00");
+      return data.usdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("0.00");
+      return "0.00";
     } finally {
       setIsLoadingBalance(false);
     }
   };
-
-  // Redirect to root if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      console.log("Not authenticated, redirecting to landing page");
-      router.replace("/");
-    } else {
-      console.log("Authenticated on home page:", address);
-      if (address) {
-        fetchBalance(address);
-      }
-    }
-  }, [isAuthenticated, router, address]);
 
   // Effect to handle transaction success banner and progress bar
   useEffect(() => {
@@ -105,13 +95,47 @@ export default function Home() {
     }
   }, [txSuccess, txHash, address]);
 
+  // Redirect to root if not authenticated and check balance for auto-claiming
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log("Not authenticated, redirecting to landing page");
+      router.replace("/");
+    } else {
+      console.log("Authenticated on home page:", address);
+      if (address) {
+        const getBalanceAndAutoCheck = async () => {
+          const currentBalance = await fetchBalance(address);
+          checkAndClaimFunds(currentBalance);
+        };
+        getBalanceAndAutoCheck();
+      }
+    }
+  }, [isAuthenticated, router, address]);
+
+  // Check balance and claim funds if needed
+  const checkAndClaimFunds = async (balanceValue: string) => {
+    if (
+      account && 
+      account.address && 
+      parseFloat(balanceValue) === 0 && 
+      !hasAttemptedClaim && 
+      !isTxProcessing
+    ) {
+      console.log("Balance is zero, auto-claiming test funds...");
+      setHasAttemptedClaim(true);
+      await handleClaimTestFunds();
+    }
+  };
+
   // Handle claiming test funds
   const handleClaimTestFunds = async () => {
     if (!account || !account.address) {
+      console.log("No wallet connected");
       return;
     }
 
     try {
+      console.log("Starting claim process with account:", account);
       setIsTxProcessing(true);
       setTxSuccess(false);
       setTxHash(null);
@@ -137,6 +161,8 @@ export default function Home() {
           value: BigInt(0),
         }),
       ];
+
+      console.log("Transactions prepared:", transactions);
 
       // Send batch transaction
       const result = await sendBatchTransaction({
