@@ -282,7 +282,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
                     Coming Soon
                   </p>
                   <p className={`mt-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                    Send functionality will be available in a future update
+                    Send functionality will be available on mainnet launch. 
                   </p>
                 </div>
               </div>

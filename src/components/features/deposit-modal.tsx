@@ -734,7 +734,7 @@ export default function DepositModal({
                   isSubmitting && pool?.protocol_pair_id === processingPoolId
                     ? "bg-gray-300 text-gray-500"
                     : parseFloat(amount) > 0
-                    ? "bg-green-400 text-black hover:bg-green-500"
+                    ? "bg-purple-400 text-black hover:bg-purple-500"
                     : "bg-gray-300 text-gray-500"
                 }`}
                 disabled={
@@ -802,7 +802,7 @@ export default function DepositModal({
 
               <div className="mb-6">
                 <p className="text-lg mb-1">You've deposited</p>
-                <p className="text-3xl font-bold text-green-500">
+                <p className="text-3xl font-bold text-purple-500">
                   ${submittedAmountRef.current} USDC
                 </p>
                 <p className="text-sm mt-2 opacity-80">
@@ -848,7 +848,7 @@ export default function DepositModal({
 
               <button
                 onClick={handleCloseAll}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 Done
               </button>

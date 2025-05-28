@@ -161,7 +161,7 @@ export default function WithdrawModal({
                     onChange={(e) => setAmount(e.target.value)}
                   />
                   <button
-                    className="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                    className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
                     onClick={handleWithdraw}
                   >
                     Withdraw
@@ -184,7 +184,7 @@ export default function WithdrawModal({
                       theme === "dark" ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
-                    Withdrawals will be available in a future update
+                    Withdrawals will be available on mainnet launch. 
                   </p>
                 </div>
               </div>
