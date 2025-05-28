@@ -244,7 +244,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${
                   theme === "dark"
                     ? "bg-purple-900/30 text-purple-300"
-                    : "bg-green-100 text-green-700"
+                    : "bg-purple-100 text-purple-700"
                 }`}
               >
                 {investorProfile}
