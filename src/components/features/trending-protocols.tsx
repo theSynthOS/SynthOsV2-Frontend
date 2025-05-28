@@ -206,12 +206,12 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
-      return <span className="text-gray-700">All Risks</span>;
-    if (riskFilters.low) return <span className="text-green-600">Low</span>;
+      return <span className="text-gray-700 dark:text-white">All Risks</span>;
+    if (riskFilters.low) return <span className="text-purple-700 dark:text-purple-300">Low</span>;
     if (riskFilters.medium)
-      return <span className="text-green-600">Medium</span>;
-    if (riskFilters.high) return <span className="text-green-600">High</span>;
-    return <span className="text-gray-700">No Filter</span>;
+      return <span className="text-purple-700 dark:text-purple-300">Medium</span>;
+    if (riskFilters.high) return <span className="text-purple-700 dark:text-purple-300">High</span>;
+    return <span className="text-purple-700 dark:text-purple-300">No Filter</span>;
   };
 
   const toggleProtocolExpand = (protocolName: string) => {
@@ -308,7 +308,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                           <div
                             className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
                               riskFilters.all
-                                ? "bg-green-500 border-green-500"
+                                ? "bg-purple-500 border-purple-500"
                                 : `border-gray-400 ${
                                     theme === "dark"
                                       ? "bg-gray-700"
@@ -341,7 +341,7 @@ export default function TrendingProtocols({ refreshBalance }: { refreshBalance?:
                           <div
                             className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
                               riskFilters.low
-                                ? "bg-green-500 border-green-500"
+                                ? "bg-purple-500 border-purple-500"
                                 : `border-gray-400 ${
                                     theme === "dark"
                                       ? "bg-gray-700"

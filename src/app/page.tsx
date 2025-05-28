@@ -292,7 +292,7 @@ export default function Home() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           onClick={handleContinueToDashboard}
-          className="bg-green-600 hover:bg-green-500 text-white font-medium py-3 px-5 rounded-lg"
+          className="bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-5 rounded-lg"
         >
           Continue to Dashboard
         </motion.button>

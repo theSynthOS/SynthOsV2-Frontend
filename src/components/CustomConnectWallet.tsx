@@ -82,7 +82,7 @@ export default function ConnectWalletButton({
       {/* Connect Wallet Button */}
       <button
         onClick={openModal}
-        className="bg-green-600 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
+        className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
       >
         {isAuthenticated && address
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -385,7 +385,7 @@ function WalletConnectionUI({
         <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "social"
-              ? "text-green-500 border-b-2 border-green-500"
+              ? "text-purple-500 border-b-2 border-purple-500"
               : "text-gray-500"
           }`}
           onClick={() => setActiveTab("social")}
@@ -396,7 +396,7 @@ function WalletConnectionUI({
         <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "wallets"
-              ? "text-green-500 border-b-2 border-green-500"
+              ? "text-purple-500 border-b-2 border-purple-500"
               : "text-gray-500"
           }`}
           onClick={() => setActiveTab("wallets")}
@@ -452,7 +452,7 @@ function WalletConnectionUI({
               key={wallet.id}
               onClick={() => handleConnectWallet(wallet.id)}
               disabled={isConnecting && currentWallet === wallet.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-purple-900/50 rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
               }`}
             >
@@ -464,7 +464,7 @@ function WalletConnectionUI({
               </div>
 
               {isConnecting && currentWallet === wallet.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600  border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-purple-600  border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
@@ -481,7 +481,7 @@ function WalletConnectionUI({
               key={option.id}
               onClick={() => handleConnectWithSocial(option.id)}
               disabled={isConnecting && currentAuth === option.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50  rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-purple-900/50  rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentAuth !== option.id ? "opacity-50" : ""
               }`}
             >
@@ -493,7 +493,7 @@ function WalletConnectionUI({
               </div>
 
               {isConnecting && currentAuth === option.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-purple-600 border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
