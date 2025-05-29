@@ -5,6 +5,7 @@ import { ArrowLeft, History } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface HistoryPanelProps {
   isOpen: boolean;
@@ -12,11 +13,19 @@ interface HistoryPanelProps {
   chain?: string;
 }
 
+interface Transfer {
+  asset: string;
+  symbol: string;
+  amount: number;
+  direction: "debit" | "credit";
+}
+
 interface Transaction {
   id: string;
   protocolName: string;
-  amount: number;
-  asset: string;
+  transfers: Transfer[];
+  txType: string;
+  summary: string;
   timestamp: string;
   status: "active" | "completed" | "failed";
   chain: string;
@@ -169,14 +178,27 @@ export default function HistoryPanel({
                 </p>
               </div>
             ) : isLoading ? (
-              <div className="h-full flex items-center justify-center px-4">
-                <p
-                  className={`text-center ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Loading transactions...
-                </p>
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`mb-4 p-4 rounded-xl ${
+                      theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <Skeleton className="w-24 h-6 rounded bg-gray-300 dark:bg-gray-700" />
+                      <Skeleton className="w-16 h-5 rounded bg-gray-300 dark:bg-gray-700" />
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Skeleton className="w-20 h-6 rounded bg-gray-300 dark:bg-gray-700" />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <Skeleton className="w-28 h-4 rounded bg-gray-300 dark:bg-gray-700" />
+                      <Skeleton className="w-20 h-4 rounded bg-gray-300 dark:bg-gray-700" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="h-full flex items-center justify-center px-4">
@@ -213,84 +235,69 @@ export default function HistoryPanel({
                         {metadata.totalTransactions}
                       </p>
                     </div>
-                    <div
-                      className={`p-4 rounded-xl ${
-                        theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
-                      }`}
-                    >
-                      <p
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-600"
-                        }`}
-                      >
-                        Total Amount
-                      </p>
-                      <p className="text-xl font-bold text-green-500">
-                        {metadata.totalAmount.toFixed(4)} {metadata.symbol}
-                      </p>
-                    </div>
                   </div>
                 )}
 
                 {/* Transaction List - Scrollable */}
                 <div className="flex-1 overflow-y-auto px-4 py-4">
-                  {transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className={`mb-4 p-4 rounded-xl ${
-                        theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
-                      } cursor-pointer hover:bg-opacity-80 transition-colors`}
-                      onClick={() => handleTransactionClick(tx)}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold">{tx.protocolName}</h3>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            tx.status === "completed"
-                              ? "bg-green-500/20 text-green-500"
-                              : "bg-red-500/20 text-red-500"
-                          }`}
-                        >
-                          {tx.status.charAt(0).toUpperCase() +
-                            tx.status.slice(1)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <div>
-                          <p
-                            className={`text-sm ${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-600"
+                  {transactions.map((tx) => {
+                    // Find the first debit transfer (deposited/sent), fallback to first transfer
+                    const deposit =
+                      tx.transfers.find((tr) => tr.direction === "debit") ||
+                      tx.transfers[0];
+                    return (
+                      <div
+                        key={tx.id}
+                        className={`mb-4 p-4 rounded-xl ${
+                          theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                        } cursor-pointer hover:bg-opacity-80 transition-colors`}
+                        onClick={() => handleTransactionClick(tx)}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <h3 className="font-semibold text-lg">
+                              {tx.protocolName}
+                            </h3>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              tx.status === "completed"
+                                ? "bg-green-500/20 text-green-500"
+                                : "bg-red-500/20 text-red-500"
                             }`}
                           >
-                            Amount
+                            {tx.status.charAt(0).toUpperCase() +
+                              tx.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-base font-bold">
+                            {deposit
+                              ? `${deposit.amount.toFixed(2)} ${deposit.symbol}`
+                              : "-"}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <p
+                            className={`text-xs ${
+                              theme === "dark"
+                                ? "text-gray-500"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {new Date(tx.timestamp).toLocaleString()}
                           </p>
-                          <p className="font-semibold">
-                            {tx.amount.toFixed(4)} {tx.asset}
-                          </p>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                            }`}
+                          >
+                            {tx.chain}
+                          </span>
                         </div>
                       </div>
-                      <div className="mt-2 flex items-center justify-between">
-                        <p
-                          className={`text-xs ${
-                            theme === "dark" ? "text-gray-500" : "text-gray-400"
-                          }`}
-                        >
-                          {new Date(tx.timestamp).toLocaleString()}
-                        </p>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                          }`}
-                        >
-                          {tx.chain.charAt(0).toUpperCase() + tx.chain.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
