@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, MessageCircle, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageCircle,
+  CheckCircle,
+  ArrowRight,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePoints } from "@/contexts/PointsContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +50,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [isSocialExiting, setIsSocialExiting] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState("");
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -65,6 +71,12 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         : [...selected, option]
     );
   };
+
+  const canSubmit =
+    selectedProtocols.length > 0 &&
+    selectedStrategies.length > 0 &&
+    (!selectedProtocols.includes("Other") || protocolOther.trim().length > 0) &&
+    (!selectedStrategies.includes("Other") || strategyOther.trim().length > 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +124,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         throw new Error(data.message || "Failed to submit feedback");
       }
 
+      // Clear any existing error
+      setError("");
+
       // Refresh points after successful submission
       refreshPoints();
       setSubmitted(true);
@@ -128,7 +143,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       }, 1000);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      // You might want to show an error message to the user here
+      setError("Failed to submit feedback. Please try again.");
     } finally {
       setProcessing(false);
     }
@@ -142,15 +157,6 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       onClose();
     }, 300);
   };
-
-  const canSubmit =
-    selectedProtocols.length > 0 &&
-    selectedStrategies.length > 0 &&
-    (!selectedProtocols.includes("Other") || protocolOther.trim().length > 0) &&
-    (!selectedStrategies.includes("Other") ||
-      strategyOther.trim().length > 0) &&
-    !submitted &&
-    !processing;
 
   if (!isOpen) return null;
 
@@ -348,53 +354,52 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                   onChange={(e) => setAdditionalFeedback(e.target.value)}
                 />
               </div>
-            </form>
-          </div>
 
-          {/* Submit Button Container - Fixed at bottom with extra padding for mobile nav */}
-          <div className="absolute bottom-0 left-0 right-0 w-full bg-gradient-to-t from-white via-white to-transparent dark:from-[#0f0b22] dark:via-[#0f0b22] px-4 sm:px-8 py-4 mb-[120px] md:mb-0">
-            <button
-              type="submit"
-              form="feedback-form"
-              disabled={!canSubmit || processing || submitted}
-              className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-                canSubmit && !processing && !submitted
-                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              {processing ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5 mr-2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8z"
-                    />
-                  </svg>
-                  Processing...
-                </>
-              ) : submitted ? (
-                <>
-                  <CheckCircle className="h-5 w-5" />
-                  Thank you!
-                </>
-              ) : (
-                "Submit Feedback"
-              )}
-            </button>
+              {/* Submit Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={!canSubmit || processing || submitted}
+                  className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+                    canSubmit && !processing && !submitted
+                      ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  {processing ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      Processing...
+                    </>
+                  ) : submitted ? (
+                    <>
+                      <CheckCircle className="h-5 w-5" />
+                      Thank you!
+                    </>
+                  ) : (
+                    "Submit Feedback"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
