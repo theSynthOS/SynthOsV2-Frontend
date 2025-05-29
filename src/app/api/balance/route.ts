@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `http://localhost:8080/accounts/balance/${address}`
+      `http://synthos-backend-production.up.railway.app/accounts/balance/${address}`
     );
     const data = await response.json();
 
