@@ -381,11 +381,11 @@ export default function Home() {
         className="flex flex-col items-center text-center max-w-md"
       >
         <div
-          className={`text-xl font-bold mb-6 ${
+          className={`text-lg md:text-xl font-bold mb-6 ${
             theme === "dark" ? "text-white" : "text-black"
           }`}
         >
-          Here's what we found:
+          Here's what we found from your {walletAnalysis?.analysis.details.totalTransactions} transactions wallet:
         </div>
 
         {/* Profile Information Card */}
@@ -407,26 +407,6 @@ export default function Home() {
               currentProfile.description}
           </p>
         </div>
-
-        {/* Analysis Summary Card */}
-        {walletAnalysis && (
-          <div
-            className={`p-6 rounded-xl mb-5 w-full ${
-              theme === "dark"
-                ? "bg-purple-800/30 text-white"
-                : "bg-purple-50 text-purple-900"
-            }`}
-          >
-            <p className="mb-3 text-lg font-bold text-left">
-              Analysis Summary:
-            </p>
-            {/* <p className="text-sm mb-3 text-left">{walletAnalysis.analysis.summary}</p> */}
-            <p className="text-sm mb-3 text-left">
-              Detected on chain Tx:{" "}
-              {walletAnalysis.analysis.details.totalTransactions}
-            </p>
-          </div>
-        )}
 
         {/* Profile Details Card */}
         {walletAnalysis?.profile && (
