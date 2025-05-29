@@ -15,10 +15,9 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-
-    // Direct database query for transactions
+    
     const transactions = await Transaction.find({
-      address: address.toLowerCase(),
+      address: { $regex: `^${address}$`, $options: "i" },
     })
       .sort({ createdAt: -1 })
       .limit(100);

@@ -44,6 +44,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const [submitted, setSubmitted] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [isSocialExiting, setIsSocialExiting] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -67,9 +68,11 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
 
     if (!address || !email) {
       console.error("Missing address or email:", { address, email });
+      setProcessing(false);
       return;
     }
 
@@ -128,6 +131,8 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     } catch (error) {
       console.error("Error submitting feedback:", error);
       // You might want to show an error message to the user here
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -146,7 +151,8 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     (!selectedProtocols.includes("Other") || protocolOther.trim().length > 0) &&
     (!selectedStrategies.includes("Other") ||
       strategyOther.trim().length > 0) &&
-    !submitted;
+    !submitted &&
+    !processing;
 
   if (!isOpen) return null;
 
@@ -350,15 +356,41 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
           <button
             type="submit"
             form="feedback-form"
-            disabled={!canSubmit}
+            disabled={!canSubmit || processing || submitted}
             className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-              canSubmit
+              canSubmit && !processing && !submitted
                 ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {submitted && <CheckCircle className="h-5 w-5" />}
-            {submitted ? "Thank you!" : "Submit Feedback"}
+            {processing ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+                Processing...
+              </>
+            ) : submitted ? (
+              <>
+                <CheckCircle className="h-5 w-5" />
+                Thank you!
+              </>
+            ) : (
+              "Submit Feedback"
+            )}
           </button>
         </div>
       </div>
@@ -382,14 +414,20 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
               Thanks for your feedback!
             </h2>
             <p className="mb-4 text-center text-base">Connect with us:</p>
-            <div className="flex gap-3 w-full">
+            <div className="flex flex-col gap-3 w-full">
               <a
                 href="https://t.me/+x8mewakKNJNmY2Nl"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors"
               >
-                <MessageCircle className="h-5 w-5 mr-2" />
+                <Image
+                  src="/Telegram_logo.svg"
+                  alt="Telegram"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 mr-2"
+                />
                 Join Telegram
               </a>
               <a
@@ -398,7 +436,13 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center px-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition-colors"
               >
-                <Image src="/X_logo_2023.svg" alt="X" width={20} height={20} className="h-5 w-5 mr-2"/>
+                <Image
+                  src="/X_logo_2023.svg"
+                  alt="X"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 mr-2"
+                />
                 Follow us on X
               </a>
             </div>
