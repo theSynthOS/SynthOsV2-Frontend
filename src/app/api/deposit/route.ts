@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     })
 
     const response = await fetch(
-      "http://synthos-backend-production.up.railway.app/action/deposit",
+      "https://synthos-backend-production.up.railway.app/action/deposit",
       {
         method: "POST",
         headers: {
