@@ -66,6 +66,8 @@ export default function DepositModal({
   const account = useActiveAccount();
   const [depositError, setDepositError] = useState<string | null>(null);
   const [txProgressPercent, setTxProgressPercent] = useState(0);
+  const refreshTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const [localIsLoadingBalance, setLocalIsLoadingBalance] = useState(false);
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
@@ -158,6 +160,14 @@ export default function DepositModal({
     setPercentageButtonClicked(false);
   }, [balance]);
 
+  // Also fetch balance directly when the modal opens to ensure we have the latest
+  useEffect(() => {
+    if (pool && address) {
+      // Fetch balance directly when modal opens
+      fetchBalance();
+    }
+  }, [pool, address]);
+
   // Handle maxBalance updates while maintaining the percentage
   useEffect(() => {
     if (pool) {
@@ -202,6 +212,74 @@ export default function DepositModal({
     onClose();
   };
 
+  // Direct balance fetching function
+  const fetchBalance = async () => {
+    if (!address) return;
+    
+    try {
+      console.log("Directly fetching balance for:", address);
+      setLocalIsLoadingBalance(true);
+      
+      const response = await fetch(`/api/balance?address=${address}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch balance");
+      }
+      
+      const data = await response.json();
+      const newBalance = data.usdBalance || "0.00";
+      console.log("New balance loaded:", newBalance);
+      
+      // Update the local maxBalance state
+      setMaxBalance(Number(newBalance));
+      
+      // Also call the parent's refreshBalance if available
+      if (refreshBalance) {
+        refreshBalance();
+      }
+      
+      return newBalance;
+    } catch (error) {
+      console.error("Error fetching balance directly:", error);
+      return "0.00";
+    } finally {
+      setLocalIsLoadingBalance(false);
+    }
+  };
+
+  // Enhanced fetchBalance function that combines direct fetch and parent refresh
+  const fetchBalanceAndUpdate = async () => {
+    try {
+      console.log("Refreshing balance in deposit modal for:", address);
+      
+      // First try direct fetch for immediate UI update
+      await fetchBalance();
+      
+      // The parent's refreshBalance will be called inside fetchBalanceDirectly
+    } catch (error) {
+      console.error("Error refreshing balance in deposit modal:", error);
+      
+      // Fallback to parent's refreshBalance if direct fetch fails
+      if (refreshBalance) {
+        refreshBalance();
+      }
+    }
+  };
+
+  // Clear all refresh timers when component unmounts or when needed
+  const clearAllRefreshTimers = () => {
+    if (refreshTimersRef.current.length > 0) {
+      refreshTimersRef.current.forEach(timer => clearTimeout(timer));
+      refreshTimersRef.current = [];
+    }
+  };
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      clearAllRefreshTimers();
+    };
+  }, []);
+
   // Handle closing success modal and reset all values
   const handleCloseAll = () => {
     setShowSuccessModal(false);
@@ -213,10 +291,11 @@ export default function DepositModal({
     setPercentageButtonClicked(false);
     modalClosedDuringProcessingRef.current = false;
     
+    // Clear all refresh timers
+    clearAllRefreshTimers();
+    
     // Refresh balance one more time before closing
-    if (refreshBalance) {
-      refreshBalance();
-    }
+    fetchBalanceAndUpdate();
     
     // Clear completed deposit status for this pool
     if (pool?.protocol_pair_id) {
@@ -401,6 +480,59 @@ export default function DepositModal({
   // Calculate estimated yearly yield using the fetched APY
   const yearlyYield = (Number.parseFloat(amount) * (currentApy || 0)) / 100;
 
+  // Handle confirmation of transaction success
+  const handleTransactionSuccess = async (txHash: string, amount: string) => {
+    try {
+      // Set transaction hash
+      setTxHash(txHash);
+      
+      // Immediately fetch balance after transaction success
+      // This ensures we get the latest balance as soon as possible
+      await fetchBalance();
+      
+      // Set up a timeout for a second fetch attempt
+      setTimeout(async () => {
+        await fetchBalance();
+        
+        // Third attempt after another delay
+        setTimeout(async () => {
+          await fetchBalance();
+        }, 3000);
+      }, 1500);
+      
+      // Update deposit tracking state
+      if (pool?.protocol_pair_id) {
+        const poolId = pool.protocol_pair_id;
+        setCompletedDeposits(prev => ({
+          ...prev,
+          [poolId]: {
+            success: true,
+            amount: amount,
+            txHash: txHash
+          }
+        }));
+      }
+      
+      // Show success UI
+      if (!modalClosedDuringProcessingRef.current) {
+        setShowSuccessModal(true);
+      } else {
+        toast({
+          variant: "success",
+          title: "Deposit Successful",
+          description: `$${amount} deposited into ${pool?.name}`,
+        });
+      }
+      
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    } catch (error) {
+      console.error("Error handling transaction success:", error);
+    }
+  };
+
   // Handle deposit confirmation
   const handleConfirmDeposit = async () => {
     // Get the current amount value from our ref for consistent access
@@ -516,47 +648,12 @@ export default function DepositModal({
 
         console.log("Transaction sent:", result);
 
-        // Store the transaction hash for the success screen
-        setTxHash(result.transactionHash);
-
-        // Refresh the balance
-        if (refreshBalance) {
-          refreshBalance();
-        }
+        // Handle success with dedicated function
+        await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Store this successful deposit in our state so we can show it if user reopens the modal
-        if (pool?.protocol_pair_id) {
-          const poolId = pool.protocol_pair_id;
-          setCompletedDeposits(prev => ({
-            ...prev,
-            [poolId]: {
-              success: true,
-              amount: depositAmount,
-              txHash: result.transactionHash
-            }
-          }));
-        }
-
-        // If the modal wasn't closed during processing, show success modal immediately
-        if (!modalClosedDuringProcessingRef.current) {
-          setShowSuccessModal(true);
-        } else {
-          // If modal was closed, just show a success toast
-          // Success modal will be shown when they click the pool again
-          toast({
-            variant: "success",
-            title: "Deposit Successful",
-            description: `$${depositAmount} deposited into ${pool?.name}`,
-          });
-        }
-
-        // Always trigger haptic feedback if supported
-        if (navigator.vibrate) {
-          navigator.vibrate([100, 50, 100]);
-        }
       } catch (error) {
         console.error("Deposit execution error:", error);
         
@@ -724,9 +821,9 @@ export default function DepositModal({
                   } mt-1 w-full`}
                 >
                   Balance:{" "}
-                  {isLoadingBalance ? (
+                  {localIsLoadingBalance ? (
                     <span className="inline-flex items-center">
-                      <div className="h-8 w-8 border-4 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+                      <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                     </span>
                   ) : (
                     `${maxBalance.toFixed(2)} USDC`
