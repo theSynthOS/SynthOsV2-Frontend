@@ -30,7 +30,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "SynthOS",
-    description: "Invest with confidence using personalized crypto yield plans.",
+    description:
+      "Invest with confidence using personalized crypto yield plans.",
     url: "https://app.synthos.fun",
     siteName: "SynthOS",
     images: [
@@ -45,7 +46,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SynthOS",
-    description: "Invest with confidence using personalized crypto yield plans.",
+    description:
+      "Invest with confidence using personalized crypto yield plans.",
     images: ["https://app.synthos.fun/og.jpg"],
   },
 };
