@@ -589,7 +589,17 @@ export default function TrendingProtocols({
                   <div className="mt-2 space-y-2 px-4">
                     {getProtocolPairs(protocol.name)
                       .filter(pair => pair.apy !== undefined && pair.apy !== null && pair.apy > 0)
-                      .sort((a, b) => (a.apy || 0) - (b.apy || 0))
+                      .sort((a, b) => {
+                        const isAUsdc = a.pair_or_vault_name.toLowerCase().includes('usdc');
+                        const isBUsdc = b.pair_or_vault_name.toLowerCase().includes('usdc');
+                        
+                        // Always put USDC pairs first
+                        if (isAUsdc && !isBUsdc) return -1;
+                        if (!isAUsdc && isBUsdc) return 1;
+                        
+                        // If both are USDC or both are not USDC, sort by APY
+                        return (a.apy || 0) - (b.apy || 0);
+                      })
                       .map((pair) => {
                         const isUsdcPair = pair.pair_or_vault_name.toLowerCase().includes('usdc');
                         return (
@@ -597,8 +607,8 @@ export default function TrendingProtocols({
                         key={pair.id}
                         className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
                           theme === "dark"
-                            ? "bg-gray-800/50 hover:bg-gray-700/50"
-                            : "bg-white hover:bg-gray-50 shadow-sm"
+                            ? isUsdcPair ? "bg-gray-800/50 hover:bg-gray-700/50" : "bg-gray-70 shadow-sm"
+                            : isUsdcPair ? "bg-white hover:bg-gray-50 shadow-sm" : "bg-gray-200/70 shadow-sm"
                         } p-5 rounded-xl transition-colors duration-200 relative h-34`}
                         onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
                       >
@@ -663,13 +673,15 @@ export default function TrendingProtocols({
                               APY
                             </div>
                           </div>
-                          <div
-                            className={`font-semibold text-md ${getRiskColor(
-                              pair.type
-                            )}`}
-                          >
-                            Risk: {getRiskLabel(pair.type)}
-                          </div>
+                          {isUsdcPair && (
+                            <div
+                              className={`font-semibold text-md ${getRiskColor(
+                                pair.type
+                              )}`}
+                            >
+                              Risk: {getRiskLabel(pair.type)}
+                            </div>
+                          )}
                         </div>
                       </div>
                         );
