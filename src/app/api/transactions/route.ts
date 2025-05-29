@@ -20,9 +20,9 @@ export async function GET(request: Request) {
     console.log("1. Received wallet address:", address);
     console.log("2. Normalized address for query:", address.toLowerCase());
 
-    // Direct database query for transactions
+    // Direct database query for transactions (case-insensitive address match)
     const transactions = await Transaction.find({
-      address: address.toLowerCase(),
+      address: { $regex: `^${address}$`, $options: "i" },
     })
       .sort({ createdAt: -1 })
       .limit(100);
