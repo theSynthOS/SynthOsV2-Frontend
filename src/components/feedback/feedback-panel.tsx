@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowLeft, MessageCircle, CheckCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePoints } from "@/contexts/PointsContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FeedbackPanelProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const STRATEGY_OPTIONS = [
 export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
+  const { email, address } = useAuth();
 
   const [isExiting, setIsExiting] = useState(false);
   const [selectedProtocols, setSelectedProtocols] = useState<string[]>([]);
@@ -65,6 +67,12 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!address || !email) {
+      console.error("Missing address or email:", { address, email });
+      return;
+    }
+
     const feedbackData = {
       protocols: selectedProtocols.includes("Other")
         ? [
@@ -82,20 +90,55 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       additionalFeedback: additionalFeedback.trim(),
     };
 
-    console.log("Feedback Data:", feedbackData);
-    refreshPoints();
-    setSubmitted(true);
+    console.log("Submitting feedback with data:", {
+      ...feedbackData,
+      walletAddress: address,
+      email: email,
+    });
 
-    setTimeout(() => {
-      setShowSocialModal(true);
-      setSubmitted(false);
-      setSelectedProtocols([]);
-      setProtocolOther("");
-      setSelectedStrategies([]);
-      setStrategyOther("");
-      setRating(5);
-      setAdditionalFeedback("");
-    }, 1000);
+    try {
+      const response = await fetch("/api/feedbacks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...feedbackData,
+          walletAddress: address,
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Feedback submission response:", data);
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to submit feedback");
+      }
+
+      // Show success message with points if awarded
+      if (data.pointsAwarded > 0) {
+        console.log(`Awarded ${data.pointsAwarded} points for feedback`);
+      }
+
+      // Refresh points after successful submission
+      refreshPoints();
+      setSubmitted(true);
+
+      setTimeout(() => {
+        setShowSocialModal(true);
+        setSubmitted(false);
+        setSelectedProtocols([]);
+        setProtocolOther("");
+        setSelectedStrategies([]);
+        setStrategyOther("");
+        setRating(5);
+        setAdditionalFeedback("");
+      }, 1000);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const handleSocialClose = () => {

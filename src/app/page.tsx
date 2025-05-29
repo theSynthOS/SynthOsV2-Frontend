@@ -327,12 +327,12 @@ export default function Home() {
                 Analyzing your wallet activity and investment patterns...
               </span>
             </div>
-            {estimatedTimeLeft <100 ? 
+            {estimatedTimeLeft < 100 ? (
               <div className="mt-2 flex items-center space-x-2 font-medium text-purple-500 animate-pulse">
                 <span>🤖</span>
                 <span>AI analysis in progress...</span>
               </div>
-             : null}
+            ) : null}
           </div>
         )}
       </div>
@@ -380,7 +380,8 @@ export default function Home() {
             theme === "dark" ? "text-white" : "text-black"
           }`}
         >
-          Here's what we found from your {walletAnalysis?.analysis.details.totalTransactions} transactions :
+          Here's what we found from your{" "}
+          {walletAnalysis?.analysis.details.totalTransactions} transactions :
         </div>
 
         {/* Profile Information Card */}

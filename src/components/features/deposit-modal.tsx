@@ -9,7 +9,11 @@ import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Pro
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
-import { prepareTransaction, sendAndConfirmTransaction, sendBatchTransaction } from "thirdweb";
+import {
+  prepareTransaction,
+  sendAndConfirmTransaction,
+  sendBatchTransaction,
+} from "thirdweb";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Add Ethereum window type
@@ -79,11 +83,13 @@ export default function DepositModal({
 
   // Add a reference to track deposit status for each pool
   // This will help maintain state even when modal is closed and reopened
-  const [completedDeposits, setCompletedDeposits] = useState<{[poolId: string]: {
-    success: boolean;
-    amount: string;
-    txHash: string;
-  }}>({});
+  const [completedDeposits, setCompletedDeposits] = useState<{
+    [poolId: string]: {
+      success: boolean;
+      amount: string;
+      txHash: string;
+    };
+  }>({});
 
   // Add a ref to store the yearly yield at the time of submission
   const submittedYearlyYieldRef = useRef<number>(0);
@@ -96,7 +102,7 @@ export default function DepositModal({
         // Don't reset state for completed deposits, as we'll show the success modal
         return;
       }
-      
+
       // Only reset state if this is a different pool than the one being processed
       if (!processingPoolId || processingPoolId !== pool.protocol_pair_id) {
         setAmount("0");
@@ -193,7 +199,7 @@ export default function DepositModal({
     if (isSubmitting) {
       // Just mark that the modal was closed during processing
       modalClosedDuringProcessingRef.current = true;
-      
+
       // Show a toast notification that transaction is still processing
       toast({
         title: "Transaction in progress",
@@ -217,28 +223,28 @@ export default function DepositModal({
   // Direct balance fetching function
   const fetchBalance = async () => {
     if (!address) return;
-    
+
     try {
       console.log("Directly fetching balance for:", address);
       setLocalIsLoadingBalance(true);
-      
+
       const response = await fetch(`/api/balance?address=${address}`);
       if (!response.ok) {
         throw new Error("Failed to fetch balance");
       }
-      
+
       const data = await response.json();
       const newBalance = data.usdBalance || "0.00";
       console.log("New balance loaded:", newBalance);
-      
+
       // Update the local maxBalance state
       setMaxBalance(Number(newBalance));
-      
+
       // Also call the parent's refreshBalance if available
       if (refreshBalance) {
         refreshBalance();
       }
-      
+
       return newBalance;
     } catch (error) {
       console.error("Error fetching balance directly:", error);
@@ -252,14 +258,14 @@ export default function DepositModal({
   const fetchBalanceAndUpdate = async () => {
     try {
       console.log("Refreshing balance in deposit modal for:", address);
-      
+
       // First try direct fetch for immediate UI update
       await fetchBalance();
-      
+
       // The parent's refreshBalance will be called inside fetchBalanceDirectly
     } catch (error) {
       console.error("Error refreshing balance in deposit modal:", error);
-      
+
       // Fallback to parent's refreshBalance if direct fetch fails
       if (refreshBalance) {
         refreshBalance();
@@ -270,7 +276,7 @@ export default function DepositModal({
   // Clear all refresh timers when component unmounts or when needed
   const clearAllRefreshTimers = () => {
     if (refreshTimersRef.current.length > 0) {
-      refreshTimersRef.current.forEach(timer => clearTimeout(timer));
+      refreshTimersRef.current.forEach((timer) => clearTimeout(timer));
       refreshTimersRef.current = [];
     }
   };
@@ -292,22 +298,22 @@ export default function DepositModal({
     setSliderValue(0);
     setPercentageButtonClicked(false);
     modalClosedDuringProcessingRef.current = false;
-    
+
     // Clear all refresh timers
     clearAllRefreshTimers();
-    
+
     // Refresh balance one more time before closing
     fetchBalanceAndUpdate();
-    
+
     // Clear completed deposit status for this pool
     if (pool?.protocol_pair_id) {
-      setCompletedDeposits(prev => {
-        const newState = {...prev};
+      setCompletedDeposits((prev) => {
+        const newState = { ...prev };
         delete newState[pool.protocol_pair_id as string];
         return newState;
       });
     }
-    
+
     handleClose();
   };
 
@@ -487,34 +493,34 @@ export default function DepositModal({
     try {
       // Set transaction hash
       setTxHash(txHash);
-      
+
       // Immediately fetch balance after transaction success
       // This ensures we get the latest balance as soon as possible
       await fetchBalance();
-      
+
       // Set up a timeout for a second fetch attempt
       setTimeout(async () => {
         await fetchBalance();
-        
+
         // Third attempt after another delay
         setTimeout(async () => {
           await fetchBalance();
         }, 3000);
       }, 1500);
-      
+
       // Update deposit tracking state
       if (pool?.protocol_pair_id) {
         const poolId = pool.protocol_pair_id;
-        setCompletedDeposits(prev => ({
+        setCompletedDeposits((prev) => ({
           ...prev,
           [poolId]: {
             success: true,
             amount: amount,
-            txHash: txHash
-          }
+            txHash: txHash,
+          },
         }));
       }
-      
+
       // Show success UI
       if (!modalClosedDuringProcessingRef.current) {
         setShowSuccessModal(true);
@@ -525,7 +531,7 @@ export default function DepositModal({
           description: `$${amount} deposited into ${pool?.name}`,
         });
       }
-      
+
       // Haptic feedback
       if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
@@ -537,17 +543,23 @@ export default function DepositModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, address }),
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           console.log("/api/points/deposit response:", data);
           // Fetch updated points
-          fetch(`/api/points?${email ? `email=${encodeURIComponent(email)}` : `address=${encodeURIComponent(address ?? "")}`}`)
-            .then(res => res.json())
-            .then(pointsData => {
+          fetch(
+            `/api/points?${
+              email
+                ? `email=${encodeURIComponent(email)}`
+                : `address=${encodeURIComponent(address ?? "")}`
+            }`
+          )
+            .then((res) => res.json())
+            .then((pointsData) => {
               console.log("Updated points after deposit:", pointsData);
             });
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("/api/points/deposit error:", err);
         });
     } catch (error) {
@@ -563,9 +575,10 @@ export default function DepositModal({
 
     // Store the final submitted amount for success screen
     submittedAmountRef.current = depositAmount;
-    
+
     // Store the yearly yield calculation for success screen
-    submittedYearlyYieldRef.current = (Number.parseFloat(depositAmount) * (currentApy || 0)) / 100;
+    submittedYearlyYieldRef.current =
+      (Number.parseFloat(depositAmount) * (currentApy || 0)) / 100;
 
     // Reset any previous errors
     setDepositError(null);
@@ -606,7 +619,7 @@ export default function DepositModal({
     try {
       // Update progress - start progress animation
       setTxProgressPercent(10);
-      
+
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: {
@@ -642,18 +655,22 @@ export default function DepositModal({
         const approvalTx = prepareTransaction({
           to: responseData[0].to,
           data: responseData[0].data,
-          value: responseData[0].value ? BigInt(responseData[0].value) : BigInt(0),
+          value: responseData[0].value
+            ? BigInt(responseData[0].value)
+            : BigInt(0),
           chain: scrollSepolia,
           client: client,
         });
-        
+
         const depositIntoVaultTx = prepareTransaction({
           to: responseData[1].to,
           data: responseData[1].data,
           chain: scrollSepolia,
           client: client,
           // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
-          value: responseData[1].value ? BigInt(responseData[1].value) : BigInt(0)
+          value: responseData[1].value
+            ? BigInt(responseData[1].value)
+            : BigInt(0),
         });
 
         // Update progress
@@ -672,16 +689,15 @@ export default function DepositModal({
 
         console.log("Transaction successful:", {
           hash: result.transactionHash,
-          amount: depositAmount
+          amount: depositAmount,
         });
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
-
       } catch (error) {
         console.error("Deposit execution error:", error);
-        
+
         // Show user-friendly error message
         let errorMessage = "Transaction failed";
         if (error instanceof Error) {
@@ -691,66 +707,68 @@ export default function DepositModal({
             errorMessage = "You rejected the transaction";
           } else if (errorString.includes("insufficient funds")) {
             errorMessage = "Insufficient funds for transaction";
-          } else if (errorString.includes("network") || errorString.includes("connect")) {
+          } else if (
+            errorString.includes("network") ||
+            errorString.includes("connect")
+          ) {
             errorMessage = "Network connection issue";
           } else {
             // Generic error with first part of message
-            errorMessage = errorString.split('.')[0];
+            errorMessage = errorString.split(".")[0];
           }
         }
-        
+
         // Set the error message for the banner
         setDepositError(errorMessage);
         setTxProgressPercent(0);
         // Reset submission state to allow retrying
         setIsSubmitting(false);
         isProcessingRef.current = false;
-        
+
         // Store the failed deposit in our state
         if (pool?.protocol_pair_id) {
           const poolId = pool.protocol_pair_id;
-          setCompletedDeposits(prev => ({
+          setCompletedDeposits((prev) => ({
             ...prev,
             [poolId]: {
               success: false,
               amount: depositAmount,
-              txHash: ""
-            }
+              txHash: "",
+            },
           }));
         }
-        
+
         // Only show error toast if the modal is still open
         if (!modalClosedDuringProcessingRef.current) {
           toast({
             variant: "destructive",
             title: "Deposit Failed",
-            description: errorMessage
+            description: errorMessage,
           });
         }
       }
     } catch (error) {
       console.error("Deposit API error:", error);
-      
+
       // Set the error message for the banner
       setDepositError("Failed to prepare transaction");
       setTxProgressPercent(0);
       // Reset submission state to allow retrying
       setIsSubmitting(false);
       isProcessingRef.current = false;
-      
+
       // Store the failed deposit in our state
       if (pool?.protocol_pair_id) {
         const poolId = pool.protocol_pair_id;
-        setCompletedDeposits(prev => ({
+        setCompletedDeposits((prev) => ({
           ...prev,
           [poolId]: {
             success: false,
             amount: depositAmount,
-            txHash: ""
-          }
+            txHash: "",
+          },
         }));
       }
-      
     } finally {
       // Only reset submission state if not already reset in the catch blocks
       // and only if this specific modal is still open and matches the processing pool ID
@@ -769,10 +787,10 @@ export default function DepositModal({
     if (pool?.protocol_pair_id && completedDeposits[pool.protocol_pair_id]) {
       // If this pool has a completed deposit, show the appropriate modal
       const depositData = completedDeposits[pool.protocol_pair_id];
-      
+
       // Set the submitted amount for display
       submittedAmountRef.current = depositData.amount;
-      
+
       if (depositData.success) {
         // Set transaction hash for the link
         setTxHash(depositData.txHash);
@@ -783,12 +801,13 @@ export default function DepositModal({
         toast({
           variant: "destructive",
           title: "Previous Deposit Failed",
-          description: "Your last deposit attempt for this pool failed. Please try again.",
+          description:
+            "Your last deposit attempt for this pool failed. Please try again.",
         });
-        
+
         // Clear the failed deposit status
-        setCompletedDeposits(prev => {
-          const newState = {...prev};
+        setCompletedDeposits((prev) => {
+          const newState = { ...prev };
           delete newState[pool.protocol_pair_id as string];
           return newState;
         });
@@ -805,27 +824,27 @@ export default function DepositModal({
   // Function to format error messages for display
   const formatErrorMessage = (errorMsg: string): string => {
     // If it's an ERC20 error, extract just the important part
-    if (errorMsg.includes('ERC20:')) {
+    if (errorMsg.includes("ERC20:")) {
       // Get text between 'ERC20:' and the next period or end of string
       const match = errorMsg.match(/ERC20:\s*([^.]+)/);
       if (match && match[1]) {
         return `ERC20: ${match[1].trim()}`;
       }
     }
-    
+
     // If it contains "UserOp failed", simplify it
-    if (errorMsg.includes('UserOp failed')) {
+    if (errorMsg.includes("UserOp failed")) {
       const match = errorMsg.match(/UserOp failed with reason:\s*([^']+)/);
       if (match && match[1]) {
         return match[1].trim();
       }
     }
-    
+
     // For general errors, limit to reasonable length
     if (errorMsg.length > 100) {
-      return errorMsg.substring(0, 97) + '...';
+      return errorMsg.substring(0, 97) + "...";
     }
-    
+
     return errorMsg;
   };
 
@@ -900,7 +919,9 @@ export default function DepositModal({
                   {isLoadingApy ? (
                     <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                   ) : (
-                    <span className="text-green-400">{currentApy?.toFixed(3) || 0}%</span>
+                    <span className="text-green-400">
+                      {currentApy?.toFixed(3) || 0}%
+                    </span>
                   )}
                 </div>
                 <div className="flex justify-between text-sm">
@@ -975,36 +996,60 @@ export default function DepositModal({
                 )}
               </button>
             </div>
-            
+
             {/* Transaction Progress */}
             {isSubmitting && (
               <div className="mt-4">
                 <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${txProgressPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
-                  {txProgressPercent < 100 ? 'Processing transaction...' : 'Transaction complete!'}
+                  {txProgressPercent < 100
+                    ? "Processing transaction..."
+                    : "Transaction complete!"}
                 </div>
               </div>
             )}
-            
+
             {/* Error Banner - Super simple design with formatted message */}
             {depositError && (
-              <div className={`mt-4 rounded-lg p-3 ${theme === "dark" ? "bg-red-900/40" : "bg-red-100"} relative`}>
-                <div className="pr-6"> {/* Add right padding for close button */}
-                  <p className={`text-sm ${theme === "dark" ? "text-red-100" : "text-red-800"} break-words`}>
-                    <span className="font-bold">Error:</span> {formatErrorMessage(depositError)}
+              <div
+                className={`mt-4 rounded-lg p-3 ${
+                  theme === "dark" ? "bg-red-900/40" : "bg-red-100"
+                } relative`}
+              >
+                <div className="pr-6">
+                  {" "}
+                  {/* Add right padding for close button */}
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-red-100" : "text-red-800"
+                    } break-words`}
+                  >
+                    <span className="font-bold">Error:</span>{" "}
+                    {formatErrorMessage(depositError)}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setDepositError(null)}
-                  className={`absolute top-2 right-2 rounded-full p-1 ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
+                  className={`absolute top-2 right-2 rounded-full p-1 ${
+                    theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+                  }`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-red-500"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
