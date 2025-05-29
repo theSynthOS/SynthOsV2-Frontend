@@ -20,8 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SynthOS",
   description: "Invest with confidence using personalized crypto yield plans.",
+  // add image
   icons: {
-    icon: "/icons/SynthOS-transparent.png",
+    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
     siteName: "SynthOS",
     images: [
       {
-        url: "/og.jpg",
+        url: "https://app.synthos.fun/og.jpg",
         width: 1200,
         height: 630,
         alt: "SynthOS",
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
     title: "SynthOS",
     description:
       "Invest with confidence using personalized crypto yield plans.",
-    images: ["/og.jpg"],
+    images: ["https://app.synthos.fun/og.jpg"],
   },
 };
 
