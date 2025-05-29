@@ -777,6 +777,33 @@ export default function DepositModal({
   // Calculate the initial angle for the radial progress bar (0-1 range)
   const initialAngle = sliderValue / 100;
 
+  // Function to format error messages for display
+  const formatErrorMessage = (errorMsg: string): string => {
+    // If it's an ERC20 error, extract just the important part
+    if (errorMsg.includes('ERC20:')) {
+      // Get text between 'ERC20:' and the next period or end of string
+      const match = errorMsg.match(/ERC20:\s*([^.]+)/);
+      if (match && match[1]) {
+        return `ERC20: ${match[1].trim()}`;
+      }
+    }
+    
+    // If it contains "UserOp failed", simplify it
+    if (errorMsg.includes('UserOp failed')) {
+      const match = errorMsg.match(/UserOp failed with reason:\s*([^']+)/);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // For general errors, limit to reasonable length
+    if (errorMsg.length > 100) {
+      return errorMsg.substring(0, 97) + '...';
+    }
+    
+    return errorMsg;
+  };
+
   return (
     <>
       {/* Main Deposit Modal */}
@@ -939,31 +966,22 @@ export default function DepositModal({
               </div>
             )}
             
-            {/* Error Banner */}
+            {/* Error Banner - Super simple design with formatted message */}
             {depositError && (
-              <div className={`mt-4 p-4 rounded-lg ${theme === "dark" ? "bg-red-900/40" : "bg-red-100"}`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start">
-                    <div className={`rounded-full p-1 mr-3 ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}>
-                      <div className="w-4 h-4 text-red-500 flex items-center justify-center">
-                        !
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className={`font-medium text-sm ${theme === "dark" ? "text-red-100" : "text-red-800"}`}>
-                        <span className="font-bold">Deposit Failed:</span> {depositError}
-                      </h3>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setDepositError(null)}
-                    className={`rounded-full p-1 ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+              <div className={`mt-4 rounded-lg p-3 ${theme === "dark" ? "bg-red-900/40" : "bg-red-100"} relative`}>
+                <div className="pr-6"> {/* Add right padding for close button */}
+                  <p className={`text-sm ${theme === "dark" ? "text-red-100" : "text-red-800"} break-words`}>
+                    <span className="font-bold">Error:</span> {formatErrorMessage(depositError)}
+                  </p>
                 </div>
+                <button 
+                  onClick={() => setDepositError(null)}
+                  className={`absolute top-2 right-2 rounded-full p-1 ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             )}
           </div>
