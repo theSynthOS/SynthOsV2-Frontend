@@ -171,7 +171,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
       {/* Bottom-Sheet Panel */}
       <div
-        className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-[100]"
+        className="fixed inset-x-0 bottom-0 h-[90vh] max-h-[90vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50"
         style={{
           animation: isExiting
             ? "slideOutDown 0.3s ease-out forwards"
@@ -199,7 +199,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         </div>
 
         {/* FORM */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 hide-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-20 hide-scrollbar">
           <form
             id="feedback-form"
             onSubmit={handleSubmit}
@@ -350,7 +350,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         </div>
 
         {/* Submit Button */}
-        <div className="sticky bottom-0 left-0 w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-white dark:from-[#0f0b22] z-20 rounded-b-2xl">
+        <div className="fixed bottom-0 left-0 right-0 w-full max-w-2xl mx-auto px-4 sm:px-8 py-4 bg-gradient-to-t from-white via-white dark:from-[#0f0b22] dark:via-[#0f0b22] to-transparent z-30">
           <button
             type="submit"
             form="feedback-form"
