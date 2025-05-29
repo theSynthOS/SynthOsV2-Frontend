@@ -171,7 +171,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
       {/* Bottom-Sheet Panel */}
       <div
-        className="fixed inset-x-0 bottom-0 h-[80vh] w-full max-w-2xl mx-auto flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50"
+        className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50 overflow-hidden"
         style={{
           animation: isExiting
             ? "slideOutDown 0.3s ease-out forwards"
@@ -182,8 +182,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       >
         {/* HEADER */}
         <div
-          className="flex items-center justify-between px-4 sm:px-8 pt-6 sm:pt-10 pb-6 sm:pb-8"
-          style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
+          className={`flex items-center justify-between px-4 sm:px-8 pt-6 sm:pt-10 pb-6 sm:pb-8 ${
+            theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
+          }`}
         >
           <button
             onClick={handleGoBack}
@@ -197,198 +198,204 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
           <div className="w-10 h-10" />
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-24">
-          <form
-            id="feedback-form"
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-8 text-base sm:text-lg"
-          >
-            {/* Protocol Selection */}
-            <div>
-              <label className="block font-semibold mb-2">
-                1. What DeFi protocol do you want to see?
-              </label>
-              <div className="flex flex-col gap-2">
-                {PROTOCOL_OPTIONS.map((opt) => (
-                  <label
-                    key={opt}
-                    className={`flex items-center px-3 py-2 rounded-full border cursor-pointer transition-colors ${
-                      selectedProtocols.includes(opt)
-                        ? theme === "dark"
-                          ? "bg-purple-600 border-purple-400 text-white"
-                          : "bg-purple-100 border-purple-500 text-purple-600"
-                        : theme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-200"
-                        : "bg-gray-100 border-gray-300 text-gray-700"
-                    }`}
-                  >
+        {/* Content Container */}
+        <div className="flex-1 flex flex-col min-h-0 relative pb-[140px] md:pb-8">
+          {/* Scrollable Form Area */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-8">
+            <form
+              id="feedback-form"
+              onSubmit={handleSubmit}
+              className="flex flex-col space-y-8 text-base sm:text-lg pb-24"
+            >
+              {/* Protocol Selection */}
+              <div>
+                <label className="block font-semibold mb-2">
+                  1. What DeFi protocol do you want to see?
+                </label>
+                <div className="flex flex-col gap-2">
+                  {PROTOCOL_OPTIONS.map((opt) => (
+                    <label
+                      key={opt}
+                      className={`flex items-center px-3 py-2 rounded-full border cursor-pointer transition-colors ${
+                        selectedProtocols.includes(opt)
+                          ? theme === "dark"
+                            ? "bg-purple-600 border-purple-400 text-white"
+                            : "bg-purple-100 border-purple-500 text-purple-600"
+                          : theme === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-200"
+                          : "bg-gray-100 border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mr-2 accent-purple-600"
+                        checked={selectedProtocols.includes(opt)}
+                        onChange={() =>
+                          handleMultiSelect(
+                            opt,
+                            selectedProtocols,
+                            setSelectedProtocols
+                          )
+                        }
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                  {selectedProtocols.includes("Other") && (
                     <input
-                      type="checkbox"
-                      className="mr-2 accent-purple-600"
-                      checked={selectedProtocols.includes(opt)}
-                      onChange={() =>
-                        handleMultiSelect(
-                          opt,
-                          selectedProtocols,
-                          setSelectedProtocols
-                        )
-                      }
+                      type="text"
+                      className="mt-2 w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-transparent"
+                      placeholder="Other protocol..."
+                      value={protocolOther}
+                      onChange={(e) => setProtocolOther(e.target.value)}
                     />
-                    {opt}
-                  </label>
-                ))}
-                {selectedProtocols.includes("Other") && (
-                  <input
-                    type="text"
-                    className="mt-2 w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-transparent"
-                    placeholder="Other protocol..."
-                    value={protocolOther}
-                    onChange={(e) => setProtocolOther(e.target.value)}
-                  />
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Strategy Selection */}
-            <div>
-              <label className="block font-semibold mb-2">
-                2. What DeFi strategy do you want to see?
-              </label>
-              <div className="flex flex-col gap-2">
-                {STRATEGY_OPTIONS.map((opt) => (
-                  <label
-                    key={opt}
-                    className={`flex items-center px-3 py-2 rounded-full border cursor-pointer transition-colors ${
-                      selectedStrategies.includes(opt)
-                        ? theme === "dark"
-                          ? "bg-purple-600 border-purple-400 text-white"
-                          : "bg-purple-100 border-purple-600 text-purple-700"
-                        : theme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-200"
-                        : "bg-gray-100 border-gray-300 text-gray-700"
-                    }`}
-                  >
+              {/* Strategy Selection */}
+              <div>
+                <label className="block font-semibold mb-2">
+                  2. What DeFi strategy do you want to see?
+                </label>
+                <div className="flex flex-col gap-2">
+                  {STRATEGY_OPTIONS.map((opt) => (
+                    <label
+                      key={opt}
+                      className={`flex items-center px-3 py-2 rounded-full border cursor-pointer transition-colors ${
+                        selectedStrategies.includes(opt)
+                          ? theme === "dark"
+                            ? "bg-purple-600 border-purple-400 text-white"
+                            : "bg-purple-100 border-purple-600 text-purple-700"
+                          : theme === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-200"
+                          : "bg-gray-100 border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mr-2 accent-purple-600"
+                        checked={selectedStrategies.includes(opt)}
+                        onChange={() =>
+                          handleMultiSelect(
+                            opt,
+                            selectedStrategies,
+                            setSelectedStrategies
+                          )
+                        }
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                  {selectedStrategies.includes("Other") && (
                     <input
-                      type="checkbox"
-                      className="mr-2 accent-purple-600"
-                      checked={selectedStrategies.includes(opt)}
-                      onChange={() =>
-                        handleMultiSelect(
-                          opt,
-                          selectedStrategies,
-                          setSelectedStrategies
-                        )
-                      }
+                      type="text"
+                      className="mt-2 w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-transparent"
+                      placeholder="Other strategy..."
+                      value={strategyOther}
+                      onChange={(e) => setStrategyOther(e.target.value)}
                     />
-                    {opt}
-                  </label>
-                ))}
-                {selectedStrategies.includes("Other") && (
-                  <input
-                    type="text"
-                    className="mt-2 w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-transparent"
-                    placeholder="Other strategy..."
-                    value={strategyOther}
-                    onChange={(e) => setStrategyOther(e.target.value)}
-                  />
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Rating */}
-            <div>
-              <label className="block font-semibold mb-2">
-                3. How do you like our app?
-              </label>
-              <div
-                className="relative w-full flex flex-col items-center"
-                style={{ minHeight: 40 }}
-              >
+              {/* Rating */}
+              <div>
+                <label className="block font-semibold mb-2">
+                  3. How do you like our app?
+                </label>
                 <div
-                  className="absolute font-bold text-purple-600 text-lg select-none"
-                  style={{
-                    left: `calc(${((rating - 1) / 9) * 100}% - 16px)`,
-                    top: 0,
-                    width: 32,
-                    textAlign: "center",
-                    pointerEvents: "none",
-                  }}
+                  className="relative w-full flex flex-col items-center"
+                  style={{ minHeight: 40 }}
                 >
-                  {rating}
-                </div>
-                <div className="flex items-center w-full gap-4 mt-6">
-                  <span className="text-sm">1</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={rating}
-                    onChange={(e) => setRating(Number(e.target.value))}
-                    className="flex-1 accent-purple-600"
-                  />
-                  <span className="text-sm">10</span>
+                  <div
+                    className="absolute font-bold text-purple-600 text-lg select-none"
+                    style={{
+                      left: `calc(${((rating - 1) / 9) * 100}% - 16px)`,
+                      top: 0,
+                      width: 32,
+                      textAlign: "center",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {rating}
+                  </div>
+                  <div className="flex items-center w-full gap-4 mt-6">
+                    <span className="text-sm">1</span>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={rating}
+                      onChange={(e) => setRating(Number(e.target.value))}
+                      className="flex-1 accent-purple-600"
+                    />
+                    <span className="text-sm">10</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Additional Feedback */}
-            <div>
-              <label className="block font-semibold mb-2">
-                4. Any other feedback? (optional)
-              </label>
-              <textarea
-                className="w-full p-3 rounded border border-gray-300 dark:border-gray-700 bg-transparent resize-none"
-                rows={4}
-                placeholder="Type any additional comments here..."
-                value={additionalFeedback}
-                onChange={(e) => setAdditionalFeedback(e.target.value)}
-              />
-            </div>
-          </form>
-        </div>
+              {/* Additional Feedback */}
+              <div>
+                <label className="block font-semibold mb-2">
+                  4. Any other feedback? (optional)
+                </label>
+                <textarea
+                  className="w-full p-3 rounded border border-gray-300 dark:border-gray-700 bg-transparent resize-none"
+                  rows={4}
+                  placeholder="Type any additional comments here..."
+                  value={additionalFeedback}
+                  onChange={(e) => setAdditionalFeedback(e.target.value)}
+                />
+              </div>
+            </form>
+          </div>
 
-        {/* Fixed Submit Button */}
-        <div className="absolute bottom-0 left-0 w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-white via-white to-transparent dark:from-[#0f0b22] dark:via-[#0f0b22] dark:to-transparent">
-          <button
-            type="submit"
-            form="feedback-form"
-            disabled={!canSubmit || processing || submitted}
-            className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-              canSubmit && !processing && !submitted
-                ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {processing ? (
-              <>
-                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                  />
-                </svg>
-                Processing...
-              </>
-            ) : submitted ? (
-              <>
-                <CheckCircle className="h-5 w-5" />
-                Thank you!
-              </>
-            ) : (
-              "Submit Feedback"
-            )}
-          </button>
+          {/* Submit Button Container - Fixed at bottom with extra padding for mobile nav */}
+          <div className="absolute bottom-0 left-0 right-0 w-full bg-gradient-to-t from-white via-white to-transparent dark:from-[#0f0b22] dark:via-[#0f0b22] px-4 sm:px-8 py-4 mb-[120px] md:mb-0">
+            <button
+              type="submit"
+              form="feedback-form"
+              disabled={!canSubmit || processing || submitted}
+              className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
+                canSubmit && !processing && !submitted
+                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {processing ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
+                  Processing...
+                </>
+              ) : submitted ? (
+                <>
+                  <CheckCircle className="h-5 w-5" />
+                  Thank you!
+                </>
+              ) : (
+                "Submit Feedback"
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
