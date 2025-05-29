@@ -12,10 +12,10 @@ export async function POST(request: Request) {
       amount
     })
 
-    console.log('Attempting to connect to backend at: http://synthos-backend-production.up.railway.app/action/deposit')
+    console.log('Attempting to connect to backend at: http://localhost:8080/action/deposit')
 
     const response = await fetch(
-      "http://synthos-backend-production.up.railway.app/action/deposit",
+      "http://localhost:8080/action/deposit",
       {
         method: "POST",
         headers: {
