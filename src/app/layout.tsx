@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SynthOS",
+  metadataBase: new URL("https://app.synthos.fun/"),
   description: "Invest with confidence using personalized crypto yield plans.",
   // add image
   icons: {
