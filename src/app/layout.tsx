@@ -2,10 +2,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import DynamicProviders from "@/components/providers/dynamic-providers";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
   display: "swap",
 });
 
@@ -59,6 +62,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
+  children: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
