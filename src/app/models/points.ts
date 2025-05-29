@@ -65,3 +65,16 @@ export async function getUserPoints({ email, address }: { email?: string, addres
   if (!email && !address) throw new Error("Email or address required");
   return UserPoints.findOne({ $or: [email ? { email } : {}, address ? { address } : {}] });
 }
+
+// Add 25 points to pointsDeposit for a user found by email or address
+export async function addDepositPoints({ email, address }: { email?: string, address?: string }) {
+  await dbConnect();
+  if (!email && !address) throw new Error("Email or address required");
+  const user = await UserPoints.findOneAndUpdate(
+    { $or: [email ? { email } : {}, address ? { address } : {}] },
+    { $inc: { pointsDeposit: 25 } },
+    { new: true }
+  );
+  if (!user) throw new Error("User not found");
+  return user;
+}

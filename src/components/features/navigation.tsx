@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Navbar() {
@@ -14,6 +15,8 @@ export default function Navbar() {
   const { theme } = useTheme();
   const { email, address } = useAuth();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
+  const { lastRefresh } = usePoints();
+  const [isLoadingPoints, setIsLoadingPoints] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +32,7 @@ export default function Navbar() {
     const fetchPoints = async () => {
       if (!email && !address) return;
       try {
+        setIsLoadingPoints(true);
         const params = new URLSearchParams();
         if (email) params.append("email", email);
         if (address) params.append("address", address);
@@ -38,20 +42,22 @@ export default function Navbar() {
           const u = data.user;
           setTotalPoints(
             (u.pointsLogin || 0) +
-            (u.pointsDeposit || 0) +
-            (u.pointsFeedback || 0) +
-            (u.pointsShareX || 0) +
-            (u.pointsTestnetClaim || 0)
+              (u.pointsDeposit || 0) +
+              (u.pointsFeedback || 0) +
+              (u.pointsShareX || 0) +
+              (u.pointsTestnetClaim || 0)
           );
         } else {
           setTotalPoints(null);
         }
       } catch (e) {
         setTotalPoints(null);
+      } finally {
+        setIsLoadingPoints(false);
       }
     };
     fetchPoints();
-  }, [email, address]);
+  }, [email, address, lastRefresh]);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -80,11 +86,7 @@ export default function Navbar() {
           }`}
         >
           <Home
-            className={`h-6 w-6 ${
-              isActive("/home")
-                ? "text-purple-500"
-                : ""
-            }`}
+            className={`h-6 w-6 ${isActive("/home") ? "text-purple-500" : ""}`}
           />
           <span className="text-xs mt-1 font-semibold">Home</span>
         </Link>
@@ -92,18 +94,22 @@ export default function Navbar() {
         <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
           <div className="rounded-full bg-purple-100 border-2 border-purple-400 shadow-lg shadow-purple-500/50 flex flex-col items-center justify-center w-24 h-24 p-2">
             <Award className="h-8 w-8 text-purple-500" />
-            {totalPoints !== null ? (
+            {isLoadingPoints || totalPoints === null ? (
+              <div className="flex flex-col items-center mt-2 w-full">
+                <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
+                <span className="text-sm font-semibold text-purple-600">
+                  Pts
+                </span>
+              </div>
+            ) : (
               <>
                 <span className="text-lg font-bold text-purple-700 mt-2">
                   {totalPoints}
                 </span>
-                <span className="text-sm font-semibold text-purple-600">Pts</span>
+                <span className="text-sm font-semibold text-purple-600">
+                  Pts
+                </span>
               </>
-            ) : (
-              <div className="flex flex-col items-center mt-2 w-full">
-                <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
-                <span className="text-sm font-semibold text-purple-600">Pts</span>
-              </div>
             )}
           </div>
         </div>
@@ -120,9 +126,7 @@ export default function Navbar() {
         >
           <Wallet
             className={`h-6 w-6 ${
-              isActive("/holding")
-                ? "text-purple-500"
-                : ""
+              isActive("/holding") ? "text-purple-500" : ""
             }`}
           />
           <span className="text-xs mt-1 font-semibold">Holdings</span>

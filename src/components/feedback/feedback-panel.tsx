@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, MessageCircle, CheckCircle } from "lucide-react";
 import { useTheme } from "next-themes";
+import { usePoints } from "@/contexts/PointsContext";
 
 interface FeedbackPanelProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const STRATEGY_OPTIONS = [
 
 export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const { theme } = useTheme();
+  const { refreshPoints } = usePoints();
   const [isExiting, setIsExiting] = useState(false);
   const [selectedProtocols, setSelectedProtocols] = useState<string[]>([]);
   const [protocolOther, setProtocolOther] = useState("");
@@ -62,7 +64,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const feedbackData = {
@@ -83,6 +85,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     };
 
     console.log("Feedback Data:", feedbackData);
+
+    // After successful submission, refresh points
+    refreshPoints();
 
     setSubmitted(true);
     setTimeout(() => {
@@ -110,7 +115,8 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     selectedProtocols.length > 0 &&
     selectedStrategies.length > 0 &&
     (!selectedProtocols.includes("Other") || protocolOther.trim().length > 0) &&
-    (!selectedStrategies.includes("Other") || strategyOther.trim().length > 0) &&
+    (!selectedStrategies.includes("Other") ||
+      strategyOther.trim().length > 0) &&
     !submitted;
 
   if (!isOpen) return null;
@@ -123,7 +129,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
           theme === "dark" ? "bg-black/30" : "bg-gray-900/20"
         } backdrop-blur-sm`}
         style={{
-          animation: isExiting ? "fadeOut 0.3s ease-out" : "fadeIn 0.3s ease-out",
+          animation: isExiting
+            ? "fadeOut 0.3s ease-out"
+            : "fadeIn 0.3s ease-out",
         }}
         onClick={handleGoBack}
       />
@@ -133,16 +141,20 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50"
         style={{
           animation: isExiting
+          animation: isExiting
             ? "slideOutDown 0.4s ease-in-out forwards"
             : "slideInUp 0.4s ease-in-out forwards",
           boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
         }}
+      >
       >
         {/* HEADER */}
         <div
           className={`sticky top-0 z-10 flex items-center justify-between px-4 sm:px-8 pt-6 sm:pt-10 pb-6 sm:pb-8 ${
             theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
           }`}
+          style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
           style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
         >
           <button
@@ -179,6 +191,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                           ? "bg-purple-600 border-purple-400 text-white"
                           : "bg-purple-100 border-purple-500 text-purple-600"
                         : theme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-200"
+                        : "bg-gray-100 border-gray-300 text-gray-700"
+                    }`}
                         ? "bg-gray-800 border-gray-700 text-gray-200"
                         : "bg-gray-100 border-gray-300 text-gray-700"
                     }`}
@@ -221,6 +236,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                           ? "bg-purple-600 border-purple-400 text-white"
                           : "bg-purple-100 border-purple-600 text-purple-700"
                         : theme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-200"
+                        : "bg-gray-100 border-gray-300 text-gray-700"
+                    }`}
                         ? "bg-gray-800 border-gray-700 text-gray-200"
                         : "bg-gray-100 border-gray-300 text-gray-700"
                     }`}
@@ -353,6 +371,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                   <path d="m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z" />
                 </svg>
                 Follow us on X
+              </a>
               </a>
             </div>
 

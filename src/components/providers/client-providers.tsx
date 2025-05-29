@@ -7,6 +7,9 @@ import { useRouter, usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { useActiveAccount } from "thirdweb/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { PointsProvider } from "@/contexts/PointsContext";
+import Header from "@/components/features/header";
+import Navbar from "@/components/features/navigation";
 
 // Lazy load components that aren't needed immediately
 const AuthProvider = dynamic(
@@ -15,62 +18,9 @@ const AuthProvider = dynamic(
     ssr: false,
   }
 );
-const Navbar = dynamic(() => import("@/components/features/navigation"), {
-  ssr: false,
-});
-const Header = dynamic(() => import("@/components/features/header"), {
-  ssr: false,
-});
 
 interface ClientProvidersProps {
   children: ReactNode;
-}
-
-export default function ClientProviders({ children }: ClientProvidersProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  
-  // Check if current page is the landing page
-  const isLandingPage = pathname === "/";
-
-  // Handle refresh action for global pull-to-refresh
-  const handleGlobalRefresh = async () => {
-    console.log("Global refresh triggered");
-
-    // Simulate API call or data refresh
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Refresh the current page
-    router.refresh();
-
-    console.log("Global refresh complete");
-  };
-
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <AuthProvider>
-        {/* Only show header on non-landing pages */}
-        {!isLandingPage && (
-          <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
-            <Header />
-          </div>
-        )}
-
-        <PullToRefresh onRefresh={handleGlobalRefresh}>
-          <AccountSyncWrapper>
-            {children}
-          </AccountSyncWrapper>
-        </PullToRefresh>
-
-        {/* Only show navbar on non-landing pages */}
-        {!isLandingPage && (
-          <div className="fixed bottom-0 left-0 right-0">
-            <Navbar />
-          </div>
-        )}
-      </AuthProvider>
-    </ThemeProvider>
-  );
 }
 
 // Separate component to handle account syncing after AuthProvider is mounted
@@ -88,11 +38,11 @@ function AccountSyncWrapper({ children }: { children: ReactNode }) {
       if (isAuthenticated && address && account.address !== address) {
         console.log("Syncing wallet address change:", {
           from: address,
-          to: account.address
+          to: account.address,
         });
         syncWallet(account.address);
       }
-      
+
       // Store the account in localStorage for persistence
       const existingAuth = localStorage.getItem("user_auth");
       if (!existingAuth) {
@@ -115,4 +65,51 @@ function AccountSyncWrapper({ children }: { children: ReactNode }) {
   }, [account, isAuthenticated, address, syncWallet]);
 
   return <>{children}</>;
+}
+
+export default function ClientProviders({ children }: ClientProvidersProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Check if current page is the landing page
+  const isLandingPage = pathname === "/";
+
+  // Handle refresh action for global pull-to-refresh
+  const handleGlobalRefresh = async () => {
+    console.log("Global refresh triggered");
+
+    // Simulate API call or data refresh
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Refresh the current page
+    router.refresh();
+
+    console.log("Global refresh complete");
+  };
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <AuthProvider>
+        <PointsProvider>
+          {/* Only show header on non-landing pages */}
+          {!isLandingPage && (
+            <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
+              <Header />
+            </div>
+          )}
+
+          <PullToRefresh onRefresh={handleGlobalRefresh}>
+            <AccountSyncWrapper>{children}</AccountSyncWrapper>
+          </PullToRefresh>
+
+          {/* Only show navbar on non-landing pages */}
+          {!isLandingPage && (
+            <div className="fixed bottom-0 left-0 right-0">
+              <Navbar />
+            </div>
+          )}
+        </PointsProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }
