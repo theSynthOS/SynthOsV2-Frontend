@@ -2,13 +2,17 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useConnect, useActiveAccount } from "thirdweb/react";
-import { createWallet, inAppWallet, type Wallet, getUserEmail } from "thirdweb/wallets";
+import {
+  createWallet,
+  inAppWallet,
+  type Wallet,
+  getUserEmail,
+} from "thirdweb/wallets";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
 import { ChevronRight, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-
 
 // Utility function to format balance
 const formatBalance = (balance: string) => {
@@ -79,65 +83,64 @@ export default function ConnectWalletButton({
   }, [isAuthenticated, address, onConnected]);
 
   return (
+    <div>
+      {/* Connect Wallet Button */}
+      <button
+        onClick={openModal}
+        className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
+      >
+        {isAuthenticated && address
+          ? `${address.slice(0, 6)}...${address.slice(-4)}`
+          : "Login"}
+      </button>
 
-      <div>
-        {/* Connect Wallet Button */}
-        <button
-          onClick={openModal}
-          className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
-        >
-          {isAuthenticated && address
-            ? `${address.slice(0, 6)}...${address.slice(-4)}`
-            : "Login"}
-        </button>
+      {/* Modal Overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop - use opacity transition instead of animation */}
+          <div
+            className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
+            onClick={closeModal}
+          ></div>
 
-        {/* Modal Overlay */}
-        {isOpen && (
-          <div className="fixed inset-0 z-50">
-            {/* Backdrop - use opacity transition instead of animation */}
-            <div
-              className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
+          {/* Modal Content - Optimize animation */}
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
+            style={{
+              maxHeight: "90vh",
+              willChange: "transform",
+              transform: "translateZ(0)", // Force GPU acceleration
+            }}
+          >
+            {/* Drag Handle */}
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
+
+            {/* Close Button */}
+            <button
               onClick={closeModal}
-            ></div>
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+            >
+              <X className="h-6 w-6" />
+            </button>
 
-            {/* Modal Content - Optimize animation */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
-              style={{ 
-                maxHeight: '90vh',
-                willChange: 'transform',
-                transform: 'translateZ(0)' // Force GPU acceleration 
+            {/* Wallet Connection UI */}
+            <div
+              className="overflow-y-auto"
+              style={{
+                maxHeight: "calc(90vh - 40px)",
+                transform: "translateZ(0)", // Force GPU acceleration
+                backfaceVisibility: "hidden", // Prevent flickering
               }}
             >
-              {/* Drag Handle */}
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
-
-              {/* Close Button */}
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
-              >
-                <X className="h-6 w-6" />
-              </button>
-
-              {/* Wallet Connection UI */}
-              <div
-                className="overflow-y-auto"
-                style={{ 
-                  maxHeight: "calc(90vh - 40px)",
-                  transform: 'translateZ(0)', // Force GPU acceleration
-                  backfaceVisibility: 'hidden' // Prevent flickering
-                }}
-              >
-                <WalletConnectionUI
-                  onClose={closeModal}
-                  onConnected={onConnected}
-                />
-              </div>
+              <WalletConnectionUI
+                onClose={closeModal}
+                onConnected={onConnected}
+              />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -150,16 +153,23 @@ function WalletConnectionUI({
   onConnected?: () => void;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"social">(
-    "social"
-  );
+  const [activeTab, setActiveTab] = useState<"social">("social");
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
   const [currentAuth, setCurrentAuth] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
 
-  const { login, isAuthenticated, address, logout, syncWallet, walletType } = useAuth();
+  const {
+    login,
+    isAuthenticated,
+    address,
+    logout,
+    syncWallet,
+    walletType,
+    autoConnect,
+    setAutoConnect,
+  } = useAuth();
   const { connect } = useConnect();
   const activeAccount = useActiveAccount();
 
@@ -170,7 +180,7 @@ function WalletConnectionUI({
       if (activeAccount.address !== address) {
         console.log("Account changed in wallet UI:", {
           from: address,
-          to: activeAccount.address
+          to: activeAccount.address,
         });
         syncWallet(activeAccount.address);
       }
@@ -388,7 +398,7 @@ function WalletConnectionUI({
 
       {/* Tabs */}
       {/* <div className="flex mb-6"> */}
-        {/* <button
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "social"
               ? "text-purple-500 border-b-2 border-purple-500"
@@ -399,7 +409,7 @@ function WalletConnectionUI({
           Social
         </button> */}
 
-        {/* <button
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "wallets"
               ? "text-purple-500 border-b-2 border-purple-500"
@@ -409,7 +419,7 @@ function WalletConnectionUI({
         >
           Wallets
         </button> */}
-        {/* <button
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "passkey" 
               ? "text-green-500 border-b-2 border-green-500" 
@@ -434,7 +444,9 @@ function WalletConnectionUI({
           <p className="text-sm text-gray-500">Connected with:</p>
           <p className="font-mono text-sm truncate">{address}</p>
           {walletType && (
-            <p className="text-sm text-gray-500">Wallet Type: <span className="font-semibold">{walletType}</span></p>
+            <p className="text-sm text-gray-500">
+              Wallet Type: <span className="font-semibold">{walletType}</span>
+            </p>
           )}
           <div className="mt-2">
             <p className="text-sm text-gray-500">Balance:</p>
@@ -444,12 +456,23 @@ function WalletConnectionUI({
               </p>
             </div>
           </div>
-          <button
-            onClick={handleDisconnect}
-            className="mt-2 text-sm text-blue-600 hover:underline"
-          >
-            Disconnect
-          </button>
+          <div className="mt-2 flex items-center justify-between">
+            <label className="flex items-center space-x-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={autoConnect}
+                onChange={(e) => setAutoConnect(e.target.checked)}
+                className="form-checkbox h-4 w-4 text-purple-600"
+              />
+              <span>Auto-connect</span>
+            </label>
+            <button
+              onClick={handleDisconnect}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
       )}
 
