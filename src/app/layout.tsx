@@ -65,7 +65,7 @@ export default function RootLayout({
         <title>SynthOS</title>
         <meta
           name="description"
-          content="SynthOS V2 - Your gateway to the future of DeFi"
+          content="SynthOS - Invest with confidence using personalized crypto yield plans."
         />
         <link rel="manifest" href="/manifest.json" />
         <meta
