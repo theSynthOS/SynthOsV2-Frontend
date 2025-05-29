@@ -610,7 +610,7 @@ export default function TrendingProtocols({
                 >
                   <div className="flex items-center justify-center">
                     <div className="text-lg font-semibold text-black dark:text-white">
-                      More investments coming soon...
+                      More investments coming on mainnet...
                     </div>
                   </div>
                 </div>
