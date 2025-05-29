@@ -10,6 +10,7 @@ import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
 import { prepareTransaction, sendAndConfirmTransaction, sendBatchTransaction } from "thirdweb";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Add Ethereum window type
 declare global {
@@ -68,6 +69,7 @@ export default function DepositModal({
   const [txProgressPercent, setTxProgressPercent] = useState(0);
   const refreshTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [localIsLoadingBalance, setLocalIsLoadingBalance] = useState(false);
+  const { email } = useAuth();
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
@@ -528,6 +530,26 @@ export default function DepositModal({
       if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
       }
+
+      // Add 25 points for deposit
+      fetch("/api/points/deposit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, address }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("/api/points/deposit response:", data);
+          // Fetch updated points
+          fetch(`/api/points?${email ? `email=${encodeURIComponent(email)}` : `address=${encodeURIComponent(address ?? "")}`}`)
+            .then(res => res.json())
+            .then(pointsData => {
+              console.log("Updated points after deposit:", pointsData);
+            });
+        })
+        .catch(err => {
+          console.error("/api/points/deposit error:", err);
+        });
     } catch (error) {
       console.error("Error handling transaction success:", error);
     }
