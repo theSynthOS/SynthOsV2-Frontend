@@ -86,8 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(PASSKEY_STORAGE_KEY, "true");
     }
 
-    console.log("Logged in with address:", address, "and email:", email);
-
     // Call the /api/points endpoint to upsert user in points DB
     if (email && address) {
       fetch("/api/points", {
@@ -96,9 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, address }),
       })
         .then((res) => res.json())
-        .then((data) => {
-          console.log("/api/points response:", data);
-        })
         .catch((err) => {
           console.error("/api/points error:", err);
         });
@@ -108,22 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!preventRedirect && window.location.pathname !== "/home") {
       router.push("/home");
     } else {
-      console.log(
-        "Redirect prevented or already on home page, no redirect needed"
-      );
+     
     }
   };
 
   // Function to sync with wallet changes without changing login status
   const syncWallet = (newAddress: string) => {
     if (!authData || !isAuthenticated) return;
-
-    console.log(
-      "Syncing wallet address from:",
-      authData.address,
-      "to:",
-      newAddress
-    );
 
     // Update auth data with new address but keep other properties
     const updatedData: AuthData = {
@@ -137,12 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Update localStorage
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedData));
 
-    console.log("Wallet address updated to:", newAddress);
   };
 
   // Function to clear auth data
   const logout = () => {
-    console.log("AuthContext: logout called");
 
     // Clear session flag first
     sessionStorage.removeItem(SESSION_KEY);
@@ -173,7 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Error clearing additional storage:", e);
     }
 
-    console.log("AuthContext: Logged out completely, address cleared");
   };
 
   // Listen for wallet changes from ThirdWeb
@@ -181,10 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (activeAccount && isAuthenticated && authData) {
       // If ThirdWeb account changes and different from current stored address
       if (activeAccount.address !== authData.address) {
-        console.log(
-          "ThirdWeb account changed, syncing with AuthContext:",
-          activeAccount.address
-        );
+  
         syncWallet(activeAccount.address);
       }
     }
@@ -202,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // Only proceed with auto-login if autoConnect is enabled
         if (!autoConnect) {
-          console.log("Auto-connect is disabled");
+    
           return;
         }
 
@@ -232,7 +212,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Update auth state
               setAuthData(authData);
               setIsAuthenticated(true);
-              console.log("Auto-reconnected to wallet:", authData.walletId);
 
               // Restore session
               sessionStorage.setItem(SESSION_KEY, "true");
@@ -243,10 +222,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } catch (e) {
-            console.log(
-              "Could not auto-reconnect wallet, using address only",
-              e
-            );
             // Fall back to just using the stored address
             setAuthData(authData);
             setIsAuthenticated(true);
@@ -263,7 +238,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Just use the stored address
           setAuthData(authData);
           setIsAuthenticated(true);
-          console.log("Using stored address:", authData.address);
 
           // Restore session
           sessionStorage.setItem(SESSION_KEY, "true");

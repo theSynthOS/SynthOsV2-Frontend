@@ -20,12 +20,9 @@ const UserPoints =
 
 export async function POST(req: Request) {
   try {
-    console.log("Connecting to database...");
     await dbConnect();
-    console.log("Database connected successfully");
 
     const body = await req.json();
-    console.log("Received feedback data:", body);
     const {
       walletAddress,
       email,
@@ -51,13 +48,10 @@ export async function POST(req: Request) {
     }
 
     // Check if user has already submitted feedback
-    console.log("Checking for existing feedback for address:", walletAddress);
     const existingFeedback = await Feedback.findOne({ walletAddress });
     const hasSubmittedBefore = !!existingFeedback;
-    console.log("Has submitted before:", hasSubmittedBefore);
 
     // Create new feedback
-    console.log("Creating new feedback...");
     const feedback = await Feedback.create({
       walletAddress,
       email,
@@ -66,24 +60,21 @@ export async function POST(req: Request) {
       rating,
       additionalFeedback: additionalFeedback || "",
     });
-    console.log("Feedback created:", feedback);
+
 
     // If this is their first submission, award points
     if (!hasSubmittedBefore) {
-      console.log("Awarding points for first submission...");
       try {
         const updatedPoints = await UserPoints.findOneAndUpdate(
           { address: walletAddress },
           { $inc: { pointsFeedback: 150 } },
           { upsert: true, new: true }
         );
-        console.log("Points updated:", updatedPoints);
       } catch (error) {
         console.error("Error updating points:", error);
         // Continue even if points update fails - we still want to save the feedback
       }
     } else {
-      console.log("No points awarded - user has submitted feedback before");
     }
 
     return NextResponse.json({

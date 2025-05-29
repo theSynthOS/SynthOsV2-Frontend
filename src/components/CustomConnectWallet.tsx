@@ -22,13 +22,11 @@ const formatBalance = (balance: string) => {
 // Function to fetch balance
 const fetchBalance = async (address: string) => {
   try {
-    console.log("Fetching balance for address:", address);
     const response = await fetch(`/api/balance?address=${address}`);
     if (!response.ok) {
       throw new Error("Failed to fetch balance");
     }
     const data = await response.json();
-    console.log("Received balance data:", data);
     return data.usdBalance || "0.00";
   } catch (error) {
     console.error("Error fetching balance:", error);
@@ -178,10 +176,6 @@ function WalletConnectionUI({
     if (activeAccount?.address && isAuthenticated && address) {
       // If the active account address is different from the auth context address
       if (activeAccount.address !== address) {
-        console.log("Account changed in wallet UI:", {
-          from: address,
-          to: activeAccount.address,
-        });
         syncWallet(activeAccount.address);
       }
     }
@@ -334,7 +328,6 @@ function WalletConnectionUI({
           if (account) {
             // Get user's email
             const email = await getUserEmail({ client });
-            console.log("User email:", email);
 
             // Set session in sessionStorage to ensure persistence across refreshes
             sessionStorage.setItem("session_active", "true");
@@ -365,7 +358,6 @@ function WalletConnectionUI({
 
   // Disconnect wallet function
   const handleDisconnect = () => {
-    console.log("Disconnecting wallet...");
     sessionStorage.removeItem("session_active");
     onClose();
     window.location.href = "/";
@@ -375,10 +367,8 @@ function WalletConnectionUI({
   // Add useEffect to fetch balance when address changes
   useEffect(() => {
     if (address) {
-      console.log("Address changed, fetching balance for:", address);
       const updateBalance = async () => {
         const newBalance = await fetchBalance(address);
-        console.log("Setting new balance:", newBalance);
         setBalance(newBalance);
       };
 

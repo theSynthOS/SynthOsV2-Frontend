@@ -78,7 +78,6 @@ export default function Home() {
 
   // Log authentication state changes
   useEffect(() => {
-    console.log("Landing page auth state:", { isAuthenticated, address });
   }, [isAuthenticated, address]);
 
   // Fetch wallet analysis when needed

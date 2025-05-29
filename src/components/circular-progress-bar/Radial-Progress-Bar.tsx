@@ -118,7 +118,6 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     // Call onAngleChange directly with the exact percentage
     if (onAngleChange) {
       // Make sure we're passing the exact percentage value (25, 50, 75, 100)
-      console.log('Percentage button clicked:', percentage);
       onAngleChange(percentage);
     }
   };

@@ -225,7 +225,6 @@ export default function DepositModal({
     if (!address) return;
 
     try {
-      console.log("Directly fetching balance for:", address);
       setLocalIsLoadingBalance(true);
 
       const response = await fetch(`/api/balance?address=${address}`);
@@ -235,7 +234,6 @@ export default function DepositModal({
 
       const data = await response.json();
       const newBalance = data.usdBalance || "0.00";
-      console.log("New balance loaded:", newBalance);
 
       // Update the local maxBalance state
       setMaxBalance(Number(newBalance));
@@ -257,7 +255,6 @@ export default function DepositModal({
   // Enhanced fetchBalance function that combines direct fetch and parent refresh
   const fetchBalanceAndUpdate = async () => {
     try {
-      console.log("Refreshing balance in deposit modal for:", address);
 
       // First try direct fetch for immediate UI update
       await fetchBalance();
@@ -545,7 +542,6 @@ export default function DepositModal({
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log("/api/points/deposit response:", data);
           // Fetch updated points
           fetch(
             `/api/points?${
@@ -555,9 +551,7 @@ export default function DepositModal({
             }`
           )
             .then((res) => res.json())
-            .then((pointsData) => {
-              console.log("Updated points after deposit:", pointsData);
-            });
+
         })
         .catch((err) => {
           console.error("/api/points/deposit error:", err);
@@ -583,7 +577,6 @@ export default function DepositModal({
         if (!data.success) {
           console.error("Failed to save transaction:", data.message);
         } else {
-          console.log("Transaction saved successfully:", data.transaction);
         }
       } catch (error) {
         console.error("Error saving transaction:", error);
@@ -612,7 +605,7 @@ export default function DepositModal({
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
-      console.log("Invalid amount:", depositAmount);
+  
       toast({
         variant: "destructive",
         title: "Invalid Amount",
@@ -629,18 +622,9 @@ export default function DepositModal({
     if (pool?.protocol_pair_id) {
       setProcessingPoolId(pool.protocol_pair_id);
     }
-    console.log(
-      "Setting isSubmitting to true for pool:",
-      pool?.protocol_pair_id
-    );
+   
 
-    console.log("Starting deposit with:", {
-      user_address: address,
-      protocol_id: pool?.protocol_id,
-      protocol_pair_id: pool?.protocol_pair_id,
-      amount: depositAmount,
-      pool_name: pool?.name,
-    });
+
 
     try {
       // Update progress - start progress animation
@@ -663,7 +647,7 @@ export default function DepositModal({
       setTxProgressPercent(30);
 
       const responseData = await response.json();
-      console.log("Deposit response:", responseData);
+    
 
       // Update progress
       setTxProgressPercent(50);
@@ -711,12 +695,7 @@ export default function DepositModal({
         // Update progress to complete
         setTxProgressPercent(100);
 
-        console.log("Transaction sent:", result);
-
-        console.log("Transaction successful:", {
-          hash: result.transactionHash,
-          amount: depositAmount,
-        });
+     
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible
@@ -996,18 +975,7 @@ export default function DepositModal({
                   // Ensure we capture the most recent amount calculation directly from the ref
                   const currentAmount =
                     lastCalculatedAmountRef.current || amount;
-                  console.log(
-                    "Confirm button clicked, amount from state:",
-                    amount,
-                    "amount from ref:",
-                    lastCalculatedAmountRef.current,
-                    "using:",
-                    currentAmount,
-                    "as number:",
-                    parseFloat(currentAmount),
-                    "for pool:",
-                    pool?.protocol_pair_id
-                  );
+       
 
                   // Make sure the amount in the ref is immediately available for handleConfirmDeposit
                   handleConfirmDeposit();

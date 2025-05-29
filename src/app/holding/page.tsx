@@ -34,11 +34,6 @@ export default function HoldingPage() {
     setMounted(true);
   }, []);
 
-  // Debug auth state
-  useEffect(() => {
-    console.log("Holding page auth state:", { isAuthenticated, address });
-    console.log("ThirdWeb account:", account?.address);
-  }, [isAuthenticated, address, account]);
 
   // Update display address whenever account or auth address changes
   useEffect(() => {
@@ -61,10 +56,6 @@ export default function HoldingPage() {
   useEffect(() => {
     // This will keep the auth context in sync with the ThirdWeb account
     if (account?.address && !isAuthenticated) {
-      console.log(
-        "Syncing ThirdWeb account to Auth Context in holding page:",
-        account.address
-      );
       // You would need the login function from your auth context
       login(account.address);
     }
@@ -103,10 +94,8 @@ export default function HoldingPage() {
   ) => {
     const threshold = 100; // minimum distance to trigger navigation
     if (info.offset.x > threshold) {
-      console.log("Swipe threshold reached, navigating to home");
       router.replace("/home");
     } else {
-      console.log("Swipe threshold not reached, resetting position");
       controls.start({ x: 0 });
     }
   };

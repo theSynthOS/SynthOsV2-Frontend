@@ -4,7 +4,6 @@ import { addTestnetClaimPoints } from "@/app/models/points";
 export async function POST(req: Request) {
   try {
     const { email, address } = await req.json();
-    console.log("/api/points/testnet-claim POST received:", { email, address });
     if (!email && !address) {
       return NextResponse.json({ error: "Missing email or address" }, { status: 400 });
     }
