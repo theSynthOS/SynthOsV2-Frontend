@@ -118,7 +118,9 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch protocol pairs");
         }
         const data = await response.json();
-        setProtocolPairs(data);
+        // Filter only pairs with chain_id 534351 (Scroll Sepolia testnet)
+        const filteredPairs = data.filter((pair: ProtocolPair) => pair.chain_id === 534351);
+        setProtocolPairs(filteredPairs);
       } catch (error) {
         console.error("Error fetching protocol pairs:", error);
         setProtocolPairs([]);
@@ -580,15 +582,20 @@ export default function TrendingProtocols({
                 </div>
                 {expandedProtocols.has(protocol.name) && (
                   <div className="mt-2 space-y-2 px-4">
-                    {getProtocolPairs(protocol.name).map((pair) => (
+                    {getProtocolPairs(protocol.name)
+                      .filter(pair => pair.apy !== undefined && pair.apy !== null && pair.apy > 0)
+                      .sort((a, b) => (a.apy || 0) - (b.apy || 0))
+                      .map((pair) => {
+                        const isUsdcPair = pair.pair_or_vault_name.toLowerCase().includes('usdc');
+                        return (
                       <div
                         key={pair.id}
-                        className={`flex flex-col cursor-pointer ${
+                        className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
                           theme === "dark"
                             ? "bg-gray-800/50 hover:bg-gray-700/50"
                             : "bg-white hover:bg-gray-50 shadow-sm"
                         } p-5 rounded-xl transition-colors duration-200 relative h-34`}
-                        onClick={() => handleProtocolClick(protocol, pair)}
+                        onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
                       >
                         <div className="flex items-center mb-4">
                           <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
@@ -604,14 +611,23 @@ export default function TrendingProtocols({
                           </div>
                           <div className="flex-1">
                             <div
-                              className={`text-lg font-semibold ${
+                              className={`text-lg font-semibold flex justify-between ${
                                 theme === "dark" ? "text-white" : "text-black"
                               }`}
                             >
-                              {pair.pair_or_vault_name}{" "}
-                              <span className="text-sm font-normal opacity-70">
-                                ({pair.name})
-                              </span>
+                              <div>
+                                {pair.pair_or_vault_name}{" "}
+                                <span className="text-sm font-normal opacity-70">
+                                  ({pair.name})
+                                </span>
+                              </div>
+                              {!isUsdcPair && (
+                                <span className={`text-xs px-2 py-1 rounded-lg border-dashed border-2 border-purple-500 ${
+                                  theme === "dark" ? "bg-purple-700 text-gray-300" : "bg-purple-100 text-purple-600"
+                                }`}>
+                                  Coming soon
+                                </span>
+                              )}
                             </div>
                             <div
                               className={`text-sm ${
@@ -631,7 +647,7 @@ export default function TrendingProtocols({
                               theme === "dark" ? "text-white" : "text-black"
                             }`}
                           >
-                            {pair.apy ? `${Number(pair.apy).toFixed(3)}%` : "N/A"}
+                            {`${Number(pair.apy).toFixed(3)}%`}
                             <div
                               className={`text-sm items-center flex font-medium ml-2 ${
                                 theme === "dark"
@@ -651,7 +667,8 @@ export default function TrendingProtocols({
                           </div>
                         </div>
                       </div>
-                    ))}
+                        );
+                      })}
                   </div>
                 )}
                 <div
