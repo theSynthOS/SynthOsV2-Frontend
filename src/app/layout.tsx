@@ -6,13 +6,13 @@ import DynamicProviders from "@/components/providers/dynamic-providers";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: 'swap',
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-  display: 'swap',
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,13 +20,33 @@ export const metadata: Metadata = {
   description: "Invest with confidence using personalized crypto yield plans.",
   // add image
   icons: {
-    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
+    icon: "https://app.synthos.fun/icons/SynthOS-transpare  nt.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "SynthOS",
+  },
+  openGraph: {
+    title: "SynthOS",
+    description: "Invest with confidence using personalized crypto yield plans.",
+    url: "https://app.synthos.fun",
+    siteName: "SynthOS",
+    images: [
+      {
+        url: "https://app.synthos.fun/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SynthOS",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SynthOS",
+    description: "Invest with confidence using personalized crypto yield plans.",
+    images: ["https://app.synthos.fun/og.jpg"],
   },
 };
 
@@ -37,15 +57,21 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <head>
         <title>SynthOS</title>
-        <meta name="description" content="SynthOS V2 - Your gateway to the future of DeFi" />
+        <meta
+          name="description"
+          content="SynthOS V2 - Your gateway to the future of DeFi"
+        />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
@@ -53,9 +79,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <DynamicProviders>
-            {children}
-        </DynamicProviders>
+        <DynamicProviders>{children}</DynamicProviders>
       </body>
     </html>
   );
