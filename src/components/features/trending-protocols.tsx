@@ -518,24 +518,16 @@ export default function TrendingProtocols({
                         </div>
                       </div>
                     </div>
-                    {expandedProtocols.has(protocol.name) ? (
-                      <ChevronUp
-                        className={`w-6 h-6 ${
-                          theme === "dark" ? "text-white" : "text-black"
-                        }`}
-                      />
-                    ) : (
-                      <ChevronDown
-                        className={`w-6 h-6 ${
-                          theme === "dark" ? "text-white" : "text-black"
-                        }`}
-                      />
-                    )}
+                    <ChevronDown
+                      className={`w-8 h-8 transition-transform duration-300 stroke-[2.5] ${
+                        theme === "dark" ? "text-white" : "text-black"
+                      } ${expandedProtocols.has(protocol.name) ? "rotate-180" : "rotate-0"}`}
+                    />
                   </div>
                 </div>
                 {/* Protocol Pairs */}
                 {expandedProtocols.has(protocol.name) && (
-                  <div className="mt-2 space-y-2 pl-4">
+                  <div className="mt-2 space-y-2 px-4">
                     {getProtocolPairs(protocol.name).map((pair) => (
                       <div
                         key={pair.id}
@@ -654,7 +646,6 @@ export default function TrendingProtocols({
                 setIsLoadingBalance(false);
               });
           }
-
           // Then call the parent's refreshBalance if provided
           if (refreshBalance) {
             refreshBalance();
