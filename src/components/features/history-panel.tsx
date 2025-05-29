@@ -5,87 +5,88 @@ import { ArrowLeft, History } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import investmentHistory from "@/data/investment-history.json";
 
 interface HistoryPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  chain?: string;
 }
 
-interface InvestmentHistory {
+interface Transaction {
   id: string;
   protocolName: string;
-  pairName: string;
   amount: number;
-  expectedApy: number;
+  asset: string;
   timestamp: string;
   status: "active" | "completed" | "failed";
   chain: string;
   protocolLogo: string;
   walletAddress: string;
-  details: {
-    type: string;
-    riskLevel: string;
-    lockPeriod: string;
-    minAmount: number;
-    maxAmount: number;
-  };
 }
 
-interface InvestmentHistoryData {
-  investments: InvestmentHistory[];
+interface TransactionData {
+  transactions: Transaction[];
   metadata: {
-    totalInvestments: number;
-    totalActiveInvestments: number;
+    totalTransactions: number;
+    totalSuccessful: number;
     totalAmount: number;
-    averageApy: number;
     lastUpdated: string;
+    chain: string;
+    symbol: string;
+    explorer: string;
   };
 }
 
-export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
+export default function HistoryPanel({
+  isOpen,
+  onClose,
+  chain = "scrollSepolia",
+}: HistoryPanelProps) {
   const { theme } = useTheme();
   const { address } = useAuth();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
-  const [history, setHistory] = useState<InvestmentHistory[]>([]);
-  const [metadata, setMetadata] = useState<
-    InvestmentHistoryData["metadata"] | null
-  >(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [metadata, setMetadata] = useState<TransactionData["metadata"] | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!address) {
-      setHistory([]);
+      setTransactions([]);
       setMetadata(null);
       return;
     }
 
-    // In a real app, this would be an API call
-    const data = investmentHistory as InvestmentHistoryData;
+    const fetchTransactions = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `/api/transactions?address=${address}&chain=${chain}`
+        );
+        const data = await response.json();
 
-    // Filter investments for current wallet
-    const walletInvestments = data.investments.filter(
-      (inv) => inv.walletAddress.toLowerCase() === address.toLowerCase()
-    );
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch transactions");
+        }
 
-    // Calculate metadata for current wallet
-    const walletMetadata = {
-      totalInvestments: walletInvestments.length,
-      totalActiveInvestments: walletInvestments.filter(
-        (inv) => inv.status === "active"
-      ).length,
-      totalAmount: walletInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-      averageApy:
-        walletInvestments.length > 0
-          ? walletInvestments.reduce((sum, inv) => sum + inv.expectedApy, 0) /
-            walletInvestments.length
-          : 0,
-      lastUpdated: data.metadata.lastUpdated,
+        setTransactions(data.transactions);
+        setMetadata(data.metadata);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch transactions"
+        );
+        console.error("Error fetching transactions:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setHistory(walletInvestments);
-    setMetadata(walletMetadata);
-  }, [address]);
+    fetchTransactions();
+  }, [address, chain]);
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -95,13 +96,15 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
     }, 300);
   };
 
-  const handleInvestmentClick = (investment: InvestmentHistory) => {
+  const handleTransactionClick = (transaction: Transaction) => {
     setIsExiting(true);
     setTimeout(() => {
       onClose();
       setIsExiting(false);
-      // Navigate to the investment details page
-      router.push(`/investment/${investment.id}`);
+      // Use the explorer URL from metadata
+      if (metadata?.explorer) {
+        window.open(`${metadata.explorer}/tx/${transaction.id}`, "_blank");
+      }
     }, 300);
   };
 
@@ -141,7 +144,7 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
             theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
           }`}
         >
-          {/* Header - Fixed */}
+          {/* Header */}
           <div className="flex-none px-4 py-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
             <button
               onClick={handleGoBack}
@@ -149,11 +152,11 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <h1 className="text-xl font-bold">Investment History</h1>
+            <h1 className="text-xl font-bold">Transaction History</h1>
             <div className="w-8 h-8"></div>
           </div>
 
-          {/* Content - Scrollable */}
+          {/* Content */}
           <div className="flex-1 overflow-hidden">
             {!address ? (
               <div className="h-full flex items-center justify-center px-4">
@@ -162,17 +165,31 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                     theme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Please connect your wallet to view investment history
+                  Please connect your wallet to view transactions
                 </p>
               </div>
-            ) : history.length === 0 ? (
+            ) : isLoading ? (
               <div className="h-full flex items-center justify-center px-4">
                 <p
                   className={`text-center ${
                     theme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  No investments found for this wallet
+                  Loading transactions...
+                </p>
+              </div>
+            ) : error ? (
+              <div className="h-full flex items-center justify-center px-4">
+                <p className={`text-center text-red-500`}>{error}</p>
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="h-full flex items-center justify-center px-4">
+                <p
+                  className={`text-center ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  No transactions found for this wallet
                 </p>
               </div>
             ) : (
@@ -190,10 +207,10 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                           theme === "dark" ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        Total Active
+                        Total Transactions
                       </p>
                       <p className="text-xl font-bold">
-                        {metadata.totalActiveInvestments}
+                        {metadata.totalTransactions}
                       </p>
                     </div>
                     <div
@@ -206,49 +223,38 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                           theme === "dark" ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        Avg. APY
+                        Total Amount
                       </p>
                       <p className="text-xl font-bold text-green-500">
-                        {metadata.averageApy.toFixed(1)}%
+                        {metadata.totalAmount.toFixed(4)} {metadata.symbol}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* History List - Scrollable */}
+                {/* Transaction List - Scrollable */}
                 <div className="flex-1 overflow-y-auto px-4 py-4">
-                  {history.map((item) => (
+                  {transactions.map((tx) => (
                     <div
-                      key={item.id}
+                      key={tx.id}
                       className={`mb-4 p-4 rounded-xl ${
                         theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
                       } cursor-pointer hover:bg-opacity-80 transition-colors`}
-                      onClick={() => handleInvestmentClick(item)}
+                      onClick={() => handleTransactionClick(tx)}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="font-semibold">{item.protocolName}</h3>
-                          <p
-                            className={`text-sm ${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                          >
-                            {item.pairName}
-                          </p>
+                          <h3 className="font-semibold">{tx.protocolName}</h3>
                         </div>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            item.status === "active"
+                            tx.status === "completed"
                               ? "bg-green-500/20 text-green-500"
-                              : item.status === "completed"
-                              ? "bg-blue-500/20 text-blue-500"
                               : "bg-red-500/20 text-red-500"
                           }`}
                         >
-                          {item.status.charAt(0).toUpperCase() +
-                            item.status.slice(1)}
+                          {tx.status.charAt(0).toUpperCase() +
+                            tx.status.slice(1)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center mt-2">
@@ -263,21 +269,7 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                             Amount
                           </p>
                           <p className="font-semibold">
-                            ${item.amount.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p
-                            className={`text-sm ${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                          >
-                            Expected APY
-                          </p>
-                          <p className="font-semibold text-green-500">
-                            {item.expectedApy}%
+                            {tx.amount.toFixed(4)} {tx.asset}
                           </p>
                         </div>
                       </div>
@@ -287,14 +279,14 @@ export default function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
                             theme === "dark" ? "text-gray-500" : "text-gray-400"
                           }`}
                         >
-                          {new Date(item.timestamp).toLocaleString()}
+                          {new Date(tx.timestamp).toLocaleString()}
                         </p>
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
                             theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                           }`}
                         >
-                          {item.details.type}
+                          {tx.chain.charAt(0).toUpperCase() + tx.chain.slice(1)}
                         </span>
                       </div>
                     </div>

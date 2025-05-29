@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const response = await fetch('http://localhost:8080/protocol/protocol-pairs')
+    const response = await fetch(
+      "http://synthos-backend-production.up.railway.app/protocol/protocol-pairs"
+    );
     if (!response.ok) {
       throw new Error('Failed to fetch protocol pairs')
     }
