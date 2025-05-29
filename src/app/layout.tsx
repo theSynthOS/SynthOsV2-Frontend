@@ -9,7 +9,6 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
-  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -62,7 +61,6 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
