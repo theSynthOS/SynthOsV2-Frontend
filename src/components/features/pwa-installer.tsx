@@ -11,14 +11,7 @@ export default function PWAInstaller() {
     // Register service worker with a delay to not block initial render
     if ("serviceWorker" in navigator) {
       setTimeout(() => {
-        navigator.serviceWorker.register("/sw.js").then(
-          (registration) => {
-            console.log("Service Worker registration successful with scope: ", registration.scope)
-          },
-          (err) => {
-            console.log("Service Worker registration failed: ", err)
-          },
-        )
+        navigator.serviceWorker.register("/sw.js")
       }, 2000) // Delay registration by 2 seconds
     }
 
@@ -34,8 +27,6 @@ export default function PWAInstaller() {
 
     // Handle installed
     window.addEventListener("appinstalled", () => {
-      // Log install to analytics
-      console.log("PWA was installed")
       // Clear the deferredPrompt
       setDeferredPrompt(null)
       // Hide install button
@@ -52,9 +43,9 @@ export default function PWAInstaller() {
     // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === "accepted") {
-        console.log("User accepted the install prompt")
+      
       } else {
-        console.log("User dismissed the install prompt")
+
       }
       // Clear the deferredPrompt variable
       setDeferredPrompt(null)

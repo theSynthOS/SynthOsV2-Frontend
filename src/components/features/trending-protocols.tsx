@@ -553,12 +553,6 @@ export default function TrendingProtocols({
                           alt={protocol.name}
                           width={100}
                           height={100}
-                          onError={(e) => {
-                            console.log(
-                              "Image failed to load:",
-                              protocol.logo_url
-                            );
-                          }}
                         />
                       </div>
                       <div>
@@ -619,9 +613,6 @@ export default function TrendingProtocols({
                               alt={pair.name}
                               width={56}
                               height={56}
-                              onError={(e) => {
-                                console.log("Image failed to load:", pair.name);
-                              }}
                             />
                           </div>
                           <div className="flex-1">

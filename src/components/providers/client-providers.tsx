@@ -31,15 +31,9 @@ function AccountSyncWrapper({ children }: { children: ReactNode }) {
   // Monitor active account and sync with AuthContext when it changes
   useEffect(() => {
     if (account?.address) {
-      console.log("ThirdWeb active account:", account.address);
-
       // If authenticated and account address is different from auth address,
       // sync the wallet address in the auth context
       if (isAuthenticated && address && account.address !== address) {
-        console.log("Syncing wallet address change:", {
-          from: address,
-          to: account.address,
-        });
         syncWallet(account.address);
       }
 
@@ -76,15 +70,12 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
 
   // Handle refresh action for global pull-to-refresh
   const handleGlobalRefresh = async () => {
-    console.log("Global refresh triggered");
 
     // Simulate API call or data refresh
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Refresh the current page
     router.refresh();
-
-    console.log("Global refresh complete");
   };
 
   return (

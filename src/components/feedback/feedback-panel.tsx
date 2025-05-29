@@ -93,11 +93,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       additionalFeedback: additionalFeedback.trim(),
     };
 
-    console.log("Submitting feedback with data:", {
-      ...feedbackData,
-      walletAddress: address,
-      email: email,
-    });
+   
 
     try {
       const response = await fetch("/api/feedbacks", {
@@ -113,15 +109,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       });
 
       const data = await response.json();
-      console.log("Feedback submission response:", data);
 
       if (!data.success) {
         throw new Error(data.message || "Failed to submit feedback");
-      }
-
-      // Show success message with points if awarded
-      if (data.pointsAwarded > 0) {
-        console.log(`Awarded ${data.pointsAwarded} points for feedback`);
       }
 
       // Refresh points after successful submission

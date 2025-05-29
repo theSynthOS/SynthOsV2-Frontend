@@ -58,7 +58,6 @@ export default function Home() {
   // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
     try {
-      console.log("Fetching balance for:", walletAddress);
       setIsLoadingBalance(true);
       const response = await fetch(`/api/balance?address=${walletAddress}`);
       if (!response.ok) {
@@ -66,7 +65,6 @@ export default function Home() {
       }
       const data = await response.json();
       setBalance(data.usdBalance || "0.00");
-      console.log("Balance loaded:", data.usdBalance || "0.00");
       // Refresh points after balance update
       refreshPoints();
       return data.usdBalance || "0.00";
@@ -75,7 +73,6 @@ export default function Home() {
       setBalance("0.00");
       return "0.00";
     } finally {
-      console.log("Finished loading balance");
       setIsLoadingBalance(false);
     }
   };
@@ -143,10 +140,8 @@ export default function Home() {
   // Redirect to root if not authenticated and check balance for auto-claiming
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log("Not authenticated, redirecting to landing page");
       router.replace("/");
     } else {
-      console.log("Authenticated on home page:", address);
       if (address) {
         const getBalanceAndAutoCheck = async () => {
           const currentBalance = await fetchBalance(address);
@@ -172,7 +167,6 @@ export default function Home() {
       !hasAttemptedClaim &&
       !isTxProcessing
     ) {
-      console.log("Balance is zero, auto-claiming test funds...");
       setHasAttemptedClaim(true);
       await handleClaimTestFunds();
     }
@@ -181,12 +175,10 @@ export default function Home() {
   // Handle claiming test funds
   const handleClaimTestFunds = async () => {
     if (!account || !account.address) {
-      console.log("No wallet connected");
       return;
     }
 
     try {
-      console.log("Starting claim process with account:", account);
       setIsTxProcessing(true);
       setTxSuccess(false);
       setTxHash(null);
@@ -206,7 +198,6 @@ export default function Home() {
         value: BigInt(0),
       });
 
-      console.log("Transaction prepared:", tx);
 
       // Use sendAndConfirmTransaction with the correct API signature
       const result = await sendAndConfirmTransaction({
@@ -214,7 +205,6 @@ export default function Home() {
         account: account,
       });
 
-      console.log("Transaction sent:", result);
 
       // Set success state and transaction hash
       setTxSuccess(true);
@@ -228,7 +218,6 @@ export default function Home() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log("/api/points/testnet-claim response:", data);
         })
         .catch((err) => {
           console.error("/api/points/testnet-claim error:", err);

@@ -5,13 +5,6 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { user_address, protocol_id, protocol_pair_id, amount } = body
 
-    console.log('Deposit API Request:', {
-      user_address,
-      protocol_id,
-      protocol_pair_id,
-      amount
-    })
-
     const response = await fetch(
       "https://synthos-backend-production.up.railway.app/action/deposit",
       {
@@ -28,7 +21,6 @@ export async function POST(request: Request) {
       }
     );
 
-    console.log('Backend response status:', response.status)
 
     if (!response.ok) {
       const error = await response.json()
@@ -41,7 +33,6 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json()
-    console.log('Deposit API Success:', data)
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error processing deposit:', {

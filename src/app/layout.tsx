@@ -9,7 +9,6 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
-  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -21,9 +20,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SynthOS",
   description: "Invest with confidence using personalized crypto yield plans.",
-  // add image
   icons: {
-    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
+    icon: "/icons/SynthOS-transparent.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -39,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "SynthOS",
     images: [
       {
-        url: "https://app.synthos.fun/og.jpg",
+        url: "/og.jpg",
         width: 1200,
         height: 630,
         alt: "SynthOS",
@@ -51,7 +49,7 @@ export const metadata: Metadata = {
     title: "SynthOS",
     description:
       "Invest with confidence using personalized crypto yield plans.",
-    images: ["https://app.synthos.fun/og.jpg"],
+    images: ["/og.jpg"],
   },
 };
 
@@ -62,7 +60,6 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (

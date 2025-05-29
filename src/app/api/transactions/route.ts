@@ -15,29 +15,12 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-
-    console.log("=== Database Query Debug ===");
-    console.log("1. Received wallet address:", address);
-    console.log("2. Normalized address for query:", address.toLowerCase());
-
-    // Direct database query for transactions (case-insensitive address match)
+    
     const transactions = await Transaction.find({
       address: { $regex: `^${address}$`, $options: "i" },
     })
       .sort({ createdAt: -1 })
       .limit(100);
-
-    console.log("3. Database query results:", {
-      totalFound: transactions.length,
-      firstTransaction: transactions[0]
-        ? {
-            hash: transactions[0].hash,
-            amount: transactions[0].amount,
-            type: transactions[0].type,
-            status: transactions[0].status,
-          }
-        : null,
-    });
 
     return NextResponse.json({
       transactions: transactions.map((tx) => ({

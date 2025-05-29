@@ -62,27 +62,16 @@ export default function HistoryPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Add logging for component mount and address changes
-  useEffect(() => {
-    console.log("HistoryPanel mounted/updated");
-    console.log("Current address:", address);
-    console.log("Panel isOpen:", isOpen);
-  }, [address, isOpen]);
+
 
   useEffect(() => {
-    console.log("=== Transaction History Debug ===");
-    console.log("1. Current wallet address:", address);
-    console.log("2. Panel open status:", isOpen);
-
     if (!address) {
-      console.log("No wallet address found - please connect your wallet");
       setTransactions([]);
       setMetadata(null);
       return;
     }
 
     const fetchTransactions = async () => {
-      console.log("3. Starting to fetch transactions for wallet:", address);
       setIsLoading(true);
       setError(null);
       try {
@@ -93,11 +82,7 @@ export default function HistoryPanel({
           throw new Error(data.error || "Failed to fetch transactions");
         }
 
-        console.log("4. Database response:", {
-          totalTransactions: data.metadata.totalTransactions,
-          totalAmount: data.metadata.totalAmount,
-          transactionsFound: data.transactions.length,
-        });
+     
 
         setTransactions(data.transactions);
         setMetadata(data.metadata);

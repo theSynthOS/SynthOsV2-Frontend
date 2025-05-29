@@ -64,23 +64,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   useEffect(() => {
     // If ThirdWeb has an account but Auth Context doesn't, update Auth Context
     if (account?.address && !isAuthenticated) {
-      console.log("Syncing ThirdWeb account to Auth Context:", account.address);
       login(account.address, wallet?.id);
     }
     // If Auth Context is authenticated but ThirdWeb has no account, update display from Auth Context
     else if (!account?.address && isAuthenticated && address) {
-      console.log("Using Auth Context address:", address);
       setDisplayAddress(address);
     }
   }, [account, wallet, isAuthenticated, address, login]);
 
   // Update display address whenever account or auth address changes
   useEffect(() => {
-    console.log("Settings panel address check:", {
-      thirdwebAddress: account?.address,
-      contextAddress: address,
-      isAuthenticated,
-    });
 
     // Clear display address if not authenticated regardless of account
     if (!isAuthenticated) {
@@ -99,7 +92,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const handleAuth = () => {
     if (isAuthenticated) {
-      console.log("Starting logout process...");
       setDisplayAddress(null);
       sessionStorage.removeItem("session_active");
       onClose();

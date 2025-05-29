@@ -35,7 +35,6 @@ export async function saveTransaction({
       type,
       status,
     });
-    console.log("Transaction saved:", transaction);
     return transaction;
   } catch (error) {
     console.error("Error saving transaction:", error);

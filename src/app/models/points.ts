@@ -38,10 +38,7 @@ export async function upsertUserPoints(email: string, address: string) {
       pointsShareX: 0,
       pointsTestnetClaim: 0,
     });
-    console.log("Created new user in points:", user);
   } else {
-    // Do not increase pointsLogin if user already exists
-    console.log("User already exists in points:", user);
   }
   return user;
 }
