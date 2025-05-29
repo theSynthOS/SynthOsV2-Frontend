@@ -148,7 +148,7 @@ function WalletConnectionUI({
   onConnected?: () => void;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">(
+  const [activeTab, setActiveTab] = useState<"social">(
     "social"
   );
   const [isConnecting, setIsConnecting] = useState(false);
@@ -175,35 +175,35 @@ function WalletConnectionUI({
     }
   }, [activeAccount, isAuthenticated, address, syncWallet]);
 
-  const wallets: WalletOption[] = [
-    {
-      id: "io.metamask",
-      name: "MetaMask",
-      icon: <span className="text-2xl">🦊</span>,
-    },
-    {
-      id: "com.coinbase.wallet",
-      name: "Coinbase Wallet",
-      icon: (
-        <Image
-          src="/icons/coinbase.png"
-          alt="Google"
-          width={100}
-          height={100}
-        />
-      ),
-    },
-    {
-      id: "me.rainbow",
-      name: "Rainbow",
-      icon: <span className="text-2xl">🌈</span>,
-    },
-    {
-      id: "walletconnect",
-      name: "WalletConnect",
-      icon: <span className="text-2xl">🔗</span>,
-    },
-  ];
+  // const wallets: WalletOption[] = [
+  //   {
+  //     id: "io.metamask",
+  //     name: "MetaMask",
+  //     icon: <span className="text-2xl">🦊</span>,
+  //   },
+  //   {
+  //     id: "com.coinbase.wallet",
+  //     name: "Coinbase Wallet",
+  //     icon: (
+  //       <Image
+  //         src="/icons/coinbase.png"
+  //         alt="Google"
+  //         width={100}
+  //         height={100}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     id: "me.rainbow",
+  //     name: "Rainbow",
+  //     icon: <span className="text-2xl">🌈</span>,
+  //   },
+  //   {
+  //     id: "walletconnect",
+  //     name: "WalletConnect",
+  //     icon: <span className="text-2xl">🔗</span>,
+  //   },
+  // ];
 
   const socialOptions: {
     id: OAuthProvider;
@@ -243,50 +243,50 @@ function WalletConnectionUI({
     },
   ];
 
-  // Connect wallet function
-  const handleConnectWallet = async (walletId: string) => {
-    try {
-      setIsConnecting(true);
-      setCurrentWallet(walletId);
-      setCurrentAuth("");
-      setError("");
+  // // Connect wallet function
+  // const handleConnectWallet = async (walletId: string) => {
+  //   try {
+  //     setIsConnecting(true);
+  //     setCurrentWallet(walletId);
+  //     setCurrentAuth("");
+  //     setError("");
 
-      await connect(async () => {
-        // Create wallet instance using the correct wallet ID
-        const wallet = createWallet(walletId as any);
+  //     await connect(async () => {
+  //       // Create wallet instance using the correct wallet ID
+  //       const wallet = createWallet(walletId as any);
 
-        // Connect the wallet
-        const account = await wallet.connect({
-          client,
-        });
+  //       // Connect the wallet
+  //       const account = await wallet.connect({
+  //         client,
+  //       });
 
-        // If connection is successful, store in auth context
-        if (account) {
-          // Set session in sessionStorage to ensure persistence across refreshes
-          sessionStorage.setItem("session_active", "true");
+  //       // If connection is successful, store in auth context
+  //       if (account) {
+  //         // Set session in sessionStorage to ensure persistence across refreshes
+  //         sessionStorage.setItem("session_active", "true");
 
-          // Close modal first
-          onClose();
+  //         // Close modal first
+  //         onClose();
 
-          // Let the login function in AuthContext handle the redirect
-          login(account.address, walletId, "wallet", true);
+  //         // Let the login function in AuthContext handle the redirect
+  //         login(account.address, walletId, "wallet", true);
 
-          // Call onConnected callback if provided
-          if (onConnected) {
-            onConnected();
-          }
-        }
+  //         // Call onConnected callback if provided
+  //         if (onConnected) {
+  //           onConnected();
+  //         }
+  //       }
 
-        // Return the connected wallet
-        return wallet;
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to connect wallet");
-      console.error("Failed to connect wallet:", err);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+  //       // Return the connected wallet
+  //       return wallet;
+  //     });
+  //   } catch (err: any) {
+  //     setError(err.message || "Failed to connect wallet");
+  //     console.error("Failed to connect wallet:", err);
+  //   } finally {
+  //     setIsConnecting(false);
+  //   }
+  // };
 
   // Connect with social auth (using in-app wallet)
   const handleConnectWithSocial = async (provider: OAuthProvider) => {
@@ -393,7 +393,7 @@ function WalletConnectionUI({
           Social
         </button>
 
-        <button
+        {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "wallets"
               ? "text-purple-500 border-b-2 border-purple-500"
@@ -402,7 +402,7 @@ function WalletConnectionUI({
           onClick={() => setActiveTab("wallets")}
         >
           Wallets
-        </button>
+        </button> */}
         {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "passkey" 
@@ -445,7 +445,7 @@ function WalletConnectionUI({
       )}
 
       {/* Wallet Options */}
-      {activeTab === "wallets" && (
+      {/* {activeTab === "wallets" && (
         <div className="space-y-4">
           {wallets.map((wallet) => (
             <button
@@ -471,7 +471,7 @@ function WalletConnectionUI({
             </button>
           ))}
         </div>
-      )}
+      )} */}
 
       {/* Social Login Options */}
       {activeTab === "social" && (
