@@ -562,6 +562,32 @@ export default function DepositModal({
         .catch((err) => {
           console.error("/api/points/deposit error:", err);
         });
+
+      // Save transaction to database
+      try {
+        const response = await fetch("/api/transactions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            address: address,
+            hash: txHash,
+            amount: amount,
+            type: "deposit",
+            status: "completed",
+          }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          console.error("Failed to save transaction:", data.message);
+        } else {
+          console.log("Transaction saved successfully:", data.transaction);
+        }
+      } catch (error) {
+        console.error("Error saving transaction:", error);
+      }
     } catch (error) {
       console.error("Error handling transaction success:", error);
     }
@@ -873,7 +899,11 @@ export default function DepositModal({
 
             <div
               className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
-              style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
+              style={{
+                WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
             >
               {/* Input and Circle Section */}
               <div>

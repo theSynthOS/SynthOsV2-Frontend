@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, History } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -62,40 +62,59 @@ export default function HistoryPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Add logging for component mount and address changes
   useEffect(() => {
+    console.log("HistoryPanel mounted/updated");
+    console.log("Current address:", address);
+    console.log("Panel isOpen:", isOpen);
+  }, [address, isOpen]);
+
+  useEffect(() => {
+    console.log("=== Transaction History Debug ===");
+    console.log("1. Current wallet address:", address);
+    console.log("2. Panel open status:", isOpen);
+
     if (!address) {
+      console.log("No wallet address found - please connect your wallet");
       setTransactions([]);
       setMetadata(null);
       return;
     }
 
     const fetchTransactions = async () => {
+      console.log("3. Starting to fetch transactions for wallet:", address);
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `/api/transactions?address=${address}&chain=${chain}`
-        );
+        const response = await fetch(`/api/transactions?address=${address}`);
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(data.error || "Failed to fetch transactions");
         }
 
+        console.log("4. Database response:", {
+          totalTransactions: data.metadata.totalTransactions,
+          totalAmount: data.metadata.totalAmount,
+          transactionsFound: data.transactions.length,
+        });
+
         setTransactions(data.transactions);
         setMetadata(data.metadata);
       } catch (err) {
+        console.error("Error fetching transactions:", err);
         setError(
           err instanceof Error ? err.message : "Failed to fetch transactions"
         );
-        console.error("Error fetching transactions:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTransactions();
-  }, [address, chain]);
+    if (isOpen) {
+      fetchTransactions();
+    }
+  }, [address, isOpen]);
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -216,7 +235,7 @@ export default function HistoryPanel({
               </div>
             ) : (
               <div className="h-full flex flex-col">
-                {/* Summary Stats - Fixed */}
+                {/* Summary Stats */}
                 {metadata && (
                   <div className="flex-none px-4 py-4 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-800">
                     <div
@@ -235,10 +254,26 @@ export default function HistoryPanel({
                         {metadata.totalTransactions}
                       </p>
                     </div>
+                    <div
+                      className={`p-4 rounded-xl ${
+                        theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                      }`}
+                    >
+                      <p
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        Total Amount
+                      </p>
+                      <p className="text-xl font-bold">
+                        ${metadata.totalAmount.toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 )}
 
-                {/* Transaction List - Scrollable */}
+                {/* Transaction List */}
                 <div className="flex-1 overflow-y-auto px-4 py-4">
                   {transactions.map((tx) => {
                     // Find the first debit transfer (deposited/sent), fallback to first transfer
@@ -256,8 +291,12 @@ export default function HistoryPanel({
                         <div className="flex justify-between items-center mb-2">
                           <div>
                             <h3 className="font-semibold text-lg">
-                              {tx.protocolName}
+                              {tx.txType.charAt(0).toUpperCase() +
+                                tx.txType.slice(1)}
                             </h3>
+                            <p className="text-sm text-gray-500">
+                              {tx.summary}
+                            </p>
                           </div>
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${
