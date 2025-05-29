@@ -155,7 +155,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div
         className={`fixed inset-0 ${
@@ -395,7 +395,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
       {/* Social Modal */}
       {showSocialModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 px-2 z-[100]">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 px-2 z-50">
           <div
             className={`bg-white dark:bg-[#18103a] rounded-xl p-6 sm:p-8 shadow-xl flex flex-col items-center gap-6 w-full max-w-xs sm:max-w-md transition-all duration-300 ${
               isSocialExiting

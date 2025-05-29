@@ -91,7 +91,7 @@ export default function Navbar() {
           <span className="text-xs mt-1 font-semibold">Home</span>
         </Link>
         {/* Points */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-30">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
           <div className="rounded-full bg-purple-100 border-2 border-purple-400 shadow-lg shadow-purple-500/50 flex flex-col items-center justify-center w-24 h-24 p-2">
             <Award className="h-8 w-8 text-purple-500" />
             {isLoadingPoints || totalPoints === null ? (

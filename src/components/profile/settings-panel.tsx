@@ -74,7 +74,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   // Update display address whenever account or auth address changes
   useEffect(() => {
-
     // Clear display address if not authenticated regardless of account
     if (!isAuthenticated) {
       setDisplayAddress(null);
