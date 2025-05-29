@@ -31,6 +31,7 @@ const STRATEGY_OPTIONS = [
 export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
+
   const [isExiting, setIsExiting] = useState(false);
   const [selectedProtocols, setSelectedProtocols] = useState<string[]>([]);
   const [protocolOther, setProtocolOther] = useState("");
@@ -39,8 +40,6 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
   const [rating, setRating] = useState(5);
   const [additionalFeedback, setAdditionalFeedback] = useState("");
   const [submitted, setSubmitted] = useState(false);
-
-  // Modal state for social links
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [isSocialExiting, setIsSocialExiting] = useState(false);
 
@@ -66,7 +65,6 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const feedbackData = {
       protocols: selectedProtocols.includes("Other")
         ? [
@@ -85,11 +83,9 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     };
 
     console.log("Feedback Data:", feedbackData);
-
-    // After successful submission, refresh points
     refreshPoints();
-
     setSubmitted(true);
+
     setTimeout(() => {
       setShowSocialModal(true);
       setSubmitted(false);
@@ -141,20 +137,16 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
         className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50"
         style={{
           animation: isExiting
-          animation: isExiting
-            ? "slideOutDown 0.4s ease-in-out forwards"
-            : "slideInUp 0.4s ease-in-out forwards",
-          boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
+            ? "slideOutDown 0.3s ease-out forwards"
+            : "slideInUp 0.3s ease-out forwards",
           boxShadow: "0 -4px 24px rgba(0,0,0,0.14)",
         }}
-      >
       >
         {/* HEADER */}
         <div
           className={`sticky top-0 z-10 flex items-center justify-between px-4 sm:px-8 pt-6 sm:pt-10 pb-6 sm:pb-8 ${
             theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
           }`}
-          style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
           style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
         >
           <button
@@ -169,14 +161,14 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
           <div className="w-10 h-10" />
         </div>
 
-        {/* SCROLLABLE CONTENT */}
+        {/* FORM */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 hide-scrollbar">
           <form
             id="feedback-form"
-            className="flex flex-col space-y-8 text-base sm:text-lg"
             onSubmit={handleSubmit}
+            className="flex flex-col space-y-8 text-base sm:text-lg"
           >
-            {/* Q1: Protocol */}
+            {/* Protocol Selection */}
             <div>
               <label className="block font-semibold mb-2">
                 1. What DeFi protocol do you want to see?
@@ -194,16 +186,17 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                         ? "bg-gray-800 border-gray-700 text-gray-200"
                         : "bg-gray-100 border-gray-300 text-gray-700"
                     }`}
-                        ? "bg-gray-800 border-gray-700 text-gray-200"
-                        : "bg-gray-100 border-gray-300 text-gray-700"
-                    }`}
                   >
                     <input
                       type="checkbox"
                       className="mr-2 accent-purple-600"
                       checked={selectedProtocols.includes(opt)}
                       onChange={() =>
-                        handleMultiSelect(opt, selectedProtocols, setSelectedProtocols)
+                        handleMultiSelect(
+                          opt,
+                          selectedProtocols,
+                          setSelectedProtocols
+                        )
                       }
                     />
                     {opt}
@@ -221,7 +214,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
               </div>
             </div>
 
-            {/* Q2: Strategy */}
+            {/* Strategy Selection */}
             <div>
               <label className="block font-semibold mb-2">
                 2. What DeFi strategy do you want to see?
@@ -239,16 +232,17 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                         ? "bg-gray-800 border-gray-700 text-gray-200"
                         : "bg-gray-100 border-gray-300 text-gray-700"
                     }`}
-                        ? "bg-gray-800 border-gray-700 text-gray-200"
-                        : "bg-gray-100 border-gray-300 text-gray-700"
-                    }`}
                   >
                     <input
                       type="checkbox"
                       className="mr-2 accent-purple-600"
                       checked={selectedStrategies.includes(opt)}
                       onChange={() =>
-                        handleMultiSelect(opt, selectedStrategies, setSelectedStrategies)
+                        handleMultiSelect(
+                          opt,
+                          selectedStrategies,
+                          setSelectedStrategies
+                        )
                       }
                     />
                     {opt}
@@ -266,16 +260,19 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
               </div>
             </div>
 
-            {/* Q3: Rating */}
+            {/* Rating */}
             <div>
               <label className="block font-semibold mb-2">
                 3. How do you like our app?
               </label>
-              <div className="relative w-full flex flex-col items-center" style={{ minHeight: 40 }}>
+              <div
+                className="relative w-full flex flex-col items-center"
+                style={{ minHeight: 40 }}
+              >
                 <div
                   className="absolute font-bold text-purple-600 text-lg select-none"
                   style={{
-                    left: `calc(${(rating - 1) / 9 * 100}% - 16px)`,
+                    left: `calc(${((rating - 1) / 9) * 100}% - 16px)`,
                     top: 0,
                     width: 32,
                     textAlign: "center",
@@ -299,7 +296,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
               </div>
             </div>
 
-            {/* Q4: Additional Feedback (Optional) */}
+            {/* Additional Feedback */}
             <div>
               <label className="block font-semibold mb-2">
                 4. Any other feedback? (optional)
@@ -327,41 +324,46 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {submitted ? <CheckCircle className="h-5 w-5" /> : null}
+            {submitted && <CheckCircle className="h-5 w-5" />}
             {submitted ? "Thank you!" : "Submit Feedback"}
           </button>
         </div>
       </div>
 
-      {/* Combined Social Modal */}
+      {/* Social Modal */}
       {showSocialModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 px-2 z-50">
           <div
             className={`bg-white dark:bg-[#18103a] rounded-xl p-6 sm:p-8 shadow-xl flex flex-col items-center gap-6 w-full max-w-xs sm:max-w-md transition-all duration-300 ${
-              isSocialExiting ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
+              isSocialExiting
+                ? "opacity-0 translate-y-8"
+                : "opacity-100 translate-y-0"
             }`}
+            style={{
+              animation: isSocialExiting
+                ? "slideOutDown 0.3s ease-out forwards"
+                : "slideInUp 0.3s ease-out forwards",
+            }}
           >
             <h2 className="text-lg sm:text-xl font-bold text-center">
               Thanks for your feedback!
             </h2>
             <p className="mb-4 text-center text-base">Connect with us:</p>
-
             <div className="flex gap-3 w-full">
               <a
                 href="https://t.me/+x8mewakKNJNmY2Nl"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Join Telegram
               </a>
-
               <a
                 href="https://x.com/SynthOS__"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center px-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition-colors whitespace-nowrap"
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -372,9 +374,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                 </svg>
                 Follow us on X
               </a>
-              </a>
             </div>
-
             <button
               onClick={handleSocialClose}
               className="mt-4 text-gray-500 text-sm hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
@@ -387,9 +387,3 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
     </div>
   );
 }
-
-// Add these animations to your global CSS:
-// @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-// @keyframes slideOutDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
-// @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-// @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
