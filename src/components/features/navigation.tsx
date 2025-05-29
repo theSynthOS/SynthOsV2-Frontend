@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -91,10 +92,19 @@ export default function Navbar() {
         <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
           <div className="rounded-full bg-purple-100 border-2 border-purple-400 shadow-lg shadow-purple-500/50 flex flex-col items-center justify-center w-24 h-24 p-2">
             <Award className="h-8 w-8 text-purple-500" />
-            <span className="text-lg font-bold text-purple-700 mt-2">
-              {totalPoints !== null ? totalPoints : "--"}
-            </span>
-            <span className="text-sm font-semibold text-purple-600">Pts</span>
+            {totalPoints !== null ? (
+              <>
+                <span className="text-lg font-bold text-purple-700 mt-2">
+                  {totalPoints}
+                </span>
+                <span className="text-sm font-semibold text-purple-600">Pts</span>
+              </>
+            ) : (
+              <div className="flex flex-col items-center mt-2 w-full">
+                <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
+                <span className="text-sm font-semibold text-purple-600">Pts</span>
+              </div>
+            )}
           </div>
         </div>
         {/* Holdings */}
