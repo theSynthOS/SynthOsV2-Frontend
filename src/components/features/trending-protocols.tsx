@@ -45,13 +45,13 @@ export default function TrendingProtocols({
   const { theme } = useTheme();
   const { isAuthenticated, address } = useAuth();
   const [selectedPool, setSelectedPool] = useState<any>(null);
-  const [riskFilters, setRiskFilters] = useState({
-    all: true,
-    low: false,
-    medium: false,
-    high: false,
-  });
-  const [showFilter, setShowFilter] = useState(false);
+  // const [riskFilters, setRiskFilters] = useState({
+  //   all: true,
+  //   low: false,
+  //   medium: false,
+  //   high: false,
+  // });
+  // const [showFilter, setShowFilter] = useState(false);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
   const [balance, setBalance] = useState<string>("0");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
@@ -61,20 +61,19 @@ export default function TrendingProtocols({
   const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(
     new Set()
   );
-  const filterRef = useRef<HTMLDivElement>(null);
+  // const filterRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [showApyInfo, setShowApyInfo] = useState(false);
   const apyInfoRef = useRef<HTMLDivElement>(null);
 
-  // Add click outside handler
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
-      ) {
-        setShowFilter(false);
-      }
+      // if (
+      //   filterRef.current &&
+      //   !filterRef.current.contains(event.target as Node)
+      // ) {
+      //   setShowFilter(false);
+      // }
       
       if (
         apyInfoRef.current &&
@@ -90,7 +89,6 @@ export default function TrendingProtocols({
     };
   }, []);
 
-  // Fetch parent protocols
   useEffect(() => {
     const fetchProtocols = async () => {
       setIsLoadingProtocols(true);
@@ -112,7 +110,6 @@ export default function TrendingProtocols({
     fetchProtocols();
   }, []);
 
-  // Fetch protocol pairs
   useEffect(() => {
     const fetchProtocolPairsApy = async () => {
       try {
@@ -131,7 +128,6 @@ export default function TrendingProtocols({
     fetchProtocolPairsApy();
   }, []);
 
-  // Fetch balance when address changes
   useEffect(() => {
     const fetchBalance = async () => {
       if (!address) {
@@ -158,14 +154,12 @@ export default function TrendingProtocols({
     fetchBalance();
   }, [address]);
 
-  // Fetch investor profile from localStorage on component mount
   useEffect(() => {
     try {
       const storedProfile = localStorage.getItem("investor_profile");
       if (storedProfile) {
         setInvestorProfile(JSON.parse(storedProfile).title);
       } else {
-        // Default profile if none is found
         setInvestorProfile("Degen Learner");
       }
     } catch (error) {
@@ -174,68 +168,68 @@ export default function TrendingProtocols({
     }
   }, []);
 
-  const getRiskCategory = (type: string) => {
-    // Placeholder risk level for now
-    return "medium";
-  };
+  // const getRiskCategory = (type: string) => {
+  //   // Placeholder risk level for now
+  //   return "medium";
+  // };
 
-  const getRiskLabel = (type: string) => {
-    // Placeholder risk label for now
-    return "Medium";
-  };
+  // const getRiskLabel = (type: string) => {
+  //   // Placeholder risk label for now
+  //   return "Medium";
+  // };
 
-  const getRiskColor = (type: string) => {
-    // Placeholder risk color for now
-    return "text-yellow-500";
-  };
+  // const getRiskColor = (type: string) => {
+  //   // Placeholder risk color for now
+  //   return "text-yellow-500";
+  // };
 
   const handleProtocolClick = (protocol: any, pair: ProtocolPair) => {
     setSelectedPool({
       name: protocol.name,
-      apy: 0, // You might want to fetch this from another API endpoint
-      risk: "Medium", // Placeholder risk for now
+      apy: 0,
+      risk: "Medium",
       pair_or_vault_name: pair.pair_or_vault_name,
       protocol_id: protocol.id.toString(),
       protocol_pair_id: pair.id,
     });
   };
 
-  const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
-    // Set only the selected filter to true, all others to false
-    setRiskFilters({
-      all: category === "all",
-      low: category === "low",
-      medium: category === "medium",
-      high: category === "high",
-    });
+  // const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
+  //   // Set only the selected filter to true, all others to false
+  //   setRiskFilters({
+  //     all: category === "all",
+  //     low: category === "low",
+  //     medium: category === "medium",
+  //     high: category === "high",
+  //   });
 
-    // Close the filter menu after selection
-    setShowFilter(false);
-  };
+  //   // Close the filter menu after selection
+  //   setShowFilter(false);
+  // };
 
-  // Update the filtered protocols to use the API data
-  const filteredProtocols = protocols
-    .filter((protocol) => {
-      if (riskFilters.all) return true;
-      return false; // No risk filtering for parent protocols
-    })
-    .slice(0, riskFilters.all ? undefined : 4);
+  // // Update the filtered protocols to use the API data
+  // const filteredProtocols = protocols
+  //   .filter((protocol) => {
+  //     if (riskFilters.all) return true;
+  //     return false; // No risk filtering for parent protocols
+  //   })
+  //   .slice(0, riskFilters.all ? undefined : 4);
 
-  const getActiveFiltersLabel = () => {
-    if (riskFilters.all)
-      return <span className="text-gray-700 dark:text-white">All Risks</span>;
-    if (riskFilters.low)
-      return <span className="text-purple-700 dark:text-purple-300">Low</span>;
-    if (riskFilters.medium)
-      return (
-        <span className="text-purple-700 dark:text-purple-300">Medium</span>
-      );
-    if (riskFilters.high)
-      return <span className="text-purple-700 dark:text-purple-300">High</span>;
-    return (
-      <span className="text-purple-700 dark:text-purple-300">No Filter</span>
-    );
-  };
+  // const getActiveFiltersLabel = () => {
+  //   if (riskFilters.all)
+  //     return <span className="text-gray-700 dark:text-white">All Risks</span>;
+  //   if (riskFilters.low)
+  //     return <span className="text-purple-700 dark:text-purple-300">Low</span>;
+  //   if (riskFilters.medium)
+  //     return (
+  //       <span className="text-purple-700 dark:text-purple-300">Medium</span>
+  //     );
+  //   if (riskFilters.high)
+  //     return <span className="text-purple-700 dark:text-purple-300">High</span>;
+  //   return (
+  //     <span className="text-purple-700 dark:text-purple-300">No Filter</span>
+  //   );
+  // };
 
   const toggleProtocolExpand = (protocolName: string) => {
     setExpandedProtocols((prev) => {
@@ -249,6 +243,14 @@ export default function TrendingProtocols({
     });
   };
 
+  const getRiskLabel = (type: string) => {
+    return "Medium";
+  };
+
+  const getRiskColor = (type: string) => {
+    return "text-yellow-500";
+  };
+
   const getProtocolPairs = (protocolName: string) => {
     return protocolPairs.filter(
       (pair) => pair.name.toLowerCase() === protocolName.toLowerCase()
@@ -260,7 +262,6 @@ export default function TrendingProtocols({
       <div className="px-4 py-6">
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
-            {/* Investor Profile Badge */}
             {investorProfile && (
               <div
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${
@@ -273,7 +274,7 @@ export default function TrendingProtocols({
               </div>
             )}
 
-            {/* Risk Filter */}
+            {/* Risk Filter
             <div ref={filterRef}>
               <button
                 onClick={() => setShowFilter(!showFilter)}
@@ -455,7 +456,7 @@ export default function TrendingProtocols({
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
           <div className="flex items-center py-1 relative">
             <Flame
@@ -482,7 +483,6 @@ export default function TrendingProtocols({
               }`} />
             </button>
             
-            {/* APY Info Popup */}
             {showApyInfo && (
               <div 
                 ref={apyInfoRef}
@@ -578,7 +578,6 @@ export default function TrendingProtocols({
                     />
                   </div>
                 </div>
-                {/* Protocol Pairs */}
                 {expandedProtocols.has(protocol.name) && (
                   <div className="mt-2 space-y-2 px-4">
                     {getProtocolPairs(protocol.name).map((pair) => (
@@ -655,7 +654,6 @@ export default function TrendingProtocols({
                     ))}
                   </div>
                 )}
-                {/* Coming Soon Box */}
                 <div
                   className={`flex flex-col ${
                     theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
@@ -679,7 +677,6 @@ export default function TrendingProtocols({
         isLoadingBalance={isLoadingBalance}
         address={address || ""}
         refreshBalance={() => {
-          // First call the component's own fetchBalance
           if (address) {
             setIsLoadingBalance(true);
             fetch(`/api/balance?address=${address}`)
@@ -699,7 +696,6 @@ export default function TrendingProtocols({
                 setIsLoadingBalance(false);
               });
           }
-          // Then call the parent's refreshBalance if provided
           if (refreshBalance) {
             refreshBalance();
           }
