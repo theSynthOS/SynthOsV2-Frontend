@@ -13,6 +13,7 @@ import { client, scrollSepolia } from "@/client";
 import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import FeedbackPanel from "@/components/feedback/feedback-panel";
+import { usePoints } from "@/contexts/PointsContext";
 
 // Storage key for last claim timestamp
 const LAST_CLAIM_KEY = "last_claim_timestamp";
@@ -21,6 +22,7 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, address, email } = useAuth();
   const { theme } = useTheme();
+  const { refreshPoints } = usePoints();
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isTxProcessing, setIsTxProcessing] = useState(false);
@@ -65,6 +67,8 @@ export default function Home() {
       const data = await response.json();
       setBalance(data.usdBalance || "0.00");
       console.log("Balance loaded:", data.usdBalance || "0.00");
+      // Refresh points after balance update
+      refreshPoints();
       return data.usdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -101,9 +105,7 @@ export default function Home() {
         fetchBalance(address);
 
         // Set up additional refresh attempts with increasing delays
-        const refreshTimeouts = [
-          setTimeout(() => fetchBalance(address), 3000),
-        ];
+        const refreshTimeouts = [setTimeout(() => fetchBalance(address), 3000)];
 
         return () => {
           if (progressTimerRef.current) {
@@ -224,13 +226,16 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, address: account.address }),
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           console.log("/api/points/testnet-claim response:", data);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("/api/points/testnet-claim error:", err);
         });
+
+      // After successful claim, refresh points
+      refreshPoints();
     } catch (error) {
       console.error("Transaction error:", error);
       const cleanErrorMessage =
@@ -379,7 +384,10 @@ export default function Home() {
                       className={`font-medium 
                       ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
                     >
-                      <span className="font-bold">Failed to Claim Test Funds:</span> Please try again later or reconnect your wallet.
+                      <span className="font-bold">
+                        Failed to Claim Test Funds:
+                      </span>{" "}
+                      Please try again later or reconnect your wallet.
                     </h3>
                   </div>
                 </div>
@@ -465,13 +473,28 @@ export default function Home() {
               <button
                 onClick={() => setIsFeedbackOpen(true)}
                 className={`flex items-center gap-2 px-5 py-2 rounded-full border-2 transition-colors shadow-sm font-semibold text-base focus:outline-none
-                  ${theme === "dark"
-                    ? "border-purple-500 text-purple-200 bg-[#18103a] hover:bg-purple-900 hover:text-white"
-                    : "border-purple-600 text-purple-700 bg-white hover:bg-purple-50 hover:text-purple-900"}
+                  ${
+                    theme === "dark"
+                      ? "border-purple-500 text-purple-200 bg-[#18103a] hover:bg-purple-900 hover:text-white"
+                      : "border-purple-600 text-purple-700 bg-white hover:bg-purple-50 hover:text-purple-900"
+                  }
                 `}
               >
                 <span className="inline-flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                    />
+                  </svg>
                   Feedback Form
                 </span>
               </button>
@@ -482,7 +505,10 @@ export default function Home() {
           </div>
         </motion.div>
         {/* FeedbackPanel rendered here */}
-        <FeedbackPanel isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+        <FeedbackPanel
+          isOpen={isFeedbackOpen}
+          onClose={() => setIsFeedbackOpen(false)}
+        />
       </div>
     </motion.div>
   );
