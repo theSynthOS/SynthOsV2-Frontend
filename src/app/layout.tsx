@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "Invest with confidence using personalized crypto yield plans.",
   // add image
   icons: {
-    icon: "https://app.synthos.fun/icons/SynthOS-transpare  nt.png",
+    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {
