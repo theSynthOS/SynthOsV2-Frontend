@@ -472,7 +472,7 @@ export default function Home() {
             renderFeedbackButton={() => (
               <button
                 onClick={() => setIsFeedbackOpen(true)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full border-2 transition-colors shadow-sm font-semibold text-base focus:outline-none
+                className={`flex items-center gap-2 px-5 py-4 rounded-lg border-2 transition-colors shadow-md font-semibold text-base focus:outline-none
                   ${
                     theme === "dark"
                       ? "border-purple-500 text-purple-200 bg-[#18103a] hover:bg-purple-900 hover:text-white"
@@ -495,7 +495,7 @@ export default function Home() {
                       d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
                     />
                   </svg>
-                  Feedback Form
+                   Here
                 </span>
               </button>
             )}

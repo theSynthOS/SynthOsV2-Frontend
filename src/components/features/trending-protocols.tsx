@@ -607,13 +607,13 @@ export default function TrendingProtocols({
                         key={pair.id}
                         className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
                           theme === "dark"
-                            ? isUsdcPair ? "bg-gray-800/50 hover:bg-gray-700/50" : "bg-gray-70 shadow-sm"
+                            ? isUsdcPair ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-gray-800/50 shadow-sm"
                             : isUsdcPair ? "bg-white hover:bg-gray-50 shadow-sm" : "bg-gray-200/70 shadow-sm"
-                        } p-5 rounded-xl transition-colors duration-200 relative h-34`}
+                        } p-5 rounded-xl transition-colors duration-200 relative`}
                         onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
                       >
                         <div className="flex items-center mb-4">
-                          <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
+                          <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
                             <Image
                               src={protocol.logo_url || ""}
                               alt={pair.name}
@@ -630,7 +630,7 @@ export default function TrendingProtocols({
                                 theme === "dark" ? "text-white" : "text-black"
                               }`}
                             >
-                              <div>
+                              <div className="pr-2">
                                 {pair.pair_or_vault_name}{" "}
                                 <span className="text-sm font-normal opacity-70">
                                   ({pair.name})
@@ -656,9 +656,9 @@ export default function TrendingProtocols({
                             </div>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center mt-auto">
+                        <div className="flex justify-between items-center mt-4">
                           <div
-                            className={`text-xl font-bold flex ${
+                            className={`text-xl font-bold flex flex-wrap ${
                               theme === "dark" ? "text-white" : "text-black"
                             }`}
                           >
@@ -675,7 +675,7 @@ export default function TrendingProtocols({
                           </div>
                           {isUsdcPair && (
                             <div
-                              className={`font-semibold text-md ${getRiskColor(
+                              className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
                                 pair.type
                               )}`}
                             >
@@ -688,23 +688,34 @@ export default function TrendingProtocols({
                       })}
                   </div>
                 )}
-                <div
-                  className={`flex flex-col ${
-                    theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
-                  } p-5 rounded-xl mt-4`}
-                >
+                
                   <div className="flex items-center justify-center">
-                    <div className="text-lg font-semibold text-black dark:text-white">
-                      More investments coming on mainnet...
+                    <div className="text-lg  text-black dark:text-white">
+                      <div className={`flex flex-col ${
+                        theme === "dark" 
+                          ? "bg-gray-800 border border-gray-700" 
+                          : "bg-white border border-gray-100"
+                      } shadow-lg p-6 rounded-lg mt-10 max-w-xl mx-auto`}>
+                        <h3 className="text-xl font-bold mb-4 text-center">
+                          🚨 We want to hear from you!
+                        </h3>
+                        <p className="mb-4 text-center text-md">
+                          We know there's 1 protocol live on our testnet.
+                        </p>
+                        <p className="mb-6 text-center text-md">
+                          Which protocols would you like to see next?
+                        </p>
+                      
+                        {renderFeedbackButton && (
+                          <div className="flex justify-center">
+                            {renderFeedbackButton()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 {/* Feedback Form Button below coming soon box */}
-                {renderFeedbackButton && (
-                  <div className="flex justify-center mt-4">
-                    {renderFeedbackButton()}
-                  </div>
-                )}
+                
               </div>
             ))
           )}

@@ -408,13 +408,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center px-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 300 300.251"
-                  className="h-5 w-5 mr-2"
-                >
-                  <path d="m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z" />
-                </svg>
+                <Image src="/X_logo_2023.svg" alt="X" width={20} height={20} className="h-5 w-5 mr-2"/>
                 Follow us on X
               </a>
             </div>

@@ -873,7 +873,7 @@ export default function DepositModal({
 
             <div
               className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {/* Input and Circle Section */}
               <div>
