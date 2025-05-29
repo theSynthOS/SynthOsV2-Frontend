@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import {
   Flame,
   Filter,
@@ -39,7 +40,7 @@ interface ProtocolPair {
 
 interface TrendingProtocolsProps {
   refreshBalance?: () => void;
-  renderFeedbackButton?: () => JSX.Element;
+  renderFeedbackButton?: () => React.ReactNode;
 }
 
 export default function TrendingProtocols({

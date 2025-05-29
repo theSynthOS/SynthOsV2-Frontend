@@ -22,7 +22,7 @@ const PWAInstaller = dynamic(() => import("@/components/features/pwa-installer")
 
 interface DynamicFeaturesProps {
   refreshBalance?: () => void;
-  renderFeedbackButton?: () => JSX.Element;
+  renderFeedbackButton?: () => React.ReactNode;
 }
 
 export default function DynamicFeatures({ refreshBalance, renderFeedbackButton }: DynamicFeaturesProps) {
