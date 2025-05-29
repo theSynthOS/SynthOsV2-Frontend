@@ -15,12 +15,15 @@ type AuthData = {
   address: string
   walletId?: string
   walletType?: string
+  email?: string
 }
 
 interface AuthContextType {
   isAuthenticated: boolean
   address: string | null
-  login: (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean) => void
+  walletType?: string
+  email?: string
+  login: (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean, email?: string) => void
   logout: () => void
   syncWallet: (newAddress: string) => void
 }
@@ -46,8 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Function to store auth data in localStorage
-  const login = (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean) => {
-    const data: AuthData = { address, walletId, walletType }
+  const login = (address: string, walletId?: string, walletType?: string, preventRedirect?: boolean, email?: string) => {
+    const data: AuthData = { address, walletId, walletType, email }
     
     // Store in state
     setAuthData(data)
@@ -64,7 +67,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(PASSKEY_STORAGE_KEY, "true")
     }
     
-    console.log("Logged in with address:", address)
+    console.log("Logged in with address:", address, "and email:", email)
+    
+    // Call the /api/points endpoint to upsert user in points DB
+    if (email && address) {
+      fetch("/api/points", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, address })
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("/api/points response:", data);
+        })
+        .catch(err => {
+          console.error("/api/points error:", err);
+        });
+    }
     
     // Only redirect to home if not already there and if preventRedirect is not true
     if (!preventRedirect && window.location.pathname !== "/home") {
@@ -218,7 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, address, login, logout, syncWallet }}>
+    <AuthContext.Provider value={{ isAuthenticated, address, walletType: authData?.walletType, email: authData?.email, login, logout, syncWallet }}>
       {children}
     </AuthContext.Provider>
   )
