@@ -9,6 +9,7 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -18,13 +19,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeFi Protocol Tracker",
-  description: "Track DeFi protocols and their APY/APR rates",
+  title: "SynthOS",
+  description: "Invest with confidence using personalized crypto yield plans.",
+  // add image
+  icons: {
+    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "DeFi Tracker",
+    title: "SynthOS",
+  },
+  openGraph: {
+    title: "SynthOS",
+    description:
+      "Invest with confidence using personalized crypto yield plans.",
+    url: "https://app.synthos.fun",
+    siteName: "SynthOS",
+    images: [
+      {
+        url: "https://app.synthos.fun/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SynthOS",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SynthOS",
+    description:
+      "Invest with confidence using personalized crypto yield plans.",
+    images: ["https://app.synthos.fun/og.jpg"],
   },
 };
 
@@ -36,14 +63,15 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <head>
-        <title>SynthOS V2</title>
+        <title>SynthOS</title>
         <meta
           name="description"
-          content="SynthOS V2 - Your gateway to the future of DeFi"
+          content="SynthOS - Invest with confidence using personalized crypto yield plans."
         />
         <link rel="manifest" href="/manifest.json" />
         <meta
@@ -55,12 +83,9 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <DynamicProviders>
-          {children}
-          <SpeedInsights />
-          <Analytics />
-        </DynamicProviders>
+        <DynamicProviders>{children}</DynamicProviders>
       </body>
     </html>
   );

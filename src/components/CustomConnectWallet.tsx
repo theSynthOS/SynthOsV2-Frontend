@@ -1,8 +1,13 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useConnect } from "thirdweb/react";
-import { createWallet, inAppWallet, type Wallet } from "thirdweb/wallets";
+import { useConnect, useActiveAccount } from "thirdweb/react";
+import {
+  createWallet,
+  inAppWallet,
+  type Wallet,
+  getUserEmail,
+} from "thirdweb/wallets";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
 import { ChevronRight, X } from "lucide-react";
@@ -43,9 +48,11 @@ type ConnectWalletButtonProps = {
   onConnected?: () => void;
 };
 
-export default function ConnectWalletButton({ onConnected }: ConnectWalletButtonProps) {
+export default function ConnectWalletButton({
+  onConnected,
+}: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, address } = useAuth();
+  const { isAuthenticated, address, walletType } = useAuth();
 
   // Open the modal
   const openModal = () => setIsOpen(true);
@@ -74,35 +81,40 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
       onConnected();
     }
   }, [isAuthenticated, address, onConnected]);
-  
 
   return (
     <div>
       {/* Connect Wallet Button */}
-      <button 
+      <button
         onClick={openModal}
-        className="bg-green-600 hover:bg-green-400 text-white font-medium py-3 px-5 rounded-lg"
+        className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
       >
-        {isAuthenticated && address 
+        {isAuthenticated && address
           ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : "Connect Wallet"
-        }
+          : "Login"}
       </button>
-      
+
       {/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
+          {/* Backdrop - use opacity transition instead of animation */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
             onClick={closeModal}
           ></div>
 
-          {/* Modal Content */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl animate-slide-up max-h-[90vh] overflow-hidden">
+          {/* Modal Content - Optimize animation */}
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
+            style={{
+              maxHeight: "90vh",
+              willChange: "transform",
+              transform: "translateZ(0)", // Force GPU acceleration
+            }}
+          >
             {/* Drag Handle */}
             <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
-            
+
             {/* Close Button */}
             <button
               onClick={closeModal}
@@ -114,9 +126,16 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
             {/* Wallet Connection UI */}
             <div
               className="overflow-y-auto"
-              style={{ maxHeight: "calc(90vh - 40px)" }}
+              style={{
+                maxHeight: "calc(90vh - 40px)",
+                transform: "translateZ(0)", // Force GPU acceleration
+                backfaceVisibility: "hidden", // Prevent flickering
+              }}
             >
-              <WalletConnectionUI onClose={closeModal} onConnected={onConnected} />
+              <WalletConnectionUI
+                onClose={closeModal}
+                onConnected={onConnected}
+              />
             </div>
           </div>
         </div>
@@ -126,24 +145,77 @@ export default function ConnectWalletButton({ onConnected }: ConnectWalletButton
 }
 
 // Separate component for the wallet connection UI
-function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onConnected?: () => void }) {
+function WalletConnectionUI({
+  onClose,
+  onConnected,
+}: {
+  onClose: () => void;
+  onConnected?: () => void;
+}) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"social" | "wallets" | "passkey">("social");
+  const [activeTab, setActiveTab] = useState<"social">("social");
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentWallet, setCurrentWallet] = useState<string>("");
   const [currentAuth, setCurrentAuth] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
 
-  const { login, isAuthenticated, address, logout } = useAuth();
+  const {
+    login,
+    isAuthenticated,
+    address,
+    logout,
+    syncWallet,
+    walletType,
+    autoConnect,
+    setAutoConnect,
+  } = useAuth();
   const { connect } = useConnect();
-  
-  const wallets: WalletOption[] = [
-    { id: "io.metamask", name: "MetaMask", icon: <span className="text-2xl">🦊</span> },
-    { id: "com.coinbase.wallet", name: "Coinbase Wallet", icon: <Image src="/icons/coinbase.png" alt="Google" width={100} height={100} /> },
-    { id: "me.rainbow", name: "Rainbow", icon: <span className="text-2xl">🌈</span> },
-    { id: "walletconnect", name: "WalletConnect", icon: <span className="text-2xl">🔗</span> },
-  ];
+  const activeAccount = useActiveAccount();
+
+  // Monitor active account changes and sync with auth context
+  useEffect(() => {
+    if (activeAccount?.address && isAuthenticated && address) {
+      // If the active account address is different from the auth context address
+      if (activeAccount.address !== address) {
+        console.log("Account changed in wallet UI:", {
+          from: address,
+          to: activeAccount.address,
+        });
+        syncWallet(activeAccount.address);
+      }
+    }
+  }, [activeAccount, isAuthenticated, address, syncWallet]);
+
+  // const wallets: WalletOption[] = [
+  //   {
+  //     id: "io.metamask",
+  //     name: "MetaMask",
+  //     icon: <span className="text-2xl">🦊</span>,
+  //   },
+  //   {
+  //     id: "com.coinbase.wallet",
+  //     name: "Coinbase Wallet",
+  //     icon: (
+  //       <Image
+  //         src="/icons/coinbase.png"
+  //         alt="Google"
+  //         width={100}
+  //         height={100}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     id: "me.rainbow",
+  //     name: "Rainbow",
+  //     icon: <span className="text-2xl">🌈</span>,
+  //   },
+  //   {
+  //     id: "walletconnect",
+  //     name: "WalletConnect",
+  //     icon: <span className="text-2xl">🔗</span>,
+  //   },
+  // ];
 
   const socialOptions: {
     id: OAuthProvider;
@@ -183,50 +255,50 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
     },
   ];
 
-  // Connect wallet function
-  const handleConnectWallet = async (walletId: string) => {
-    try {
-      setIsConnecting(true);
-      setCurrentWallet(walletId);
-      setCurrentAuth("");
-      setError("");
+  // // Connect wallet function
+  // const handleConnectWallet = async (walletId: string) => {
+  //   try {
+  //     setIsConnecting(true);
+  //     setCurrentWallet(walletId);
+  //     setCurrentAuth("");
+  //     setError("");
 
-      await connect(async () => {
-        // Create wallet instance using the correct wallet ID
-        const wallet = createWallet(walletId as any);
+  //     await connect(async () => {
+  //       // Create wallet instance using the correct wallet ID
+  //       const wallet = createWallet(walletId as any);
 
-        // Connect the wallet
-        const account = await wallet.connect({
-          client,
-        });
+  //       // Connect the wallet
+  //       const account = await wallet.connect({
+  //         client,
+  //       });
 
-        // If connection is successful, store in auth context
-        if (account) {
-          // Set session in sessionStorage to ensure persistence across refreshes
-          sessionStorage.setItem("session_active", "true");
+  //       // If connection is successful, store in auth context
+  //       if (account) {
+  //         // Set session in sessionStorage to ensure persistence across refreshes
+  //         sessionStorage.setItem("session_active", "true");
 
-          // Close modal first
-          onClose();
+  //         // Close modal first
+  //         onClose();
 
-          // Let the login function in AuthContext handle the redirect
-          login(account.address, walletId, "wallet", true);
-          
-          // Call onConnected callback if provided
-          if (onConnected) {
-            onConnected();
-          }
-        }
+  //         // Let the login function in AuthContext handle the redirect
+  //         login(account.address, walletId, "wallet", true);
 
-        // Return the connected wallet
-        return wallet;
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to connect wallet");
-      console.error("Failed to connect wallet:", err);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+  //         // Call onConnected callback if provided
+  //         if (onConnected) {
+  //           onConnected();
+  //         }
+  //       }
+
+  //       // Return the connected wallet
+  //       return wallet;
+  //     });
+  //   } catch (err: any) {
+  //     setError(err.message || "Failed to connect wallet");
+  //     console.error("Failed to connect wallet:", err);
+  //   } finally {
+  //     setIsConnecting(false);
+  //   }
+  // };
 
   // Connect with social auth (using in-app wallet)
   const handleConnectWithSocial = async (provider: OAuthProvider) => {
@@ -249,7 +321,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
             sponsorGas: true,
           },
         });
-        
+
         // Connect the wallet to the client with the specific strategy
         // Each strategy requires different connection options
         if (provider === "google" || provider === "apple" || provider === "x") {
@@ -260,11 +332,15 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
 
           // If connection is successful, store in auth context
           if (account) {
+            // Get user's email
+            const email = await getUserEmail({ client });
+            console.log("User email:", email);
+
             // Set session in sessionStorage to ensure persistence across refreshes
             sessionStorage.setItem("session_active", "true");
             onClose();
-            login(account.address, undefined, provider, true);
-            
+            login(account.address, undefined, provider, true, email);
+
             // Call onConnected callback if provided
             if (onConnected) {
               onConnected();
@@ -321,29 +397,29 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
       </div>
 
       {/* Tabs */}
-      <div className="flex mb-6">
-        <button
+      {/* <div className="flex mb-6"> */}
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "social"
-              ? "text-green-500 border-b-2 border-green-500"
+              ? "text-purple-500 border-b-2 border-purple-500"
               : "text-gray-500"
           }`}
           onClick={() => setActiveTab("social")}
         >
           Social
-        </button>
+        </button> */}
 
-        <button
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "wallets"
-              ? "text-green-500 border-b-2 border-green-500"
+              ? "text-purple-500 border-b-2 border-purple-500"
               : "text-gray-500"
           }`}
           onClick={() => setActiveTab("wallets")}
         >
           Wallets
-        </button>
-        {/* <button
+        </button> */}
+      {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "passkey" 
               ? "text-green-500 border-b-2 border-green-500" 
@@ -353,7 +429,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
         >
           Passkey
         </button> */}
-      </div>
+      {/* </div> */}
 
       {/* Error Message */}
       {error && (
@@ -367,6 +443,11 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
         <div className="mb-6 p-4 bg-gray-100 border border-gray-200 rounded-lg">
           <p className="text-sm text-gray-500">Connected with:</p>
           <p className="font-mono text-sm truncate">{address}</p>
+          {walletType && (
+            <p className="text-sm text-gray-500">
+              Wallet Type: <span className="font-semibold">{walletType}</span>
+            </p>
+          )}
           <div className="mt-2">
             <p className="text-sm text-gray-500">Balance:</p>
             <div className="flex items-center">
@@ -375,24 +456,35 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
               </p>
             </div>
           </div>
-          <button
-            onClick={handleDisconnect}
-            className="mt-2 text-sm text-blue-600 hover:underline"
-          >
-            Disconnect
-          </button>
+          <div className="mt-2 flex items-center justify-between">
+            <label className="flex items-center space-x-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={autoConnect}
+                onChange={(e) => setAutoConnect(e.target.checked)}
+                className="form-checkbox h-4 w-4 text-purple-600"
+              />
+              <span>Auto-connect</span>
+            </label>
+            <button
+              onClick={handleDisconnect}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
       )}
 
       {/* Wallet Options */}
-      {activeTab === "wallets" && (
+      {/* {activeTab === "wallets" && (
         <div className="space-y-4">
           {wallets.map((wallet) => (
             <button
               key={wallet.id}
               onClick={() => handleConnectWallet(wallet.id)}
               disabled={isConnecting && currentWallet === wallet.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50 rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-purple-900/50 rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentWallet !== wallet.id ? "opacity-50" : ""
               }`}
             >
@@ -404,14 +496,14 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
               </div>
 
               {isConnecting && currentWallet === wallet.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600  border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-purple-600  border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
             </button>
           ))}
         </div>
-      )}
+      )} */}
 
       {/* Social Login Options */}
       {activeTab === "social" && (
@@ -421,7 +513,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
               key={option.id}
               onClick={() => handleConnectWithSocial(option.id)}
               disabled={isConnecting && currentAuth === option.id}
-              className={`flex items-center justify-between w-full p-4 shadow-md shadow-green-900/50  rounded-xl hover:bg-gray-50 ${
+              className={`flex items-center justify-between w-full p-4 shadow-md shadow-purple-900/50  rounded-xl hover:bg-gray-50 ${
                 isConnecting && currentAuth !== option.id ? "opacity-50" : ""
               }`}
             >
@@ -433,7 +525,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
               </div>
 
               {isConnecting && currentAuth === option.id ? (
-                <div className="animate-spin h-5 w-5 border-2 border-green-600 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-purple-600 border-t-transparent rounded-full"></div>
               ) : (
                 <ChevronRight className="h-6 w-6 text-gray-400" />
               )}
@@ -441,7 +533,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
           ))}
         </div>
       )}
-      
+
       {/* Passkey Options */}
       {/* {activeTab === "passkey" && (
         <div className="text-center p-4">
@@ -471,7 +563,7 @@ function WalletConnectionUI({ onClose, onConnected }: { onClose: () => void; onC
           </button>
         </div>
       )} */}
-      
+
       <div className="mt-8 text-center text-xs text-gray-500">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </div>

@@ -1,0 +1,106 @@
+{
+  "investments": [
+    {
+      "id": "1",
+      "protocolName": "Aave",
+      "pairName": "USDC/ETH",
+      "amount": 5000,
+      "expectedApy": 8.5,
+      "timestamp": "2024-03-15T10:30:00Z",
+      "status": "active",
+      "chain": "Ethereum",
+      "protocolLogo": "/protocols/aave.png",
+      "walletAddress": "0x8827Ed6f864D480642bB82EdD31cA203Eb65fB4C",
+      "details": {
+        "type": "Lending",
+        "riskLevel": "Medium",
+        "lockPeriod": "30 days",
+        "minAmount": 100,
+        "maxAmount": 100000
+      }
+    },
+    {
+      "id": "2",
+      "protocolName": "Uniswap",
+      "pairName": "ETH/USDT",
+      "amount": 2500,
+      "expectedApy": 12.3,
+      "timestamp": "2024-03-14T15:45:00Z",
+      "status": "active",
+      "chain": "Ethereum",
+      "protocolLogo": "/protocols/uniswap.png",
+      "walletAddress": "0x8827Ed6f864D480642bB82EdD31cA203Eb65fB4C",
+      "details": {
+        "type": "Liquidity Pool",
+        "riskLevel": "High",
+        "lockPeriod": "None",
+        "minAmount": 50,
+        "maxAmount": 50000
+      }
+    },
+    {
+      "id": "3",
+      "protocolName": "Curve",
+      "pairName": "3Pool",
+      "amount": 10000,
+      "expectedApy": 5.2,
+      "timestamp": "2024-03-13T09:15:00Z",
+      "status": "completed",
+      "chain": "Ethereum",
+      "protocolLogo": "/protocols/curve.png",
+      "walletAddress": "0x8827Ed6f864D480642bB82EdD31cA203Eb65fB4C",
+      "details": {
+        "type": "Stable Pool",
+        "riskLevel": "Low",
+        "lockPeriod": "None",
+        "minAmount": 1000,
+        "maxAmount": 1000000
+      }
+    },
+    {
+      "id": "4",
+      "protocolName": "Lido",
+      "pairName": "ETH/stETH",
+      "amount": 7500,
+      "expectedApy": 4.8,
+      "timestamp": "2024-03-12T14:20:00Z",
+      "status": "active",
+      "chain": "Ethereum",
+      "protocolLogo": "/protocols/lido.png",
+      "walletAddress": "0x8827Ed6f864D480642bB82EdD31cA203Eb65fB4C",
+      "details": {
+        "type": "Staking",
+        "riskLevel": "Low",
+        "lockPeriod": "None",
+        "minAmount": 0.1,
+        "maxAmount": 1000
+      }
+    },
+    {
+      "id": "5",
+      "protocolName": "Compound",
+      "pairName": "USDC/ETH",
+      "amount": 3000,
+      "expectedApy": 7.2,
+      "timestamp": "2024-03-11T11:10:00Z",
+      "status": "failed",
+      "chain": "Ethereum",
+      "protocolLogo": "/protocols/compound.png",
+      "walletAddress": "0x8827Ed6f864D480642bB82EdD31cA203Eb65fB4C",
+      "details": {
+        "type": "Lending",
+        "riskLevel": "Medium",
+        "lockPeriod": "None",
+        "minAmount": 100,
+        "maxAmount": 100000
+      }
+    }
+  ],
+  "metadata": {
+    "totalInvestments": 5,
+    "totalActiveInvestments": 3,
+    "totalAmount": 28000,
+    "averageApy": 7.7,
+    "lastUpdated": "2024-03-15T10:30:00Z"
+  }
+} 

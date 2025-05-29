@@ -20,14 +20,19 @@ const PWAInstaller = dynamic(() => import("@/components/features/pwa-installer")
   ssr: false
 });
 
-export default function DynamicFeatures() {
+interface DynamicFeaturesProps {
+  refreshBalance?: () => void;
+  renderFeedbackButton?: () => React.ReactNode;
+}
+
+export default function DynamicFeatures({ refreshBalance, renderFeedbackButton }: DynamicFeaturesProps) {
   const { theme } = useTheme();
   
   return (
     <>
       {/* Trending */}
       <div className="mb-[80px]">
-        <TrendingProtocols />
+        <TrendingProtocols refreshBalance={refreshBalance} renderFeedbackButton={renderFeedbackButton} />
       </div>
 
       {/* PWA Installer */}

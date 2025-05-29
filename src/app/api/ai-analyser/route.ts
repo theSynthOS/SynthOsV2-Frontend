@@ -10,15 +10,15 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `https://synthos-backend-production.up.railway.app/accounts/balance/${address}`
+      `https://synthos-v2-backend-production-f721.up.railway.app/api/analyze/${address}`
     );
     const data = await response.json();
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching balance:", error);
+    console.error("Error fetching activity:", error);
     return NextResponse.json(
-      { error: "Failed to fetch balance" },
+      { error: "Failed to fetch activity" },
       { status: 500 }
     );
   }

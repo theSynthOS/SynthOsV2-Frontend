@@ -1,307 +1,757 @@
-"use client"
+"use client";
 
-import { Flame, Filter, ArrowUpDown, Check, X } from "lucide-react"
-import Image from "next/image"
-import { useTheme } from "next-themes"
-import { useState, useEffect } from "react"
-import DepositModal from "./deposit-modal"
-import { useAuth } from "@/contexts/AuthContext"
+import React from 'react';
+import {
+  Flame,
+  Filter,
+  ArrowUpDown,
+  Check,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Info,
+} from "lucide-react";
+import Image from "next/image";
+import { useTheme } from "next-themes";
+import { useState, useEffect, useRef } from "react";
+import DepositModal from "./deposit-modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
-export default function TrendingProtocols() {
-  const { theme } = useTheme()
-  const { isAuthenticated } = useAuth()
-  const [selectedPool, setSelectedPool] = useState<any>(null)
-  const [riskFilters, setRiskFilters] = useState({
-    all: true,
-    low: false,
-    medium: false,
-    high: false
-  })
-  const [showFilter, setShowFilter] = useState(false)
-  const [investorProfile, setInvestorProfile] = useState<string | null>(null)
-  
-  // Fetch investor profile from localStorage on component mount
+interface Protocol {
+  id: number;
+  name: string;
+  logo_url: string;
+  description: string;
+  created_at: string;
+}
+
+interface ProtocolPair {
+  id: string;
+  name: string;
+  pair_or_vault_name: string;
+  type: string;
+  chain_id: number;
+  contract_address: string;
+  created_at: string;
+  apy?: number;
+}
+
+interface TrendingProtocolsProps {
+  refreshBalance?: () => void;
+  renderFeedbackButton?: () => React.ReactNode;
+}
+
+export default function TrendingProtocols({
+  refreshBalance,
+  renderFeedbackButton,
+}: TrendingProtocolsProps) {
+  const { theme } = useTheme();
+  const { isAuthenticated, address } = useAuth();
+  const [selectedPool, setSelectedPool] = useState<any>(null);
+  // const [riskFilters, setRiskFilters] = useState({
+  //   all: true,
+  //   low: false,
+  //   medium: false,
+  //   high: false,
+  // });
+  // const [showFilter, setShowFilter] = useState(false);
+  const [investorProfile, setInvestorProfile] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string>("0");
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([]);
+  const [isLoadingProtocols, setIsLoadingProtocols] = useState(true);
+  const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(
+    new Set()
+  );
+  // const filterRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const [showApyInfo, setShowApyInfo] = useState(false);
+  const apyInfoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // if (
+      //   filterRef.current &&
+      //   !filterRef.current.contains(event.target as Node)
+      // ) {
+      //   setShowFilter(false);
+      // }
+      
+      if (
+        apyInfoRef.current &&
+        !apyInfoRef.current.contains(event.target as Node)
+      ) {
+        setShowApyInfo(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchProtocols = async () => {
+      setIsLoadingProtocols(true);
+      try {
+        const response = await fetch("/api/protocols");
+        if (!response.ok) {
+          throw new Error("Failed to fetch protocols");
+        }
+        const data = await response.json();
+        setProtocols(data);
+      } catch (error) {
+        console.error("Error fetching protocols:", error);
+        setProtocols([]);
+      } finally {
+        setIsLoadingProtocols(false);
+      }
+    };
+
+    fetchProtocols();
+  }, []);
+
+  useEffect(() => {
+    const fetchProtocolPairsApy = async () => {
+      try {
+        const response = await fetch("/api/protocol-pairs-apy");
+        if (!response.ok) {
+          throw new Error("Failed to fetch protocol pairs");
+        }
+        const data = await response.json();
+        // Filter only pairs with chain_id 534351 (Scroll Sepolia testnet)
+        const filteredPairs = data.filter((pair: ProtocolPair) => pair.chain_id === 534351);
+        setProtocolPairs(filteredPairs);
+      } catch (error) {
+        console.error("Error fetching protocol pairs:", error);
+        setProtocolPairs([]);
+      }
+    };
+
+    fetchProtocolPairsApy();
+  }, []);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address) {
+        setBalance("0");
+        return;
+      }
+
+      setIsLoadingBalance(true);
+      try {
+        const response = await fetch(`/api/balance?address=${address}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch balance");
+        }
+        const data = await response.json();
+        setBalance(data.usdBalance || "0");
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setBalance("0");
+      } finally {
+        setIsLoadingBalance(false);
+      }
+    };
+
+    fetchBalance();
+  }, [address]);
+
   useEffect(() => {
     try {
-      const storedProfile = localStorage.getItem("investor_profile")
+      const storedProfile = localStorage.getItem("investor_profile");
       if (storedProfile) {
-        setInvestorProfile(JSON.parse(storedProfile).title)
+        setInvestorProfile(JSON.parse(storedProfile).title);
       } else {
-        // Default profile if none is found
-        setInvestorProfile("Degen Learner")
+        setInvestorProfile("Degen Learner");
       }
     } catch (error) {
-      console.error("Error fetching investor profile:", error)
-      setInvestorProfile("Degen Learner")
+      console.error("Error fetching investor profile:", error);
+      setInvestorProfile("Degen Learner");
     }
-  }, [])
-  
-  const trendingProtocols = [
-    { id: "fx", name: "FX", pair: 'USDT', type: 'supply', apy: 9.86, tvl: "$463M", logo: "/fx-protocol-logo.png",  riskScore: 3 },
-    { id: "quill", name: "Quill Finance", pair: 'ETH', type: 'earn', apy: 12.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 4 },
-    { id: "fx", name: "FX ", pair: 'FXS', type: 'supply', apy: 5.45, tvl: "$892M", logo: "/compound.png", riskScore: 2 },
-    { id: "quill", name: "Quill Finance", pair: 'wstETH', type: 'earn', apy: 33.19, tvl: "$262M", logo: "/quill-finance-logo.png",  riskScore: 9 },
-    { id: "aave", name: "AAVE", pair: 'GHO/USDT', type: 'supply', apy: 1.13, tvl: "$1.1B", logo: "/aave.png",  riskScore: 1 },
-    { id: "ambient", name: "Ambient", pair: 'USDC/USDT', type: 'vault', apy: 2.19, tvl: "$487k", logo: "/ambient.png", riskScore: 2 },
-    { id: "ambient", name: "Ambient", pair: 'SCR/ETH', type: 'vault', apy: 27.98, tvl: "$15.06k", logo: "/ambient.png", riskScore: 10 },
-    { id: "ambient", name: "Ambient", pair: 'wstETH/wrsWTH', type: 'vault', apy: 3.45, tvl: "$15.92k", logo: "/ambient.png", riskScore: 5 },
-    { id: "aave", name: "AAVE", pair: 'GHO', type: 'supply', apy: 6.13, tvl: "$1.1B", logo: "/aave.png", riskScore: 2 },
-  ]
+  }, []);
 
-  const getRiskCategory = (score: number) => {
-    if (score >= 1 && score <= 3) return "low";
-    if (score >= 4 && score <= 7) return "medium";
-    if (score >= 8 && score <= 10) return "high";
-    return "unknown";
-  }
+  // const getRiskCategory = (type: string) => {
+  //   // Placeholder risk level for now
+  //   return "medium";
+  // };
 
-  const getRiskLabel = (score: number) => {
-    const category = getRiskCategory(score);
-    switch(category) {
-      case "low": return "Low";
-      case "medium": return "Medium";
-      case "high": return "High";
-      default: return "Unknown";
-    }
-  }
+  // const getRiskLabel = (type: string) => {
+  //   // Placeholder risk label for now
+  //   return "Medium";
+  // };
 
-  const getRiskColor = (score: number) => {
-    const category = getRiskCategory(score);
-    switch(category) {
-      case "low": return "text-green-500";
-      case "medium": return "text-yellow-500";
-      case "high": return "text-red-500";
-      default: return "text-gray-500";
-    }
-  }
+  // const getRiskColor = (type: string) => {
+  //   // Placeholder risk color for now
+  //   return "text-yellow-500";
+  // };
 
-  const handleProtocolClick = (protocol: any) => {
+  const handleProtocolClick = (protocol: any, pair: ProtocolPair) => {
     setSelectedPool({
       name: protocol.name,
-      apy: protocol.apy,
-      risk: getRiskLabel(protocol.riskScore)
-    })
-  }
-
-  const toggleRiskFilter = (category: 'all' | 'low' | 'medium' | 'high') => {
-    // Set only the selected filter to true, all others to false
-    setRiskFilters({
-      all: category === 'all',
-      low: category === 'low',
-      medium: category === 'medium',
-      high: category === 'high'
+      apy: 0,
+      risk: "Medium",
+      pair_or_vault_name: pair.pair_or_vault_name,
+      protocol_id: protocol.id.toString(),
+      protocol_pair_id: pair.id,
     });
-    
-    // Close the filter menu after selection
-    setShowFilter(false);
-  }
+  };
 
-  // Debug version of the filtering function to track what's happening
-  const filteredProtocols = trendingProtocols
-    .filter(protocol => {
-      // If showing all, return all protocols
-      if (riskFilters.all) return true;
-      
-      // Get the risk category of this protocol
-      const category = getRiskCategory(protocol.riskScore);
-      
-      // Only return protocols matching the selected category
-      let shouldKeep = false;
-      
-      if (riskFilters.low && category === "low") {
-        shouldKeep = true;
-      }
-      
-      if (riskFilters.medium && category === "medium") {
-        shouldKeep = true;
-      }
-      
-      if (riskFilters.high && category === "high") {
-        shouldKeep = true;
-      }
-      
-      return shouldKeep;
-    })
-    .sort((a, b) => b.apy - a.apy) // Sort by APY (highest first)
-    // Only limit to 4 if not showing all
-    .slice(0, riskFilters.all ? undefined : 4);
+  // const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
+  //   // Set only the selected filter to true, all others to false
+  //   setRiskFilters({
+  //     all: category === "all",
+  //     low: category === "low",
+  //     medium: category === "medium",
+  //     high: category === "high",
+  //   });
 
-  const getActiveFiltersLabel = () => {
-    if (riskFilters.all) return "All Risks";
-    if (riskFilters.low) return "Low";
-    if (riskFilters.medium) return "Medium";
-    if (riskFilters.high) return "High";
-    return "No Filter"; // Fallback, shouldn't happen
-    
-  }
+  //   // Close the filter menu after selection
+  //   setShowFilter(false);
+  // };
+
+  // // Update the filtered protocols to use the API data
+  // const filteredProtocols = protocols
+  //   .filter((protocol) => {
+  //     if (riskFilters.all) return true;
+  //     return false; // No risk filtering for parent protocols
+  //   })
+  //   .slice(0, riskFilters.all ? undefined : 4);
+
+  // const getActiveFiltersLabel = () => {
+  //   if (riskFilters.all)
+  //     return <span className="text-gray-700 dark:text-white">All Risks</span>;
+  //   if (riskFilters.low)
+  //     return <span className="text-purple-700 dark:text-purple-300">Low</span>;
+  //   if (riskFilters.medium)
+  //     return (
+  //       <span className="text-purple-700 dark:text-purple-300">Medium</span>
+  //     );
+  //   if (riskFilters.high)
+  //     return <span className="text-purple-700 dark:text-purple-300">High</span>;
+  //   return (
+  //     <span className="text-purple-700 dark:text-purple-300">No Filter</span>
+  //   );
+  // };
+
+  const toggleProtocolExpand = (protocolName: string) => {
+    setExpandedProtocols((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(protocolName)) {
+        newSet.delete(protocolName);
+      } else {
+        newSet.add(protocolName);
+      }
+      return newSet;
+    });
+  };
+
+  const getRiskLabel = (type: string) => {
+    return "Medium";
+  };
+
+  const getRiskColor = (type: string) => {
+    return "text-yellow-500";
+  };
+
+  const getProtocolPairs = (protocolName: string) => {
+    return protocolPairs.filter(
+      (pair) => pair.name.toLowerCase() === protocolName.toLowerCase()
+    );
+  };
 
   return (
     <>
       <div className="px-4 py-6">
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
-            {/* Investor Profile Badge */}
             {investorProfile && (
-              <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                theme === 'dark' 
-                  ? 'bg-purple-900/30 text-purple-300' 
-                  : 'bg-green-100 text-green-700'
-              }`}>
+              <div
+                className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                  theme === "dark"
+                    ? "bg-purple-900/30 text-purple-300"
+                    : "bg-purple-100 text-purple-700"
+                }`}
+              >
                 {investorProfile}
               </div>
             )}
-            
-            {/* Risk Filter */}
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className={`flex items-center px-4 py-2 rounded-lg ${
-                theme === 'dark' 
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-black'
-              } transition-colors duration-200`}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {getActiveFiltersLabel()}
-            </button>
-            {showFilter && (
-              <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-10 ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-              } border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="py-2 px-1">
-                  <div className="flex items-center justify-between px-3 py-1">
-                    <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Risk Categories
-                    </p>
-                    <button 
-                      onClick={() => setShowFilter(false)}
-                      className={`p-1 rounded-full ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                    >
-                      <X className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                    </button>
+
+            {/* Risk Filter
+            <div ref={filterRef}>
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className={`flex items-center px-4 py-2 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white"
+                    : "bg-white hover:bg-gray-50 text-black border border-gray-200"
+                } transition-colors duration-200`}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                {getActiveFiltersLabel()}
+              </button>
+              {showFilter && (
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-10 ${
+                    theme === "dark" ? "bg-gray-800" : "bg-white"
+                  } border ${
+                    theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`}
+                >
+                  <div className="py-2 px-1">
+                    <div className="flex items-center justify-between px-3 py-1">
+                      <p
+                        className={`text-sm font-medium ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        Risk Categories
+                      </p>
+                      <button
+                        onClick={() => setShowFilter(false)}
+                        className={`p-1 rounded-full ${
+                          theme === "dark"
+                            ? "hover:bg-gray-700"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <X
+                          className={`w-4 h-4 ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <div className="space-y-1 mt-1">
+                      <button
+                        onClick={() => toggleRiskFilter("all")}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                          theme === "dark"
+                            ? "text-white hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } rounded-md`}
+                      >
+                        <span className="flex items-center">
+                          <div
+                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                              riskFilters.all
+                                ? "bg-purple-500 border-purple-500"
+                                : `border-gray-400 ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-white"
+                                  }`
+                            }`}
+                          >
+                            {riskFilters.all && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <span
+                            className={
+                              theme === "dark" ? "text-white" : "text-black"
+                            }
+                          >
+                            All Risks
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleRiskFilter("low")}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                          theme === "dark"
+                            ? "hover:bg-gray-700"
+                            : "hover:bg-gray-100"
+                        } rounded-md`}
+                      >
+                        <span className="flex items-center">
+                          <div
+                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                              riskFilters.low
+                                ? "bg-purple-500 border-purple-500"
+                                : `border-gray-400 ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-white"
+                                  }`
+                            }`}
+                          >
+                            {riskFilters.low && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <span
+                            className={
+                              theme === "dark" ? "text-white" : "text-gray-700"
+                            }
+                          >
+                            Low
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleRiskFilter("medium")}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                          theme === "dark"
+                            ? "hover:bg-gray-700"
+                            : "hover:bg-gray-100"
+                        } rounded-md`}
+                      >
+                        <span className="flex items-center">
+                          <div
+                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                              riskFilters.medium
+                                ? "bg-purple-500 border-purple-500"
+                                : `border-gray-400 ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-white"
+                                  }`
+                            }`}
+                          >
+                            {riskFilters.medium && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <span
+                            className={
+                              theme === "dark" ? "text-white" : "text-gray-700"
+                            }
+                          >
+                            Medium
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleRiskFilter("high")}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                          theme === "dark"
+                            ? "hover:bg-gray-700"
+                            : "hover:bg-gray-100"
+                        } rounded-md`}
+                      >
+                        <span className="flex items-center">
+                          <div
+                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                              riskFilters.high
+                                ? "bg-purple-500 border-purple-500"
+                                : `border-gray-400 ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-white"
+                                  }`
+                            }`}
+                          >
+                            {riskFilters.high && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <span
+                            className={
+                              theme === "dark" ? "text-white" : "text-gray-700"
+                            }
+                          >
+                            High
+                          </span>
+                        </span>
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-1 mt-1">
-                    <button
-                      onClick={() => toggleRiskFilter('all')}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
-                        theme === 'dark' ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-                      } rounded-md`}
-                    >
-                      <span className="flex items-center">
-                        <div className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                          riskFilters.all 
-                            ? 'bg-green-500 border-green-500'
-                            : `border-gray-400 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`
-                        }`}>
-                          {riskFilters.all && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        All Risks
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => toggleRiskFilter('low')}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-sm text-green-500 ${
-                        theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                      } rounded-md`}
-                    >
-                      <span className="flex items-center">
-                        <div className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                          riskFilters.low 
-                            ? 'bg-green-500 border-green-500'
-                            : `border-gray-400 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`
-                        }`}>
-                          {riskFilters.low && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        Low
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => toggleRiskFilter('medium')}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-sm text-yellow-500 ${
-                        theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                      } rounded-md`}
-                    >
-                      <span className="flex items-center">
-                        <div className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                          riskFilters.medium 
-                            ? 'bg-yellow-500 border-yellow-500'
-                            : `border-gray-400 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`
-                        }`}>
-                          {riskFilters.medium && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        Medium
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => toggleRiskFilter('high')}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-sm text-red-500 ${
-                        theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                      } rounded-md`}
-                    >
-                      <span className="flex items-center">
-                        <div className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                          riskFilters.high 
-                            ? 'bg-red-500 border-red-500'
-                            : `border-gray-400 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`
-                        }`}>
-                          {riskFilters.high && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        High
-                      </span>
-                    </button>
-                  </div>
-                  
                 </div>
-                
+              )}
+            </div> */}
+          </div>
+          <div className="flex items-center py-1 relative">
+            <Flame
+              className={`w-5 h-5 mr-2 ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
+            />
+            <h2
+              className={`text-2xl font-bold ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
+            >
+              Suggested Investments
+            </h2>
+            <button
+              onClick={() => setShowApyInfo(!showApyInfo)}
+              className={`ml-2 p-1 rounded-full hover:bg-opacity-20 ${
+                theme === "dark" ? "hover:bg-gray-600" : "hover:bg-gray-200"
+              }`}
+              aria-label="APY Information"
+            >
+              <Info className={`w-4 h-4 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`} />
+            </button>
+            
+            {showApyInfo && (
+              <div 
+                ref={apyInfoRef}
+                className={`absolute left-0 top-12 z-20 p-4 rounded-lg shadow-lg w-72 ${
+                  theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-md">Testnet APY Information</h3>
+                  <button
+                    onClick={() => setShowApyInfo(false)}
+                    className={`p-1 rounded-full ${
+                      theme === "dark" 
+                        ? "hover:bg-gray-700" 
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm">
+                  The APY values shown are on testnet and may differ from mainnet rates.
+                </p>
+                <div className="mt-3 text-xs opacity-70">
+                  All investments are simulated on Scroll Sepolia testnet.
+                </div>
               </div>
             )}
           </div>
-          <div className="flex items-center py-1">
-            <Flame className={`w-5 h-5 mr-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`} />
-            <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Suggested Investments</h2>
-          </div>
         </div>
         <div className="space-y-4">
-          {filteredProtocols.map((protocol) => (
-            <div 
-              key={`${protocol.id}-${protocol.pair}`}
-              className={`flex flex-col cursor-pointer shadow-md ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100/50 hover:bg-gray-100'} p-5 rounded-xl transition-colors duration-200 relative h-34`}
-              onClick={() => handleProtocolClick(protocol)}
+          {isLoadingProtocols ? (
+            <div className="flex flex-col gap-4 py-8">
+              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
+            </div>
+          ) : protocols.length === 0 ? (
+            <div
+              className={`py-8 text-center ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
             >
-              <div className="flex items-center mb-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden mr-4">
-                  <Image src={protocol.logo || "/placeholder.svg"} alt={protocol.name} width={56} height={56} />
-                </div>
-                <div className="flex-1">
-                  <div className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                    {protocol.pair} <span className="text-sm font-normal opacity-70">({protocol.name})</span>
+              No protocols available
+            </div>
+          ) : (
+            protocols.map((protocol) => (
+              <div key={protocol.id} className={`mb-6 rounded-lg`}>
+                <div
+                  className={`flex flex-col cursor-pointer ${
+                    theme === "dark"
+                      ? "bg-gray-800 hover:bg-gray-700"
+                      : "bg-white hover:bg-gray-50 shadow-sm"
+                  } p-5 rounded-xl transition-colors duration-200 relative`}
+                  onClick={() => toggleProtocolExpand(protocol.name)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-32 h-32 rounded-full overflow-hidden mr-4">
+                        <Image
+                          src={protocol.logo_url || ""}
+                          alt={protocol.name}
+                          width={100}
+                          height={100}
+                          onError={(e) => {
+                            console.log(
+                              "Image failed to load:",
+                              protocol.logo_url
+                            );
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <div
+                          className={`text-lg font-semibold ${
+                            theme === "dark" ? "text-white" : "text-black"
+                          }`}
+                        >
+                          {protocol.name}
+                        </div>
+                        <div
+                          className={`text-sm ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          {protocol.description}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`w-8 h-8 transition-transform duration-300 stroke-[2.5] ${
+                        theme === "dark" ? "text-white" : "text-black"
+                      } ${expandedProtocols.has(protocol.name) ? "rotate-180" : "rotate-0"}`}
+                    />
                   </div>
-                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{protocol.tvl} TVL</div>
                 </div>
+                {expandedProtocols.has(protocol.name) && (
+                  <div className="mt-2 space-y-2 px-4">
+                    {getProtocolPairs(protocol.name)
+                      .filter(pair => pair.apy !== undefined && pair.apy !== null && pair.apy > 0)
+                      .sort((a, b) => {
+                        const isAUsdc = a.pair_or_vault_name.toLowerCase().includes('usdc');
+                        const isBUsdc = b.pair_or_vault_name.toLowerCase().includes('usdc');
+                        
+                        // Always put USDC pairs first
+                        if (isAUsdc && !isBUsdc) return -1;
+                        if (!isAUsdc && isBUsdc) return 1;
+                        
+                        // If both are USDC or both are not USDC, sort by APY
+                        return (a.apy || 0) - (b.apy || 0);
+                      })
+                      .map((pair) => {
+                        const isUsdcPair = pair.pair_or_vault_name.toLowerCase().includes('usdc');
+                        return (
+                      <div
+                        key={pair.id}
+                        className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
+                          theme === "dark"
+                            ? isUsdcPair ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-gray-800/50 shadow-sm"
+                            : isUsdcPair ? "bg-white hover:bg-gray-50 shadow-sm" : "bg-gray-200/70 shadow-sm"
+                        } p-5 rounded-xl transition-colors duration-200 relative`}
+                        onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
+                      >
+                        <div className="flex items-center mb-4">
+                          <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
+                            <Image
+                              src={protocol.logo_url || ""}
+                              alt={pair.name}
+                              width={56}
+                              height={56}
+                              onError={(e) => {
+                                console.log("Image failed to load:", pair.name);
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div
+                              className={`text-lg font-semibold flex justify-between ${
+                                theme === "dark" ? "text-white" : "text-black"
+                              }`}
+                            >
+                              <div className="pr-2">
+                                {pair.pair_or_vault_name}{" "}
+                                <span className="text-sm font-normal opacity-70">
+                                  ({pair.name})
+                                </span>
+                              </div>
+                              {!isUsdcPair && (
+                                <span className={`text-xs px-2 py-1 rounded-lg border-dashed border-2 border-purple-500 ${
+                                  theme === "dark" ? "bg-purple-700 text-gray-300" : "bg-purple-100 text-purple-600"
+                                }`}>
+                                  Coming soon
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className={`text-sm ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {pair.type.charAt(0).toUpperCase() +
+                                pair.type.slice(1)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-4">
+                          <div
+                            className={`text-xl font-bold flex flex-wrap ${
+                              theme === "dark" ? "text-white" : "text-black"
+                            }`}
+                          >
+                            {`${Number(pair.apy).toFixed(3)}%`}
+                            <div
+                              className={`text-sm items-center flex font-medium ml-2 ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              APY
+                            </div>
+                          </div>
+                          {isUsdcPair && (
+                            <div
+                              className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
+                                pair.type
+                              )}`}
+                            >
+                              Risk: {getRiskLabel(pair.type)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                        );
+                      })}
+                  </div>
+                )}
+                
+                  <div className="flex items-center justify-center">
+                    <div className="text-lg  text-black dark:text-white">
+                      <div className={`flex flex-col ${
+                        theme === "dark" 
+                          ? "bg-gray-800 border border-gray-700" 
+                          : "bg-white border border-gray-100"
+                      } shadow-lg p-6 rounded-lg mt-10 max-w-xl mx-auto`}>
+                        <h3 className="text-xl font-bold mb-4 text-center">
+                          🚨 We want to hear from you!
+                        </h3>
+                        <p className="mb-4 text-center text-md">
+                          We know there's 1 protocol live on our testnet.
+                        </p>
+                        <p className="mb-6 text-center text-md">
+                          Which protocols would you like to see next?
+                        </p>
+                      
+                        {renderFeedbackButton && (
+                          <div className="flex justify-center">
+                            {renderFeedbackButton()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                {/* Feedback Form Button below coming soon box */}
+                
               </div>
-              <div className="flex justify-between items-center mt-auto">
-                <div className={`text-xl font-bold flex ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                  {protocol.apy.toFixed(2)}%
-                  <div className={`text-sm items-center flex font-medium ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>APY</div>
-                </div>
-                <div className={`font-semibold text-md ${getRiskColor(protocol.riskScore)}`}>
-                  Risk: {getRiskLabel(protocol.riskScore)}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {filteredProtocols.length === 0 && (
-            <div className={`py-8 text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              No pools match your selected risk filters
-            </div>
+            ))
           )}
         </div>
       </div>
-
-      <DepositModal 
+      <DepositModal
         pool={selectedPool}
         onClose={() => setSelectedPool(null)}
+        balance={balance}
+        isLoadingBalance={isLoadingBalance}
+        address={address || ""}
+        refreshBalance={() => {
+          if (address) {
+            setIsLoadingBalance(true);
+            fetch(`/api/balance?address=${address}`)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Failed to fetch balance");
+                }
+                return response.json();
+              })
+              .then((data) => {
+                setBalance(data.usdBalance || "0");
+              })
+              .catch((error) => {
+                console.error("Error refreshing balance:", error);
+              })
+              .finally(() => {
+                setIsLoadingBalance(false);
+              });
+          }
+          if (refreshBalance) {
+            refreshBalance();
+          }
+        }}
       />
     </>
-  )
+  );
 }
