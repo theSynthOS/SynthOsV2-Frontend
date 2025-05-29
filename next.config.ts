@@ -5,30 +5,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  // This is required to support PostHog trailing slash API requests
-  skipTrailingSlashRedirect: true,
-
   async redirects() {
-    return [];
+    return []
   },
-
   async rewrites() {
-    return [
-      {
-        source: "/ingest/static/:path*",
-        destination: "https://us-assets.i.posthog.com/static/:path*",
-      },
-      {
-        source: "/ingest/:path*",
-        destination: "https://us.i.posthog.com/:path*",
-      },
-      {
-        source: "/ingest/decide",
-        destination: "https://us.i.posthog.com/decide",
-      },
-    ];
+    return []
   },
-
   async headers() {
     return [
       {
@@ -36,20 +18,20 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'DENY'
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            value: 'nosniff'
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-        ],
-      },
-    ];
-  },
+            value: '1; mode=block'
+          }
+        ]
+      }
+    ]
+  }
 };
 
 export default nextConfig;

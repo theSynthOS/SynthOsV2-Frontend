@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import DynamicProviders from "@/components/providers/dynamic-providers";
-import { PostHogProvider } from "@/components/providers/posthog-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
 
 // export const viewport = {
 //   themeColor: "#0f0b22",
-//};
+// };
 
 export default function RootLayout({
   children,
@@ -49,11 +48,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PostHogProvider>
-          <DynamicProviders>
+        <DynamicProviders>
             {children}
-          </DynamicProviders>
-        </PostHogProvider>
+        </DynamicProviders>
       </body>
     </html>
   );
