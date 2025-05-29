@@ -243,7 +243,7 @@ export default function Home() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
-        className={`text-xl font-bold mb-12 max-w-md text-center ${
+        className={`text-xl font-bold mb-8 max-w-md text-center ${
           theme === "dark" ? "text-white" : "text-black"
         }`}
       >
