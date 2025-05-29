@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useConnect, useActiveAccount } from "thirdweb/react";
-import { createWallet, inAppWallet, type Wallet } from "thirdweb/wallets";
+import { createWallet, inAppWallet, type Wallet, getUserEmail } from "thirdweb/wallets";
 import { client } from "@/client";
 import { scrollSepolia } from "@/client";
 import { ChevronRight, X } from "lucide-react";
@@ -48,7 +48,7 @@ export default function ConnectWalletButton({
   onConnected,
 }: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, address } = useAuth();
+  const { isAuthenticated, address, walletType } = useAuth();
 
   // Open the modal
   const openModal = () => setIsOpen(true);
@@ -159,7 +159,7 @@ function WalletConnectionUI({
   const [error, setError] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
 
-  const { login, isAuthenticated, address, logout, syncWallet } = useAuth();
+  const { login, isAuthenticated, address, logout, syncWallet, walletType } = useAuth();
   const { connect } = useConnect();
   const activeAccount = useActiveAccount();
 
@@ -322,10 +322,14 @@ function WalletConnectionUI({
 
           // If connection is successful, store in auth context
           if (account) {
+            // Get user's email
+            const email = await getUserEmail({ client });
+            console.log("User email:", email);
+
             // Set session in sessionStorage to ensure persistence across refreshes
             sessionStorage.setItem("session_active", "true");
             onClose();
-            login(account.address, undefined, provider, true);
+            login(account.address, undefined, provider, true, email);
 
             // Call onConnected callback if provided
             if (onConnected) {
@@ -429,6 +433,9 @@ function WalletConnectionUI({
         <div className="mb-6 p-4 bg-gray-100 border border-gray-200 rounded-lg">
           <p className="text-sm text-gray-500">Connected with:</p>
           <p className="font-mono text-sm truncate">{address}</p>
+          {walletType && (
+            <p className="text-sm text-gray-500">Wallet Type: <span className="font-semibold">{walletType}</span></p>
+          )}
           <div className="mt-2">
             <p className="text-sm text-gray-500">Balance:</p>
             <div className="flex items-center">
