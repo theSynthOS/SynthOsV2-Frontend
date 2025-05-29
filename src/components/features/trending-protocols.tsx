@@ -37,11 +37,15 @@ interface ProtocolPair {
   apy?: number;
 }
 
+interface TrendingProtocolsProps {
+  refreshBalance?: () => void;
+  renderFeedbackButton?: () => JSX.Element;
+}
+
 export default function TrendingProtocols({
   refreshBalance,
-}: {
-  refreshBalance?: () => void;
-}) {
+  renderFeedbackButton,
+}: TrendingProtocolsProps) {
   const { theme } = useTheme();
   const { isAuthenticated, address } = useAuth();
   const [selectedPool, setSelectedPool] = useState<any>(null);
@@ -682,6 +686,12 @@ export default function TrendingProtocols({
                     </div>
                   </div>
                 </div>
+                {/* Feedback Form Button below coming soon box */}
+                {renderFeedbackButton && (
+                  <div className="flex justify-center mt-4">
+                    {renderFeedbackButton()}
+                  </div>
+                )}
               </div>
             ))
           )}
