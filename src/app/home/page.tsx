@@ -388,7 +388,7 @@ export default function Home() {
                       className={`font-medium 
                       ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
                     >
-                      Please try again later or reconnect your wallet.
+                      <span className="font-bold">Failed to Claim Test Funds:</span> Please try again later or reconnect your wallet.
                     </h3>
                   </div>
                 </div>

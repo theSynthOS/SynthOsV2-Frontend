@@ -64,6 +64,8 @@ export default function DepositModal({
   const successModalRef = useRef<HTMLDivElement>(null);
   const wallet = useActiveWallet();
   const account = useActiveAccount();
+  const [depositError, setDepositError] = useState<string | null>(null);
+  const [txProgressPercent, setTxProgressPercent] = useState(0);
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
@@ -192,6 +194,9 @@ export default function DepositModal({
       lastCalculatedAmountRef.current = "0";
       setSliderValue(0);
       setPercentageButtonClicked(false);
+      // Clear any error messages
+      setDepositError(null);
+      setTxProgressPercent(0);
     }
     // Always call onClose to close the modal
     onClose();
@@ -408,7 +413,9 @@ export default function DepositModal({
     // Store the yearly yield calculation for success screen
     submittedYearlyYieldRef.current = (Number.parseFloat(depositAmount) * (currentApy || 0)) / 100;
 
-    
+    // Reset any previous errors
+    setDepositError(null);
+    setTxProgressPercent(0);
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
@@ -443,6 +450,9 @@ export default function DepositModal({
     });
 
     try {
+      // Update progress - start progress animation
+      setTxProgressPercent(10);
+      
       const response = await fetch("/api/deposit", {
         method: "POST",
         headers: {
@@ -456,8 +466,14 @@ export default function DepositModal({
         }),
       });
 
+      // Update progress
+      setTxProgressPercent(30);
+
       const responseData = await response.json();
       console.log("Deposit response:", responseData);
+
+      // Update progress
+      setTxProgressPercent(50);
 
       // Execute the deposit payload
       try {
@@ -466,6 +482,8 @@ export default function DepositModal({
         }
 
         // Prepare the transaction using the calldata from the API
+        // Update progress
+        setTxProgressPercent(60);
 
         const approvalTx = prepareTransaction({
           to: responseData[0].to,
@@ -484,11 +502,17 @@ export default function DepositModal({
           value: responseData[1].value ? BigInt(responseData[1].value) : BigInt(0)
         });
 
+        // Update progress
+        setTxProgressPercent(75);
+
         // Send the transaction and wait for confirmation
         const result = await sendBatchTransaction({
           transactions: [approvalTx, depositIntoVaultTx],
           account,
         });
+
+        // Update progress to complete
+        setTxProgressPercent(100);
 
         console.log("Transaction sent:", result);
 
@@ -536,6 +560,30 @@ export default function DepositModal({
       } catch (error) {
         console.error("Deposit execution error:", error);
         
+        // Show user-friendly error message
+        let errorMessage = "Transaction failed";
+        if (error instanceof Error) {
+          // Extract a readable message from the error
+          const errorString = error.message;
+          if (errorString.includes("user rejected transaction")) {
+            errorMessage = "You rejected the transaction";
+          } else if (errorString.includes("insufficient funds")) {
+            errorMessage = "Insufficient funds for transaction";
+          } else if (errorString.includes("network") || errorString.includes("connect")) {
+            errorMessage = "Network connection issue";
+          } else {
+            // Generic error with first part of message
+            errorMessage = errorString.split('.')[0];
+          }
+        }
+        
+        // Set the error message for the banner
+        setDepositError(errorMessage);
+        setTxProgressPercent(0);
+        // Reset submission state to allow retrying
+        setIsSubmitting(false);
+        isProcessingRef.current = false;
+        
         // Store the failed deposit in our state
         if (pool?.protocol_pair_id) {
           const poolId = pool.protocol_pair_id;
@@ -554,15 +602,19 @@ export default function DepositModal({
           toast({
             variant: "destructive",
             title: "Deposit Failed",
-            description:
-              error instanceof Error
-                ? error.message
-                : "Failed to execute deposit",
+            description: errorMessage
           });
         }
       }
     } catch (error) {
-      console.error("Deposit execution error:", error);
+      console.error("Deposit API error:", error);
+      
+      // Set the error message for the banner
+      setDepositError("Failed to prepare transaction");
+      setTxProgressPercent(0);
+      // Reset submission state to allow retrying
+      setIsSubmitting(false);
+      isProcessingRef.current = false;
       
       // Store the failed deposit in our state
       if (pool?.protocol_pair_id) {
@@ -578,12 +630,11 @@ export default function DepositModal({
       }
       
     } finally {
-      // Only reset submission state if this specific modal is still open
-      // and matches the processing pool ID
-      if (pool?.protocol_pair_id === processingPoolId) {
-        setIsSubmitting(false);
-        // Only reset processing flags if we're not showing success modal
+      // Only reset submission state if not already reset in the catch blocks
+      // and only if this specific modal is still open and matches the processing pool ID
+      if (isSubmitting && pool?.protocol_pair_id === processingPoolId) {
         if (!showSuccessModal) {
+          setIsSubmitting(false);
           isProcessingRef.current = false;
           setProcessingPoolId(null);
         }
@@ -700,7 +751,7 @@ export default function DepositModal({
                   {isLoadingApy ? (
                     <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                   ) : (
-                    <span className="text-green-400">{currentApy || 0}%</span>
+                    <span className="text-green-400">{currentApy?.toFixed(3) || 0}%</span>
                   )}
                 </div>
                 <div className="flex justify-between text-sm">
@@ -775,6 +826,49 @@ export default function DepositModal({
                 )}
               </button>
             </div>
+            
+            {/* Transaction Progress */}
+            {isSubmitting && (
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${txProgressPercent}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
+                  {txProgressPercent < 100 ? 'Processing transaction...' : 'Transaction complete!'}
+                </div>
+              </div>
+            )}
+            
+            {/* Error Banner */}
+            {depositError && (
+              <div className={`mt-4 p-4 rounded-lg ${theme === "dark" ? "bg-red-900/40" : "bg-red-100"}`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start">
+                    <div className={`rounded-full p-1 mr-3 ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}>
+                      <div className="w-4 h-4 text-red-500 flex items-center justify-center">
+                        !
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className={`font-medium text-sm ${theme === "dark" ? "text-red-100" : "text-red-800"}`}>
+                        <span className="font-bold">Deposit Failed:</span> {depositError}
+                      </h3>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setDepositError(null)}
+                    className={`rounded-full p-1 ${theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -818,7 +912,7 @@ export default function DepositModal({
                 <div className="flex justify-between mb-2">
                   <span className="opacity-70">Expected APY</span>
                   <span className="font-semibold text-green-500">
-                    {currentApy || 0}%
+                    {currentApy?.toFixed(3) || 0}%
                   </span>
                 </div>
                 <div className="flex justify-between">

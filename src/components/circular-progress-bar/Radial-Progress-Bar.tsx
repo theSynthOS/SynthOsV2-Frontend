@@ -138,7 +138,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
       <div
         className="rounded-full overflow-hidden relative h-48 w-48 mb-4 cursor-pointer"
         style={{
-          background: `conic-gradient(rgb(46, 240, 120) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`,
+          background: `conic-gradient(rgb(211, 134, 247) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`,
         }}
       >
         <div
@@ -149,7 +149,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 
         <div className="absolute inset-2 flex items-center justify-center">
           <div
-            className="bg-[rgb(0,105,32)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none z-10"
+            className="bg-[rgb(75,23,114)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none z-10"
             ref={draggbleRef}
             style={{
               transform: `translate(${dx}px, ${dy}px)`,
@@ -168,8 +168,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
           className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
             ${
               selectedPercentage === 25
-                ? "bg-green-500 text-white border-green-500"
-                : "bg-green-100 text-green-700 border-green-500 hover:bg-green-200"
+                ? "bg-purple-500 text-white border-purple-500"
+                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
             }
           `}
         >
@@ -180,8 +180,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
           className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
             ${
               selectedPercentage === 50
-                ? "bg-green-500 text-white border-green-500"
-                : "bg-green-100 text-green-700 border-green-500 hover:bg-green-200"
+                ? "bg-purple-500 text-white border-purple-500"
+                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
             }
           `}
         >
@@ -192,8 +192,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
           className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
             ${
               selectedPercentage === 75
-                ? "bg-green-500 text-white border-green-500"
-                : "bg-green-100 text-green-700 border-green-500 hover:bg-green-200"
+                ? "bg-purple-500 text-white border-purple-500"
+                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
             }
           `}
         >
@@ -204,8 +204,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
           className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
             ${
               selectedPercentage === 100
-                ? "bg-green-500 text-white border-green-500"
-                : "bg-green-100 text-green-700 border-green-500 hover:bg-green-200"
+                ? "bg-purple-500 text-white border-purple-500"
+                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
             }
           `}
         >
