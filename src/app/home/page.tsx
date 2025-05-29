@@ -112,7 +112,6 @@ export default function Home() {
         // Set up additional refresh attempts with increasing delays
         const refreshTimeouts = [
           setTimeout(() => fetchBalance(address), 3000),
-          setTimeout(() => fetchBalance(address), 6000),
         ];
 
         return () => {
