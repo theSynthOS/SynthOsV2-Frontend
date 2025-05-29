@@ -93,8 +93,6 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
       additionalFeedback: additionalFeedback.trim(),
     };
 
-   
-
     try {
       const response = await fetch("/api/feedbacks", {
         method: "POST",
@@ -173,7 +171,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
       {/* Bottom-Sheet Panel */}
       <div
-        className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-50"
+        className="fixed inset-x-0 bottom-0 h-[95vh] w-full max-w-2xl flex flex-col bg-white dark:bg-[#0f0b22] rounded-t-2xl shadow-2xl z-[100]"
         style={{
           animation: isExiting
             ? "slideOutDown 0.3s ease-out forwards"
@@ -397,7 +395,7 @@ export default function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
 
       {/* Social Modal */}
       {showSocialModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 px-2 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 px-2 z-[100]">
           <div
             className={`bg-white dark:bg-[#18103a] rounded-xl p-6 sm:p-8 shadow-xl flex flex-col items-center gap-6 w-full max-w-xs sm:max-w-md transition-all duration-300 ${
               isSocialExiting
