@@ -648,7 +648,10 @@ export default function DepositModal({
 
         console.log("Transaction sent:", result);
 
-        // Handle success with dedicated function
+        console.log("Transaction successful:", {
+          hash: result.transactionHash,
+          amount: depositAmount
+        });
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible

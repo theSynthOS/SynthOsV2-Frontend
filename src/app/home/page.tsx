@@ -18,7 +18,7 @@ const LAST_CLAIM_KEY = "last_claim_timestamp";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, address } = useAuth();
+  const { isAuthenticated, address, email } = useAuth();
   const { theme } = useTheme();
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
@@ -36,31 +36,20 @@ export default function Home() {
   const { toast } = useToast();
   const account = useActiveAccount();
 
-  // Check if claim is allowed based on last claim time
-  const isClaimAllowed = () => {
-    if (!lastClaimTime) return true;
-
-    const now = Date.now();
-    const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
-
-    // Allow claiming once every 24 hours
-    return hoursSinceLastClaim >= 24;
-  };
-
   // Load last claim time from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined" && address) {
-      try {
-        const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
-        if (storedData) {
-          const timestamp = parseInt(storedData, 10);
-          setLastClaimTime(timestamp);
-        }
-      } catch (error) {
-        console.error("Error loading last claim time:", error);
-      }
-    }
-  }, [address]);
+  // useEffect(() => {
+  //   if (typeof window !== "undefined" && address) {
+  //     try {
+  //       const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
+  //       if (storedData) {
+  //         const timestamp = parseInt(storedData, 10);
+  //         setLastClaimTime(timestamp);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error loading last claim time:", error);
+  //     }
+  //   }
+  // }, [address]);
 
   // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
@@ -179,12 +168,6 @@ export default function Home() {
       !hasAttemptedClaim &&
       !isTxProcessing
     ) {
-      // Check if claiming is allowed based on time
-      if (!isClaimAllowed()) {
-        console.log("Auto-claim skipped: Already claimed within 24 hours");
-        return;
-      }
-
       console.log("Balance is zero, auto-claiming test funds...");
       setHasAttemptedClaim(true);
       await handleClaimTestFunds();
@@ -195,13 +178,6 @@ export default function Home() {
   const handleClaimTestFunds = async () => {
     if (!account || !account.address) {
       console.log("No wallet connected");
-      return;
-    }
-
-    // Check if claiming is allowed based on time
-    if (!isClaimAllowed()) {
-      const errorMsg = `Please try again later or reconnect your wallet.`;
-      showError(errorMsg);
       return;
     }
 
@@ -239,6 +215,20 @@ export default function Home() {
       // Set success state and transaction hash
       setTxSuccess(true);
       setTxHash(result.transactionHash);
+
+      // Add 5 points for testnet claim
+      fetch("/api/points/testnet-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, address: account.address }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("/api/points/testnet-claim response:", data);
+        })
+        .catch(err => {
+          console.error("/api/points/testnet-claim error:", err);
+        });
     } catch (error) {
       console.error("Transaction error:", error);
       const cleanErrorMessage =

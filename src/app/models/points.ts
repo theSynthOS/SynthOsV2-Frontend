@@ -45,3 +45,23 @@ export async function upsertUserPoints(email: string, address: string) {
   }
   return user;
 }
+
+// Add 5 points to pointsTestnetClaim for a user found by email or address
+export async function addTestnetClaimPoints({ email, address }: { email?: string, address?: string }) {
+  await dbConnect();
+  if (!email && !address) throw new Error("Email or address required");
+  const user = await UserPoints.findOneAndUpdate(
+    { $or: [email ? { email } : {}, address ? { address } : {}] },
+    { $inc: { pointsTestnetClaim: 5 } },
+    { new: true }
+  );
+  if (!user) throw new Error("User not found");
+  return user;
+}
+
+// Get user points by email or address
+export async function getUserPoints({ email, address }: { email?: string, address?: string }) {
+  await dbConnect();
+  if (!email && !address) throw new Error("Email or address required");
+  return UserPoints.findOne({ $or: [email ? { email } : {}, address ? { address } : {}] });
+}
