@@ -9,6 +9,7 @@ import { ChevronRight, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
+
 // Utility function to format balance
 const formatBalance = (balance: string) => {
   return parseFloat(balance).toFixed(2);
@@ -78,64 +79,65 @@ export default function ConnectWalletButton({
   }, [isAuthenticated, address, onConnected]);
 
   return (
-    <div>
-      {/* Connect Wallet Button */}
-      <button
-        onClick={openModal}
-        className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
-      >
-        {isAuthenticated && address
-          ? `${address.slice(0, 6)}...${address.slice(-4)}`
-          : "Login"}
-      </button>
 
-      {/* Modal Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50">
-          {/* Backdrop - use opacity transition instead of animation */}
-          <div
-            className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
-            onClick={closeModal}
-          ></div>
+      <div>
+        {/* Connect Wallet Button */}
+        <button
+          onClick={openModal}
+          className="bg-purple-600 hover:bg-purple-400 text-white font-medium py-3 px-5 rounded-lg"
+        >
+          {isAuthenticated && address
+            ? `${address.slice(0, 6)}...${address.slice(-4)}`
+            : "Login"}
+        </button>
 
-          {/* Modal Content - Optimize animation */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
-            style={{ 
-              maxHeight: '90vh',
-              willChange: 'transform',
-              transform: 'translateZ(0)' // Force GPU acceleration 
-            }}
-          >
-            {/* Drag Handle */}
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
-
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            {/* Wallet Connection UI */}
+        {/* Modal Overlay */}
+        {isOpen && (
+          <div className="fixed inset-0 z-50">
+            {/* Backdrop - use opacity transition instead of animation */}
             <div
-              className="overflow-y-auto"
+              className="absolute inset-0 bg-black/50 transition-opacity duration-200 ease-in-out"
+              onClick={closeModal}
+            ></div>
+
+            {/* Modal Content - Optimize animation */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-xl overflow-hidden transition-transform duration-300 ease-out transform translate-y-0"
               style={{ 
-                maxHeight: "calc(90vh - 40px)",
-                transform: 'translateZ(0)', // Force GPU acceleration
-                backfaceVisibility: 'hidden' // Prevent flickering
+                maxHeight: '90vh',
+                willChange: 'transform',
+                transform: 'translateZ(0)' // Force GPU acceleration 
               }}
             >
-              <WalletConnectionUI
-                onClose={closeModal}
-                onConnected={onConnected}
-              />
+              {/* Drag Handle */}
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4"></div>
+
+              {/* Close Button */}
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-6 w-6" />
+              </button>
+
+              {/* Wallet Connection UI */}
+              <div
+                className="overflow-y-auto"
+                style={{ 
+                  maxHeight: "calc(90vh - 40px)",
+                  transform: 'translateZ(0)', // Force GPU acceleration
+                  backfaceVisibility: 'hidden' // Prevent flickering
+                }}
+              >
+                <WalletConnectionUI
+                  onClose={closeModal}
+                  onConnected={onConnected}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 }
 
@@ -381,8 +383,8 @@ function WalletConnectionUI({
       </div>
 
       {/* Tabs */}
-      <div className="flex mb-6">
-        <button
+      {/* <div className="flex mb-6"> */}
+        {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
             activeTab === "social"
               ? "text-purple-500 border-b-2 border-purple-500"
@@ -391,7 +393,7 @@ function WalletConnectionUI({
           onClick={() => setActiveTab("social")}
         >
           Social
-        </button>
+        </button> */}
 
         {/* <button
           className={`flex-1 py-3 px-4 text-lg font-medium ${
@@ -413,7 +415,7 @@ function WalletConnectionUI({
         >
           Passkey
         </button> */}
-      </div>
+      {/* </div> */}
 
       {/* Error Message */}
       {error && (
