@@ -6,14 +6,14 @@ SynthOS is a smart DeFi investment platform built for retail crypto users. It he
 
 ### 1. **Welcome Screen**
 
-<img src="/public/welcome-screen.png" alt="Welcome Screen" width="200"/>
+<img src="/public/welcome-screen.png" alt="Welcome Screen" width="100"/>
 You're greeted with a simple login screen. Click `Login` to begin.
 
 ---
 
 ### 2. **Social Login Options**
 
-<img src="/public/connect-wallet.png" alt="Connect Wallet" width="200"/>
+<img src="/public/connect-wallet.png" alt="Connect Wallet" width="100"/>
 Choose one of the available methods to connect:
 
 - Google
@@ -26,14 +26,14 @@ Choose one of the available methods to connect:
 
 ### 3. **Wallet Analysis in Progress**
 
-<img src="/public/wallet-analysis.png" alt="Wallet Analysis" width="200"/>
+<img src="/public/wallet-analysis.png" alt="Wallet Analysis" width="100"/>
 After logging in, SynthOS scans your wallet to understand your transaction history and investment habits.
 
 ---
 
 ### 4. **Personalized Investor Profile**
 
-<img src="/public/analysis-output.png" alt="Analysis Output" width="200"/>
+<img src="/public/analysis-output.png" alt="Analysis Output" width="100"/>
 Based on your wallet activity, SynthOS assigns you a profile.  
 Example: **Cautious Newbie** – Ideal for users just starting DeFi, with a focus on low-risk, steady-income strategies.
 
@@ -41,7 +41,7 @@ Example: **Cautious Newbie** – Ideal for users just starting DeFi, with a focu
 
 ### 5. **Dashboard Overview**
 
-<img src="/public/dashboard.png" alt="Dashboard" width="200"/>
+<img src="/public/dashboard.png" alt="Dashboard" width="100"/>
 Your dashboard shows:
 
 - Test balance
@@ -54,14 +54,14 @@ Your dashboard shows:
 
 ### 6. **Suggested Investments**
 
-<img src="/public/dashboard-2.png" alt="Dashboard with Investments" width="200"/>
+<img src="/public/dashboard-2.png" alt="Dashboard with Investments" width="100"/>
 You'll see real protocol suggestions (e.g., Aave) and available assets with APYs, risk levels, and investment options.
 
 ---
 
 ### 7. **Deposit Modal**
 
-<img src="/public/deposit.png" alt="Deposit" width="200"/>
+<img src="/public/deposit.png" alt="Deposit" width="100"/>
 Select how much of your balance you want to deposit (25%, 50%, etc.).  
 The modal displays:
 
@@ -74,7 +74,7 @@ Click `Confirm Deposit` to proceed.
 
 ### 8. **Deposit Confirmation**
 
-<img src="/public/deposit-success.png" alt="Deposit Success" width="200"/>
+<img src="/public/deposit-success.png" alt="Deposit Success" width="100"/>
 Success! Your deposit is complete. You'll see:
 
 - Amount deposited
@@ -86,7 +86,7 @@ Success! Your deposit is complete. You'll see:
 
 ### 9. **Feedback Submission**
 
-<img src="/public/feedback.png" alt="Feedback" width="200"/>
+<img src="/public/feedback.png" alt="Feedback" width="100"/>
 Give feedback on:
 
 - DeFi protocols you want to see (e.g., Curve, Uniswap)
