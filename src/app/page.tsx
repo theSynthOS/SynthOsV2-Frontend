@@ -77,8 +77,7 @@ export default function Home() {
   }, [isAuthenticated, router, address, onboardingStep]);
 
   // Log authentication state changes
-  useEffect(() => {
-  }, [isAuthenticated, address]);
+  useEffect(() => {}, [isAuthenticated, address]);
 
   // Fetch wallet analysis when needed
   useEffect(() => {
@@ -246,7 +245,7 @@ export default function Home() {
           theme === "dark" ? "text-white" : "text-black"
         }`}
       >
-        Invest with confidence using personalized yield plans.
+        Invest with confidence using personalized crypto yield plans.
       </motion.div>
 
       <motion.div
