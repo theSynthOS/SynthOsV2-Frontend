@@ -50,7 +50,21 @@ export default function ConnectWalletButton({
   onConnected,
 }: ConnectWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, address, walletType } = useAuth();
+  const { isAuthenticated, address, walletType, autoConnect } = useAuth();
+
+  // Attempt auto-connect on mount if enabled
+  useEffect(() => {
+    const attemptAutoConnect = async () => {
+      if (autoConnect && !isAuthenticated) {
+        const lastConnectedWallet = localStorage.getItem("lastConnectedWallet");
+        if (lastConnectedWallet) {
+          setIsOpen(true); // Open modal to show connecting state
+        }
+      }
+    };
+
+    attemptAutoConnect();
+  }, [autoConnect, isAuthenticated]);
 
   // Open the modal
   const openModal = () => setIsOpen(true);
@@ -170,6 +184,32 @@ function WalletConnectionUI({
   } = useAuth();
   const { connect } = useConnect();
   const activeAccount = useActiveAccount();
+
+  // Attempt auto-connect on mount
+  useEffect(() => {
+    const attemptReconnect = async () => {
+      if (autoConnect && !isAuthenticated) {
+        const lastConnectedWallet = localStorage.getItem("lastConnectedWallet");
+        if (
+          lastConnectedWallet &&
+          ["google", "apple", "x"].includes(lastConnectedWallet)
+        ) {
+          try {
+            setIsConnecting(true);
+            setCurrentAuth(lastConnectedWallet);
+            await handleConnectWithSocial(lastConnectedWallet as OAuthProvider);
+          } catch (error) {
+            console.error("Auto-reconnect failed:", error);
+            setError("Auto-connect failed. Please try connecting manually.");
+          } finally {
+            setIsConnecting(false);
+          }
+        }
+      }
+    };
+
+    attemptReconnect();
+  }, [autoConnect, isAuthenticated]);
 
   // Monitor active account changes and sync with auth context
   useEffect(() => {

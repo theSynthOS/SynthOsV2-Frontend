@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { createWallet } from "thirdweb/wallets";
-import { client } from "@/client";
+import { createWallet, inAppWallet, getUserEmail } from "thirdweb/wallets";
+import { client, scrollSepolia } from "@/client";
 import { useRouter } from "next/navigation";
 import { useActiveAccount } from "thirdweb/react";
 
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [autoConnect, setAutoConnect] = useState(() => {
     // Check if auto-connect was previously enabled
     const stored = localStorage.getItem("autoConnect");
-    return stored ? JSON.parse(stored) : false;
+    return stored ? JSON.parse(stored) : true; // Default to true for better UX
   });
   const router = useRouter();
   const activeAccount = useActiveAccount();
@@ -81,6 +81,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set session active flag
     sessionStorage.setItem(SESSION_KEY, "true");
 
+    // If autoConnect is enabled, store the wallet type for reconnection
+    if (autoConnect) {
+      localStorage.setItem("lastConnectedWallet", walletType || "");
+    }
+
     // Store passkey info if applicable
     if (walletType === "passkey") {
       localStorage.setItem(PASSKEY_STORAGE_KEY, "true");
@@ -103,7 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!preventRedirect && window.location.pathname !== "/home") {
       router.push("/home");
     } else {
-     
     }
   };
 
@@ -122,12 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Update localStorage
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedData));
-
   };
 
   // Function to clear auth data
   const logout = () => {
-
     // Clear session flag first
     sessionStorage.removeItem(SESSION_KEY);
 
@@ -156,7 +158,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Error clearing additional storage:", e);
     }
-
   };
 
   // Listen for wallet changes from ThirdWeb
@@ -164,7 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (activeAccount && isAuthenticated && authData) {
       // If ThirdWeb account changes and different from current stored address
       if (activeAccount.address !== authData.address) {
-  
         syncWallet(activeAccount.address);
       }
     }
@@ -176,73 +176,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("autoConnect", JSON.stringify(enabled));
   };
 
-  // Modify autoLogin to respect autoConnect setting
+  // Modify autoLogin to handle social auth reconnection
   useEffect(() => {
     const autoLogin = async () => {
       try {
         // Only proceed with auto-login if autoConnect is enabled
         if (!autoConnect) {
-    
+          console.log("Auto-connect is disabled");
           return;
         }
 
-        // Rest of your existing autoLogin logic
         const hasActiveSession = sessionStorage.getItem(SESSION_KEY) === "true";
-
-        // Get stored auth data
         const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
+        const lastConnectedWallet = localStorage.getItem("lastConnectedWallet");
+
         if (!storedAuth) return;
 
         const authData: AuthData = JSON.parse(storedAuth);
-
-        // Skip autoLogin redirect if we're already on the home page
-        // This prevents redirect loops
         const isOnHomePage = window.location.pathname === "/home";
         const shouldRedirect =
           window.location.pathname === "/" && hasActiveSession;
 
-        // Always restore auth state if we have stored data
+        // Handle social auth reconnection
+        if (
+          lastConnectedWallet &&
+          ["google", "apple", "x"].includes(lastConnectedWallet)
+        ) {
+          try {
+            const wallet = inAppWallet({
+              auth: {
+                options: [lastConnectedWallet as any],
+                mode: "popup",
+                redirectUrl: window.location.href,
+              },
+              smartAccount: {
+                chain: scrollSepolia,
+                sponsorGas: true,
+              },
+            });
+
+            const account = await wallet.connect({
+              client,
+              strategy: lastConnectedWallet as any,
+            });
+
+            if (account) {
+              const email = await getUserEmail({ client });
+              setAuthData({ ...authData, email });
+              setIsAuthenticated(true);
+              sessionStorage.setItem(SESSION_KEY, "true");
+
+              if (shouldRedirect && !isOnHomePage) {
+                router.push("/home");
+              }
+              return;
+            }
+          } catch (e) {
+            console.error("Social auth reconnection failed:", e);
+          }
+        }
+
+        // Fallback to regular wallet reconnection
         if (authData.walletId) {
           try {
-            // Try to reconnect with the wallet if we have a walletId
             const wallet = createWallet(authData.walletId as any);
             const account = await wallet.getAccount();
 
             if (account) {
-              // Update auth state
               setAuthData(authData);
               setIsAuthenticated(true);
-
-              // Restore session
               sessionStorage.setItem(SESSION_KEY, "true");
 
-              // Redirect if appropriate
               if (shouldRedirect && !isOnHomePage) {
                 router.push("/home");
               }
             }
           } catch (e) {
+            console.log("Regular wallet reconnection failed:", e);
             // Fall back to just using the stored address
             setAuthData(authData);
             setIsAuthenticated(true);
-
-            // Restore session
             sessionStorage.setItem(SESSION_KEY, "true");
 
-            // Redirect if appropriate
             if (shouldRedirect && !isOnHomePage) {
               router.push("/home");
             }
           }
         } else if (authData.address) {
-          // Just use the stored address
           setAuthData(authData);
           setIsAuthenticated(true);
-
-          // Restore session
           sessionStorage.setItem(SESSION_KEY, "true");
 
-          // Redirect if appropriate
           if (shouldRedirect && !isOnHomePage) {
             router.push("/home");
           }
@@ -253,8 +277,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Run autoLogin when component mounts and when autoConnect changes
     autoLogin();
-  }, [router, autoConnect]); // Add autoConnect to dependencies
+  }, [router, autoConnect]); // Dependencies remain the same
 
   return (
     <AuthContext.Provider

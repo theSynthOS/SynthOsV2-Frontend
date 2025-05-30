@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SynthOS
 
-## Getting Started
+SynthOS is a smart DeFi investment platform built for retail crypto users. It helps users invest confidently through personalized, AI-driven yield plans. Unlike centralized exchanges (CEXs) or complex DeFi interfaces, SynthOS is beginner-friendly and tailored to users' on-chain behavior.
 
-First, run the development server:
+## 🧭 User Flow
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. **Welcome Screen**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<img src="/public/welcome-screen.png" alt="Welcome Screen" width="400"/>
+You're greeted with a simple login screen. Click `Login` to begin.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. **Social Login Options**
 
-## Learn More
+<img src="/public/connect-wallet.png" alt="Connect Wallet" width="400"/>
+Choose one of the available methods to connect:
 
-To learn more about Next.js, take a look at the following resources:
+- Google
+- Apple
+- X (Twitter)
+- Telegram  
+  This makes onboarding quick and secure.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. **Wallet Analysis in Progress**
 
-## Deploy on Vercel
+<img src="/public/wallet-analysis.png" alt="Wallet Analysis" width="400"/>
+After logging in, SynthOS scans your wallet to understand your transaction history and investment habits.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. **Personalized Investor Profile**
+
+<img src="/public/analysis-output.png" alt="Analysis Output" width="400"/>
+Based on your wallet activity, SynthOS assigns you a profile.  
+Example: **Cautious Newbie** – Ideal for users just starting DeFi, with a focus on low-risk, steady-income strategies.
+
+---
+
+### 5. **Dashboard Overview**
+
+<img src="/public/dashboard.png" alt="Dashboard" width="400"/>
+Your dashboard shows:
+
+- Test balance
+- Role badge (e.g., Cautious Newbie)
+- `Claim Test USDC` button
+- Protocols active on testnet
+- Feedback prompt to vote for upcoming protocols
+
+---
+
+### 6. **Suggested Investments**
+
+<img src="/public/dashboard-2.png" alt="Dashboard with Investments" width="400"/>
+You'll see real protocol suggestions (e.g., Aave) and available assets with APYs, risk levels, and investment options.
+
+---
+
+### 7. **Deposit Modal**
+
+<img src="/public/deposit.png" alt="Deposit" width="400"/>
+Select how much of your balance you want to deposit (25%, 50%, etc.).  
+The modal displays:
+
+- Estimated APY (e.g., 71.960%)
+- Projected yearly yield in USDC
+
+Click `Confirm Deposit` to proceed.
+
+---
+
+### 8. **Deposit Confirmation**
+
+<img src="/public/deposit-success.png" alt="Deposit Success" width="400"/>
+Success! Your deposit is complete. You'll see:
+
+- Amount deposited
+- Expected APY
+- Estimated yearly return
+- Option to view transaction
+
+---
+
+### 9. **Feedback Submission**
+
+<img src="/public/feedback.png" alt="Feedback" width="400"/>
+Give feedback on:
+
+- DeFi protocols you want to see (e.g., Curve, Uniswap)
+- Strategies you're interested in (e.g., Yield Farming, Staking)
+
+This helps the SynthOS team prioritize future integrations.
