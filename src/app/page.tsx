@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import CustomConnectWallet from "@/components/CustomConnectWallet";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { MoveRight } from "lucide-react";
+import { useActiveAccount, ConnectButton } from "thirdweb/react";
+import { client } from "@/client";
 
 // Define onboarding steps
 type OnboardingStep = "welcome" | "wallet-analysis" | "preferences";
@@ -38,9 +38,9 @@ interface WalletAnalysis {
 }
 
 export default function Home() {
-  const router = useRouter();
-  const { isAuthenticated, address } = useAuth();
   const { theme } = useTheme();
+  const router = useRouter();
+  const account = useActiveAccount();
   const [onboardingStep, setOnboardingStep] =
     useState<OnboardingStep>("welcome");
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
@@ -57,7 +57,7 @@ export default function Home() {
 
   // Check authentication state and onboarding status on initial load
   useEffect(() => {
-    if (isAuthenticated) {
+    if (account?.address) {
       // Check if this user has completed onboarding before
       const completedAddresses = JSON.parse(
         localStorage.getItem("completed_onboarding_addresses") || "[]"
@@ -65,26 +65,24 @@ export default function Home() {
 
       // Only redirect to home if they've completed onboarding before AND they're on the initial welcome step
       if (
-        address &&
-        completedAddresses.includes(address) &&
+        account.address &&
+        completedAddresses.includes(account.address) &&
         onboardingStep === "welcome"
       ) {
         // If this wallet address has completed onboarding, redirect to home
         router.replace("/home");
       }
-    }
+    } console.log(account);
     setInitialAuthChecked(true);
-  }, [isAuthenticated, router, address, onboardingStep]);
-
-  // Log authentication state changes
-  useEffect(() => {}, [isAuthenticated, address]);
+  }, [account, router, onboardingStep]);
 
   // Fetch wallet analysis when needed
   useEffect(() => {
-    if (onboardingStep === "wallet-analysis" && address) {
-      fetchWalletAnalysis(address);
+    if (onboardingStep === "wallet-analysis" && account?.address) {
+      fetchWalletAnalysis(account.address);
     }
-  }, [onboardingStep, address]);
+  }, [onboardingStep, account]);
+  
 
   // Update profile when wallet analysis is received
   useEffect(() => {
@@ -186,7 +184,7 @@ export default function Home() {
     if (
       (onboardingStep === "wallet-analysis" ||
         onboardingStep === "preferences") &&
-      !isAuthenticated
+      !account?.address
     ) {
       // Force wallet connection if not authenticated
       return renderWelcome();
@@ -254,7 +252,7 @@ export default function Home() {
         transition={{ delay: 0.8, duration: 0.6 }}
         className="mt-2"
       >
-        <CustomConnectWallet onConnected={handleWalletConnected} />
+        <ConnectButton client={client} onConnect={handleWalletConnected} />
       </motion.div>
     </motion.div>
   );
@@ -346,15 +344,15 @@ export default function Home() {
     };
 
     const handleContinueToDashboard = () => {
-      if (address) {
+      if (account?.address) {
         // Get existing completed addresses
         const completedAddresses = JSON.parse(
           localStorage.getItem("completed_onboarding_addresses") || "[]"
         );
 
         // Add current address if not already included
-        if (!completedAddresses.includes(address)) {
-          completedAddresses.push(address);
+        if (!completedAddresses.includes(account.address)) {
+          completedAddresses.push(account.address);
           localStorage.setItem(
             "completed_onboarding_addresses",
             JSON.stringify(completedAddresses)

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/contexts/AuthContext";
+import { useActiveAccount } from "thirdweb/react";
 import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,7 +13,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = useTheme();
-  const { email, address } = useAuth();
+  const account = useActiveAccount();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { lastRefresh } = usePoints();
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
@@ -30,12 +30,11 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchPoints = async () => {
-      if (!email && !address) return;
+      if (!account?.address) return;
       try {
         setIsLoadingPoints(true);
         const params = new URLSearchParams();
-        if (email) params.append("email", email);
-        if (address) params.append("address", address);
+        if (account.address) params.append("address", account.address);
         const res = await fetch(`/api/points?${params.toString()}`);
         const data = await res.json();
         if (data.user) {
@@ -57,7 +56,7 @@ export default function Navbar() {
       }
     };
     fetchPoints();
-  }, [email, address, lastRefresh]);
+  }, [account, lastRefresh]);
 
   const isActive = (path: string) => {
     return pathname === path;

@@ -24,7 +24,6 @@ import {
   useDisconnect,
   useConnect,
 } from "thirdweb/react";
-import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +39,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { disconnect } = useDisconnect();
   const { connect } = useConnect();
   const router = useRouter();
-  const { isAuthenticated, address, logout, login } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -60,42 +58,21 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     )}`;
   };
 
-  // Sync ThirdWeb account with Auth Context
+  // Update display address whenever account changes
   useEffect(() => {
-    // If ThirdWeb has an account but Auth Context doesn't, update Auth Context
-    if (account?.address && !isAuthenticated) {
-      login(account.address, wallet?.id);
-    }
-    // If Auth Context is authenticated but ThirdWeb has no account, update display from Auth Context
-    else if (!account?.address && isAuthenticated && address) {
-      setDisplayAddress(address);
-    }
-  }, [account, wallet, isAuthenticated, address, login]);
-
-  // Update display address whenever account or auth address changes
-  useEffect(() => {
-    // Clear display address if not authenticated regardless of account
-    if (!isAuthenticated) {
-      setDisplayAddress(null);
-      return;
-    }
-
-    if (account && account.address) {
+    if (account?.address) {
       setDisplayAddress(account.address);
-    } else if (address) {
-      setDisplayAddress(address);
     } else {
       setDisplayAddress(null);
     }
-  }, [account, address, isAuthenticated]);
+  }, [account]);
 
   const handleAuth = () => {
-    if (isAuthenticated) {
+    if (account && wallet) {
       setDisplayAddress(null);
-      sessionStorage.removeItem("session_active");
+      disconnect(wallet);
       onClose();
       window.location.href = "/";
-      logout();
     } else {
       handleGoBack();
     }
@@ -293,7 +270,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
               } rounded-lg text-red-400`}
             >
-              {isAuthenticated ? (
+              {account ? (
                 <>
                   <LogOut className="h-5 w-5 mr-3" />
                   <span>Log Out</span>

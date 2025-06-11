@@ -1,19 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Copy, Check } from 'lucide-react';
-import ConnectWalletButton from '../CustomConnectWallet';
+import { ConnectButton, useActiveAccount } from 'thirdweb/react';
+import { client } from '@/client';
 import QRCode from 'react-qr-code';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import { useActiveAccount } from 'thirdweb/react';
 
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isAuthenticated: boolean;
-  address?: string | null;
 }
 
-export default function DepositModal({ isOpen, onClose, isAuthenticated, address }: DepositModalProps) {
+export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [copied, setCopied] = useState(false);
   const { theme } = useTheme();
@@ -22,7 +20,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
   const [windowHeight, setWindowHeight] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const activeAccount = useActiveAccount();
+  const account = useActiveAccount();
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
 
   // Set mounted state once hydration is complete and detect mobile
@@ -43,17 +41,15 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
     };
   }, []);
   
-  // Determine which address to display - prioritize ThirdWeb account if available
+  // Determine which address to display - use ThirdWeb account
   useEffect(() => {
-    if (activeAccount?.address) {
-      setDisplayAddress(activeAccount.address);
-    } else if (address) {
-      setDisplayAddress(address);
+    if (account?.address) {
+      setDisplayAddress(account.address);
     } else {
       setDisplayAddress(null);
     }
-  }, [activeAccount, address]);
-  
+  }, [account]);
+
   // Control body scrolling based on modal open state - improved for mobile Safari
   useEffect(() => {
     if (isOpen) {
@@ -102,7 +98,7 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
         }
       }, 100);
     }
-  }, [isOpen, displayAddress, isAuthenticated]);
+  }, [isOpen, displayAddress]);
 
   // Prevent touchmove events from propagating to body
   useEffect(() => {
@@ -229,12 +225,11 @@ export default function DepositModal({ isOpen, onClose, isAuthenticated, address
             minHeight: '100px', // Ensure there's enough height to trigger scrolling
           }}
         >
-          {!isAuthenticated ? (
+          {!displayAddress ? (
             <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg ${contentPadding} text-center`}>
               <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-sm mb-3' : 'mb-4'}`}>
                 Connect your wallet to get your deposit address
               </p>
-              <ConnectWalletButton />
             </div>
           ) : (
             <div className={`space-y-${isSmallHeight ? '3' : '4'}`}>

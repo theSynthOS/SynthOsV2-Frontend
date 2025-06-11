@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/contexts/AuthContext";
+import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -52,7 +52,7 @@ export default function HistoryPanel({
   chain = "scrollSepolia",
 }: HistoryPanelProps) {
   const { theme } = useTheme();
-  const { address } = useAuth();
+  const account = useActiveAccount();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -62,12 +62,11 @@ export default function HistoryPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-
-
   useEffect(() => {
-    if (!address) {
+    if (!account?.address) {
       setTransactions([]);
       setMetadata(null);
+      setIsLoading(false);
       return;
     }
 
@@ -75,22 +74,20 @@ export default function HistoryPanel({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/transactions?address=${address}`);
+        const response = await fetch(`/api/transactions?address=${account.address}`);
         const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch transactions");
+        if (data.success) {
+          setTransactions(data.transactions || []);
+          setMetadata(data.metadata || null);
+        } else {
+          setError(data.message || "Failed to fetch transactions");
+          setTransactions([]);
         }
-
-     
-
-        setTransactions(data.transactions);
-        setMetadata(data.metadata);
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch transactions"
-        );
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        setError("Failed to fetch transactions. Please try again.");
+        setTransactions([]);
       } finally {
         setIsLoading(false);
       }
@@ -99,7 +96,7 @@ export default function HistoryPanel({
     if (isOpen) {
       fetchTransactions();
     }
-  }, [address, isOpen]);
+  }, [account, isOpen]);
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -171,7 +168,7 @@ export default function HistoryPanel({
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            {!address ? (
+            {!account ? (
               <div className="h-full flex items-center justify-center px-4">
                 <p
                   className={`text-center ${

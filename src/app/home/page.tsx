@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import DynamicFeatures from "@/components/home/dynamic-features";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
@@ -12,7 +11,6 @@ import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
 import { client, scrollSepolia } from "@/client";
 import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import FeedbackPanel from "@/components/feedback/feedback-panel";
 import { usePoints } from "@/contexts/PointsContext";
 
 // Storage key for last claim timestamp
@@ -20,7 +18,6 @@ const LAST_CLAIM_KEY = "last_claim_timestamp";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, address, email } = useAuth();
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
   const [balance, setBalance] = useState<string>("0.00");
@@ -38,7 +35,6 @@ export default function Home() {
   const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Load last claim time from localStorage
   // useEffect(() => {
@@ -97,12 +93,12 @@ export default function Home() {
       }, 100); // Update every 100ms for smooth animation
 
       // Refresh balance after transaction success
-      if (address) {
+      if (account?.address) {
         // Initial refresh
-        fetchBalance(address);
+        fetchBalance(account.address);
 
         // Set up additional refresh attempts with increasing delays
-        const refreshTimeouts = [setTimeout(() => fetchBalance(address), 3000)];
+        const refreshTimeouts = [setTimeout(() => fetchBalance(account.address), 3000)];
 
         return () => {
           if (progressTimerRef.current) {
@@ -119,7 +115,7 @@ export default function Home() {
         }
       };
     }
-  }, [txSuccess, txHash, address]);
+  }, [txSuccess, txHash, account]);
 
   // Effect to handle error banner
   useEffect(() => {
@@ -139,18 +135,16 @@ export default function Home() {
 
   // Redirect to root if not authenticated and check balance for auto-claiming
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!account?.address) {
       router.replace("/");
     } else {
-      if (address) {
-        const getBalanceAndAutoCheck = async () => {
-          const currentBalance = await fetchBalance(address);
-          checkAndClaimFunds(currentBalance);
-        };
-        getBalanceAndAutoCheck();
-      }
+      const getBalanceAndAutoCheck = async () => {
+        const currentBalance = await fetchBalance(account.address);
+        checkAndClaimFunds(currentBalance);
+      };
+      getBalanceAndAutoCheck();
     }
-  }, [isAuthenticated, router, address]);
+  }, [account, router]);
 
   // Show error message
   const showError = (message: string) => {
@@ -214,7 +208,7 @@ export default function Home() {
       fetch("/api/points/testnet-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, address: account.address }),
+        body: JSON.stringify({ address: account.address }),
       })
         .then((res) => res.json())
         .then((data) => {
@@ -239,7 +233,7 @@ export default function Home() {
   };
 
   // Show loading state while checking authentication
-  if (!isAuthenticated) {
+  if (!account?.address) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -274,129 +268,6 @@ export default function Home() {
       }`}
     >
       <div className="flex flex-col min-h-screen">
-        {/* Transaction Success Banner */}
-        {bannerVisible && (
-          <div
-            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-            ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
-            rounded-lg shadow-lg overflow-hidden`}
-          >
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  <div
-                    className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
-                  >
-                    <Check
-                      className={`h-5 w-5 
-                      ${
-                        theme === "dark" ? "text-green-300" : "text-green-600"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-medium 
-                      ${
-                        theme === "dark" ? "text-green-100" : "text-green-800"
-                      }`}
-                    >
-                      Funds Claimed Successfully
-                    </h3>
-                    <div className="mt-1 flex items-center">
-                      <a
-                        href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`text-xs flex items-center
-                          ${
-                            theme === "dark"
-                              ? "text-green-300 hover:text-green-200"
-                              : "text-green-700 hover:text-green-800"
-                          }`}
-                      >
-                        View Transaction
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setBannerVisible(false)}
-                  className={`rounded-full p-1 
-                    ${
-                      theme === "dark"
-                        ? "hover:bg-green-800"
-                        : "hover:bg-green-200"
-                    }`}
-                >
-                  <X
-                    className={`h-4 w-4 
-                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
-                  />
-                </button>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="h-full bg-green-500 transition-all duration-100 ease-linear"
-                  style={{ width: `${progressValue}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Banner */}
-        {errorBannerVisible && (
-          <div
-            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-            ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
-            rounded-lg shadow-lg overflow-hidden`}
-          >
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  <div
-                    className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
-                  >
-                    <AlertCircle
-                      className={`h-5 w-5 
-                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
-                    />
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-medium 
-                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
-                    >
-                      <span className="font-bold">
-                        Failed to Claim Test Funds:
-                      </span>{" "}
-                      Please try again later or reconnect your wallet.
-                    </h3>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setErrorBannerVisible(false)}
-                  className={`rounded-full p-1 
-                    ${
-                      theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
-                    }`}
-                >
-                  <X
-                    className={`h-4 w-4 
-                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Balance */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -415,20 +286,7 @@ export default function Home() {
             } flex justify-between items-center`}
           >
             <span>Total balance</span>
-            <button
-              onClick={handleClaimTestFunds}
-              disabled={isTxProcessing}
-              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
-                ${
-                  theme === "dark"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : "bg-white hover:bg-gray-400 text-black border border-gray-200"
-                } transition-colors
-                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
-              `}
-            >
-              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
-            </button>
+            
           </motion.div>
           <div className="flex items-center">
             <motion.div
@@ -454,50 +312,15 @@ export default function Home() {
         >
           <DynamicFeatures
             refreshBalance={() => {
-              if (address) {
-                fetchBalance(address);
+              if (account?.address) {
+                fetchBalance(account.address);
               }
             }}
-            renderFeedbackButton={() => (
-              <button
-                onClick={() => setIsFeedbackOpen(true)}
-                className={`flex items-center gap-2 px-5 py-4 rounded-lg border-2 transition-colors shadow-md font-semibold text-base focus:outline-none
-                  ${
-                    theme === "dark"
-                      ? "border-purple-500 text-purple-200 bg-[#18103a] hover:bg-purple-900 hover:text-white"
-                      : "border-purple-600 text-purple-700 bg-white hover:bg-purple-50 hover:text-purple-900"
-                  }
-                `}
-              >
-                <span className="inline-flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-                    />
-                  </svg>
-                   Here
-                </span>
-              </button>
-            )}
           />
           <div className="flex justify-center mt-6">
             {/* This space is intentionally left for spacing below the investments section */}
           </div>
         </motion.div>
-        {/* FeedbackPanel rendered here */}
-        <FeedbackPanel
-          isOpen={isFeedbackOpen}
-          onClose={() => setIsFeedbackOpen(false)}
-        />
       </div>
     </motion.div>
   );

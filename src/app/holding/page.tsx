@@ -1,20 +1,18 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Upload } from "lucide-react";
-import ConnectWalletButton from "@/components/CustomConnectWallet";
 import { MoveUp, MoveDown, Send } from "lucide-react";
 import DepositModal from "@/components/features/wallet-deposit";
 import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
-import { useActiveAccount } from "thirdweb/react";
+import { useActiveAccount, ConnectButton } from "thirdweb/react";
+import { client } from "@/client";
 import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 export default function HoldingPage() {
-  const { address, isAuthenticated, login } = useAuth();
   const account = useActiveAccount();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -34,32 +32,14 @@ export default function HoldingPage() {
     setMounted(true);
   }, []);
 
-
-  // Update display address whenever account or auth address changes
+  // Update display address whenever account changes
   useEffect(() => {
-    // Clear display address if not authenticated regardless of account
-    if (!isAuthenticated) {
-      setDisplayAddress(null);
-      return;
-    }
-
-    if (account && account.address) {
+    if (account?.address) {
       setDisplayAddress(account.address);
-    } else if (address) {
-      setDisplayAddress(address);
     } else {
       setDisplayAddress(null);
     }
-  }, [account, address, isAuthenticated]);
-
-  // If ThirdWeb has an account but Auth Context doesn't, update Auth Context
-  useEffect(() => {
-    // This will keep the auth context in sync with the ThirdWeb account
-    if (account?.address && !isAuthenticated) {
-      // You would need the login function from your auth context
-      login(account.address);
-    }
-  }, [account, isAuthenticated]);
+  }, [account]);
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -171,9 +151,9 @@ export default function HoldingPage() {
             </div>
 
             {/* Connect Wallet Button (if not connected) */}
-            {!isAuthenticated && (
+            {!account && (
               <div className="mb-6">
-                <ConnectWalletButton />
+                <ConnectButton client={client} />
               </div>
             )}
 
@@ -324,8 +304,6 @@ export default function HoldingPage() {
         <DepositModal
           isOpen={showModal === "deposit"}
           onClose={closeModal}
-          isAuthenticated={isAuthenticated}
-          address={address}
         />
       )}
 
@@ -333,8 +311,6 @@ export default function HoldingPage() {
         <WithdrawModal
           isOpen={showModal === "withdraw"}
           onClose={closeModal}
-          isAuthenticated={isAuthenticated}
-          address={address}
         />
       )}
 
@@ -342,8 +318,6 @@ export default function HoldingPage() {
         <SendModal
           isOpen={showModal === "send"}
           onClose={closeModal}
-          isAuthenticated={isAuthenticated}
-          address={address}
         />
       )}
     </motion.div>

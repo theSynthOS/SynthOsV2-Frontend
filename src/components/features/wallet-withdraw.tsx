@@ -2,25 +2,23 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
-import ConnectWalletButton from "../CustomConnectWallet";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { client } from "@/client";
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isAuthenticated: boolean;
-  address?: string | null;
 }
 
 export default function WithdrawModal({
   isOpen,
   onClose,
-  isAuthenticated,
-  address,
 }: WithdrawModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
   const { theme } = useTheme();
+  const account = useActiveAccount();
   const [mounted, setMounted] = useState(false);
 
   // Set mounted state once hydration is complete
@@ -111,7 +109,7 @@ export default function WithdrawModal({
           style={{ maxHeight: "calc(90% - 40px)" }}
         >
           <h2 className="text-2xl font-bold mb-6">Withdraw Funds</h2>
-          {!isAuthenticated ? (
+          {!account ? (
             <div
               className={`${
                 theme === "dark" ? "bg-gray-800" : "bg-gray-50"
@@ -124,7 +122,6 @@ export default function WithdrawModal({
               >
                 Connect your wallet to withdraw funds.
               </p>
-              <ConnectWalletButton />
             </div>
           ) : (
             <div className="relative">

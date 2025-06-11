@@ -15,7 +15,7 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
 import DepositModal from "./deposit-modal";
-import { useAuth } from "@/contexts/AuthContext";
+import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,7 +48,7 @@ export default function TrendingProtocols({
   renderFeedbackButton,
 }: TrendingProtocolsProps) {
   const { theme } = useTheme();
-  const { isAuthenticated, address } = useAuth();
+  const account = useActiveAccount();
   const [selectedPool, setSelectedPool] = useState<any>(null);
   // const [riskFilters, setRiskFilters] = useState({
   //   all: true,
@@ -137,14 +137,14 @@ export default function TrendingProtocols({
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) {
+      if (!account?.address) {
         setBalance("0");
         return;
       }
 
       setIsLoadingBalance(true);
       try {
-        const response = await fetch(`/api/balance?address=${address}`);
+        const response = await fetch(`/api/balance?address=${account.address}`);
         if (!response.ok) {
           throw new Error("Failed to fetch balance");
         }
@@ -159,7 +159,7 @@ export default function TrendingProtocols({
     };
 
     fetchBalance();
-  }, [address]);
+  }, [account?.address]);
 
   useEffect(() => {
     try {
@@ -717,11 +717,11 @@ export default function TrendingProtocols({
         onClose={() => setSelectedPool(null)}
         balance={balance}
         isLoadingBalance={isLoadingBalance}
-        address={address || ""}
+        address={account?.address || ""}
         refreshBalance={() => {
-          if (address) {
+          if (account?.address) {
             setIsLoadingBalance(true);
-            fetch(`/api/balance?address=${address}`)
+            fetch(`/api/balance?address=${account?.address}`)
               .then((response) => {
                 if (!response.ok) {
                   throw new Error("Failed to fetch balance");

@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { X, Scan, ArrowRight, ChevronRight, ArrowLeft, Delete } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { ConnectButton, useActiveAccount } from 'thirdweb/react';
+import { client } from '@/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
-import ConnectWalletButton from '../CustomConnectWallet';
 
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isAuthenticated: boolean;
-  address?: string | null;
 }
 
-export default function SendModal({ isOpen, onClose, isAuthenticated, address }: SendModalProps) {
+export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [isClosing, setIsClosing] = useState(false);
-  const [step, setStep] = useState(1); 
-  const [amount, setAmount] = useState('0');
-  const [recipientAddress, setRecipientAddress] = useState('');
   const [showScanner, setShowScanner] = useState(false);
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [recentAddresses, setRecentAddresses] = useState<string[]>([]);
+  const [amount, setAmount] = useState('');
+  const [step, setStep] = useState<'address' | 'amount' | 'confirm'>('address');
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme();
+  const { toast } = useToast();
+  const account = useActiveAccount();
   const [balance, setBalance] = useState('0.00');
   const [isSending, setIsSending] = useState(false);
-  const { toast } = useToast();
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [windowHeight, setWindowHeight] = useState(0);
 
   // Set mounted state once hydration is complete
@@ -61,7 +61,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
     // In a real app, this would fetch the actual balance from the blockchain
     // For now, we'll just use a mock value
     setBalance('100.00');
-  }, [address]);
+  }, [account]);
   
   const handleClose = () => {
     setIsClosing(true);
@@ -69,7 +69,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
       onClose();
       setIsClosing(false);
       // Reset state when closing
-      setStep(1);
+      setStep('address');
       setAmount('0');
       setRecipientAddress('');
     }, 200); // Match animation duration
@@ -110,12 +110,12 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
   
   const handleNextStep = () => {
     if (parseFloat(amount) > 0) {
-      setStep(2);
+      setStep('confirm');
     }
   };
   
   const handlePreviousStep = () => {
-    setStep(1);
+    setStep('address');
   };
 
   const handleSend = () => {
@@ -150,7 +150,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
       setIsSending(false);
       setAmount('0');
       setRecipientAddress('');
-      setStep(1);
+      setStep('address');
       handleClose();
     }, 2000);
   };
@@ -199,12 +199,11 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
           className={`px-4 pb-safe overflow-y-auto overscroll-contain flex-1`}
           style={{ paddingBottom: isMobile ? '6rem' : '8rem' }}
         >
-          {!isAuthenticated ? (
+          {!account ? (
             <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
               <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
                 Connect your wallet to send funds.
               </p>
-              <ConnectWalletButton />
             </div>
           ) : showScanner ? (
             <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
@@ -223,7 +222,7 @@ export default function SendModal({ isOpen, onClose, isAuthenticated, address }:
                 Cancel
               </button>
             </div>
-          ) : step === 1 ? (
+          ) : step === 'address' ? (
             <div className="relative">
               {/* Blurred Content */}
               <div className="filter blur-sm">
