@@ -21,9 +21,8 @@ export const metadata: Metadata = {
   title: "SynthOS",
   metadataBase: new URL("https://app.synthos.fun/"),
   description: "Invest with confidence using personalized crypto yield plans.",
-  // add image
   icons: {
-    icon: "https://app.synthos.fun/icons/SynthOS-transparent.png",
+    icon: "/favicon.ico",
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -73,6 +72,7 @@ export default function RootLayout({
           content="SynthOS - Invest with confidence using personalized crypto yield plans."
         />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"

@@ -679,34 +679,6 @@ export default function TrendingProtocols({
                       })}
                   </div>
                 )}
-                
-                  <div className="flex items-center justify-center">
-                    <div className="text-lg  text-black dark:text-white">
-                      <div className={`flex flex-col ${
-                        theme === "dark" 
-                          ? "bg-gray-800 border border-gray-700" 
-                          : "bg-white border border-gray-100"
-                      } shadow-lg p-6 rounded-lg mt-10 max-w-xl mx-auto`}>
-                        <h3 className="text-xl font-bold mb-4 text-center">
-                          🚨 We want to hear from you!
-                        </h3>
-                        <p className="mb-4 text-center text-md">
-                          We know there's 1 protocol live on our testnet.
-                        </p>
-                        <p className="mb-6 text-center text-md">
-                          Which protocols would you like to see next?
-                        </p>
-                      
-                        {renderFeedbackButton && (
-                          <div className="flex justify-center">
-                            {renderFeedbackButton()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                {/* Feedback Form Button below coming soon box */}
-                
               </div>
             ))
           )}
