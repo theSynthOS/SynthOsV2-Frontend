@@ -198,12 +198,9 @@ export default function Home() {
         transaction: tx,
         account: account,
       });
-
-
       // Set success state and transaction hash
       setTxSuccess(true);
       setTxHash(result.transactionHash);
-
       // Add 5 points for testnet claim
       fetch("/api/points/testnet-claim", {
         method: "POST",
@@ -216,7 +213,6 @@ export default function Home() {
         .catch((err) => {
           console.error("/api/points/testnet-claim error:", err);
         });
-
       // After successful claim, refresh points
       refreshPoints();
     } catch (error) {
@@ -225,7 +221,6 @@ export default function Home() {
         error instanceof Error
           ? error.message.split("contract:")[0].trim()
           : "Unknown error";
-
       showError(cleanErrorMessage);
     } finally {
       setIsTxProcessing(false);

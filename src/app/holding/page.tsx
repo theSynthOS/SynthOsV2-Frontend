@@ -157,8 +157,8 @@ export default function HoldingPage() {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex justify-between w-full max-w-xs">
+            {/* Action Buttons-- originally justify-between */}
+            <div className="flex justify-center w-full max-w-xs">
               <button
                 onClick={() => setShowModal("deposit")}
                 className="flex flex-col items-center"
@@ -169,7 +169,7 @@ export default function HoldingPage() {
                 <span className="text-sm font-medium">Deposit</span>
               </button>
 
-              <button
+              {/* <button
                 onClick={() => setShowModal("withdraw")}
                 className="flex flex-col items-center"
               >
@@ -187,7 +187,7 @@ export default function HoldingPage() {
                   <Send size={24} className="text-white" />
                 </div>
                 <span className="text-sm font-medium">Send</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -201,15 +201,15 @@ export default function HoldingPage() {
       >
         <div className="relative">
           {/* Blur overlay with "Coming Soon" */}
-          <div className="absolute inset-0 backdrop-blur-sm bg-black/30 rounded-2xl z-10 flex items-center justify-center">
+          {/* <div className="absolute inset-0 backdrop-blur-sm bg-black/30 rounded-2xl z-10 flex items-center justify-center">
             <div className="text-center">
               <h3 className="text-2xl font-bold text-white mb-2">Coming Soon</h3>
               <p className="text-gray-200">This feature will be available on mainnet launch.</p>
             </div>
-          </div>
+          </div> */}
 
           {/* Original content (blurred) */}
-          <div
+          {/* <div
             className={`${
               theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
             } rounded-2xl p-6`}
@@ -218,7 +218,6 @@ export default function HoldingPage() {
 
             {balance !== null && balance > 0 ? (
               <div className="space-y-4">
-                {/* Example holding */}
                 <div
                   className={`flex items-center justify-between p-3 ${
                     theme === "dark" ? "bg-gray-800/50" : "bg-white shadow-sm"
@@ -295,7 +294,7 @@ export default function HoldingPage() {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </motion.div>
 
