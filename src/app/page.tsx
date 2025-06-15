@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { MoveRight } from "lucide-react";
 import { useActiveAccount, ConnectButton } from "thirdweb/react";
-import { client } from "@/client";
+import { client, scrollSepolia, wallets } from "@/client";
 
 // Define onboarding steps
 type OnboardingStep = "welcome" | "wallet-analysis" | "preferences";
@@ -252,7 +252,17 @@ export default function Home() {
         transition={{ delay: 0.8, duration: 0.6 }}
         className="mt-2"
       >
-        <ConnectButton client={client} onConnect={handleWalletConnected} />
+        <ConnectButton 
+        client={client} 
+        onConnect={handleWalletConnected}  
+        wallets={wallets}
+        theme={"dark"}
+        connectModal={{ size: "compact" }}
+        accountAbstraction={{
+          chain: scrollSepolia, // replace with the chain you want
+          sponsorGas: true,
+        }}
+      />
       </motion.div>
     </motion.div>
   );

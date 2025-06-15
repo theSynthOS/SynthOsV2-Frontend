@@ -263,6 +263,130 @@ export default function Home() {
       }`}
     >
       <div className="flex flex-col min-h-screen">
+           {/* Transaction Success Banner */}
+        {bannerVisible && (
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+            ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
+            rounded-lg shadow-lg overflow-hidden`}
+          >
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
+                  >
+                    <Check
+                      className={`h-5 w-5 
+                      ${
+                        theme === "dark" ? "text-green-300" : "text-green-600"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <h3
+                      className={`font-medium 
+                      ${
+                        theme === "dark" ? "text-green-100" : "text-green-800"
+                      }`}
+                    >
+                      Funds Claimed Successfully
+                    </h3>
+                    <div className="mt-1 flex items-center">
+                      <a
+                        href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-xs flex items-center
+                          ${
+                            theme === "dark"
+                              ? "text-green-300 hover:text-green-200"
+                              : "text-green-700 hover:text-green-800"
+                          }`}
+                      >
+                        View Transaction
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setBannerVisible(false)}
+                  className={`rounded-full p-1 
+                    ${
+                      theme === "dark"
+                        ? "hover:bg-green-800"
+                        : "hover:bg-green-200"
+                    }`}
+                >
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
+                  />
+                </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all duration-100 ease-linear"
+                  style={{ width: `${progressValue}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Banner */}
+        {errorBannerVisible && (
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+            ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
+            rounded-lg shadow-lg overflow-hidden`}
+          >
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
+                  >
+                    <AlertCircle
+                      className={`h-5 w-5 
+                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                    />
+                  </div>
+                  <div>
+                    <h3
+                      className={`font-medium 
+                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
+                    >
+                      <span className="font-bold">
+                        Failed to Claim Test Funds:
+                      </span>{" "}
+                      Please try again later or reconnect your wallet.
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setErrorBannerVisible(false)}
+                  className={`rounded-full p-1 
+                    ${
+                      theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+                    }`}
+                >
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Transaction Success Banner end */}
+
         {/* Balance */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -281,6 +405,21 @@ export default function Home() {
             } flex justify-between items-center`}
           >
             <span>Total balance</span>
+            {/* button to claim test funds */}
+              <button
+              onClick={handleClaimTestFunds}
+              disabled={isTxProcessing}
+              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
+                ${
+                  theme === "dark"
+                    ? "bg-purple-600 hover:bg-purple-700 text-white"
+                    : "bg-white hover:bg-gray-400 text-black border border-gray-200"
+                } transition-colors
+                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
+              `}
+            >
+              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
+            </button>
             
           </motion.div>
           <div className="flex items-center">

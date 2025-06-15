@@ -595,16 +595,14 @@ export default function TrendingProtocols({
                         return (a.apy || 0) - (b.apy || 0);
                       })
                       .map((pair) => {
-                        const isUsdcPair = pair.pair_or_vault_name.toLowerCase().includes('usdc');
+                        
                         return (
                       <div
                         key={pair.id}
-                        className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
-                          theme === "dark"
-                            ? isUsdcPair ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-gray-800/50 shadow-sm"
-                            : isUsdcPair ? "bg-white hover:bg-gray-50 shadow-sm" : "bg-gray-200/70 shadow-sm"
+                        className={`flex flex-col ${
+                          theme === "dark" ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-white hover:bg-gray-50 shadow-sm"
                         } p-5 rounded-xl transition-colors duration-200 relative`}
-                        onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
+                        onClick={() => handleProtocolClick(protocol, pair)}
                       >
                         <div className="flex items-center mb-4">
                           <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
@@ -617,9 +615,7 @@ export default function TrendingProtocols({
                           </div>
                           <div className="flex-1">
                             <div
-                              className={`text-lg font-semibold flex justify-between ${
-                                theme === "dark" ? "text-white" : "text-black"
-                              }`}
+                              className={`text-lg font-semibold flex justify-between`}
                             >
                               <div className="pr-2">
                                 {pair.pair_or_vault_name}{" "}
@@ -627,13 +623,7 @@ export default function TrendingProtocols({
                                   ({pair.name})
                                 </span>
                               </div>
-                              {!isUsdcPair && (
-                                <span className={`text-xs px-2 py-1 rounded-lg border-dashed border-2 border-purple-500 ${
-                                  theme === "dark" ? "bg-purple-700 text-gray-300" : "bg-purple-100 text-purple-600"
-                                }`}>
-                                  Coming soon
-                                </span>
-                              )}
+                             
                             </div>
                             <div
                               className={`text-sm ${
@@ -664,7 +654,6 @@ export default function TrendingProtocols({
                               APY
                             </div>
                           </div>
-                          {isUsdcPair && (
                             <div
                               className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
                                 pair.type
@@ -672,7 +661,6 @@ export default function TrendingProtocols({
                             >
                               Risk: {getRiskLabel(pair.type)}
                             </div>
-                          )}
                         </div>
                       </div>
                         );

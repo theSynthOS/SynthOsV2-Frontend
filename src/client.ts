@@ -1,5 +1,6 @@
 // src/client.ts
 import { createThirdwebClient, defineChain } from "thirdweb";
+import { inAppWallet, createWallet } from "thirdweb/wallets";
 
 // Define Scroll Sepolia chain
 export const scrollSepolia = defineChain({
@@ -57,3 +58,17 @@ export const ethereum = defineChain({
 export const client = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "",
 });
+
+export const wallets = [
+   inAppWallet({
+    auth: {
+      options: [
+        "google",
+        "discord",
+        "telegram",
+        "email",
+        "x",
+      ],
+    },
+  }),
+];
