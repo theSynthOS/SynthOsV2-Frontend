@@ -535,21 +535,33 @@ export default function DepositModal({
       }
 
       // Add 25 points for deposit
+      console.log('Starting points deposit for address:', address);
       fetch("/api/points/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          console.log('Points deposit response status:', res.status);
+          return res.json();
+        })
         .then((data) => {
+          console.log('Points deposit response data:', data);
           // Fetch updated points
-          fetch(
+          console.log('Fetching updated points for address:', address);
+          return fetch(
             `/api/points?address=${encodeURIComponent(address ?? "")}`
-          )
-            .then((res) => res.json())
+          );
+        })
+        .then((res) => {
+          console.log('Get points response status:', res.status);
+          return res.json();
+        })
+        .then((data) => {
+          console.log('Get points response data:', data);
         })
         .catch((err) => {
-          console.error("/api/points/deposit error:", err);
+          console.error("Points operation error:", err);
         });
 
       // Save transaction to database

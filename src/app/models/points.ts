@@ -3,7 +3,7 @@ import dbConnect from "../lib/mongodb";
 
 // UserPoints schema
 export type UserPoints = {
-  email: string;         // unique
+  email?: string;        // optional
   address: string;       // unique
   pointsLogin: number;
   pointsDeposit: number;
@@ -13,7 +13,7 @@ export type UserPoints = {
 };
 
 const userPointsSchema = new Schema({
-  email: { type: String, unique: true, required: true },
+  email: { type: String, unique: true, sparse: true },
   address: { type: String, unique: true, required: true },
   pointsLogin: { type: Number, default: 0 },
   pointsDeposit: { type: Number, default: 0 },
@@ -25,9 +25,9 @@ const userPointsSchema = new Schema({
 const UserPoints = models.UserPoints || model("UserPoints", userPointsSchema);
 
 // Upsert user: if not exists, create with 50 login points; if exists, do not increase login points
-export async function upsertUserPoints(email: string, address: string) {
+export async function upsertUserPoints(address: string, email?: string) {
   await dbConnect();
-  let user = await UserPoints.findOne({ $or: [{ email }, { address }] });
+  let user = await UserPoints.findOne({ address });
   if (!user) {
     user = await UserPoints.create({
       email,
@@ -38,17 +38,16 @@ export async function upsertUserPoints(email: string, address: string) {
       pointsShareX: 0,
       pointsTestnetClaim: 0,
     });
-  } else {
   }
   return user;
 }
 
-// Add 5 points to pointsTestnetClaim for a user found by email or address
-export async function addTestnetClaimPoints({ email, address }: { email?: string, address?: string }) {
+// Add 5 points to pointsTestnetClaim for a user found by address
+export async function addTestnetClaimPoints(address: string) {
   await dbConnect();
-  if (!email && !address) throw new Error("Email or address required");
+  if (!address) throw new Error("Address required");
   const user = await UserPoints.findOneAndUpdate(
-    { $or: [email ? { email } : {}, address ? { address } : {}] },
+    { address },
     { $inc: { pointsTestnetClaim: 5 } },
     { new: true }
   );
@@ -56,19 +55,19 @@ export async function addTestnetClaimPoints({ email, address }: { email?: string
   return user;
 }
 
-// Get user points by email or address
-export async function getUserPoints({ email, address }: { email?: string, address?: string }) {
+// Get user points by address
+export async function getUserPoints(address: string) {
   await dbConnect();
-  if (!email && !address) throw new Error("Email or address required");
-  return UserPoints.findOne({ $or: [email ? { email } : {}, address ? { address } : {}] });
+  if (!address) throw new Error("Address required");
+  return UserPoints.findOne({ address });
 }
 
-// Add 25 points to pointsDeposit for a user found by email or address
-export async function addDepositPoints({ email, address }: { email?: string, address?: string }) {
+// Add 25 points to pointsDeposit for a user found by address
+export async function addDepositPoints(address: string) {
   await dbConnect();
-  if (!email && !address) throw new Error("Email or address required");
+  if (!address) throw new Error("Address required");
   const user = await UserPoints.findOneAndUpdate(
-    { $or: [email ? { email } : {}, address ? { address } : {}] },
+    { address },
     { $inc: { pointsDeposit: 25 } },
     { new: true }
   );
