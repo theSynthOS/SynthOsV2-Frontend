@@ -74,12 +74,15 @@ export default function HistoryPanel({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/transactions?address=${account.address}`);
+        const response = await fetch(
+          `/api/transactions?address=${account.address}`
+        );
         const data = await response.json();
 
-        if (data.success) {
-          setTransactions(data.transactions || []);
-          setMetadata(data.metadata || null);
+        if (data.transactions && data.metadata) {
+          setTransactions(data.transactions);
+          setMetadata(data.metadata);
+          setError(null);
         } else {
           setError(data.message || "Failed to fetch transactions");
           setTransactions([]);
