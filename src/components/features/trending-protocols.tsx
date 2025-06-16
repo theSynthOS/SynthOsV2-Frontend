@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import {
   Flame,
   Filter,
@@ -79,7 +79,7 @@ export default function TrendingProtocols({
       // ) {
       //   setShowFilter(false);
       // }
-      
+
       if (
         apyInfoRef.current &&
         !apyInfoRef.current.contains(event.target as Node)
@@ -124,7 +124,9 @@ export default function TrendingProtocols({
         }
         const data = await response.json();
         // Filter only pairs with chain_id 534351 (Scroll Sepolia testnet)
-        const filteredPairs = data.filter((pair: ProtocolPair) => pair.chain_id === 534351);
+        const filteredPairs = data.filter(
+          (pair: ProtocolPair) => pair.chain_id === 534351
+        );
         setProtocolPairs(filteredPairs);
       } catch (error) {
         console.error("Error fetching protocol pairs:", error);
@@ -485,16 +487,20 @@ export default function TrendingProtocols({
               }`}
               aria-label="APY Information"
             >
-              <Info className={`w-4 h-4 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`} />
+              <Info
+                className={`w-4 h-4 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              />
             </button>
-            
+
             {showApyInfo && (
-              <div 
+              <div
                 ref={apyInfoRef}
                 className={`absolute left-0 top-12 z-20 p-4 rounded-lg shadow-lg w-72 ${
-                  theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+                  theme === "dark"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white text-gray-800"
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -502,8 +508,8 @@ export default function TrendingProtocols({
                   <button
                     onClick={() => setShowApyInfo(false)}
                     className={`p-1 rounded-full ${
-                      theme === "dark" 
-                        ? "hover:bg-gray-700" 
+                      theme === "dark"
+                        ? "hover:bg-gray-700"
                         : "hover:bg-gray-100"
                     }`}
                   >
@@ -511,7 +517,8 @@ export default function TrendingProtocols({
                   </button>
                 </div>
                 <p className="text-sm">
-                  The APY values shown are on testnet and may differ from mainnet rates.
+                  The APY values shown are on testnet and may differ from
+                  mainnet rates.
                 </p>
                 <div className="mt-3 text-xs opacity-70">
                   All investments are simulated on Scroll Sepolia testnet.
@@ -575,94 +582,107 @@ export default function TrendingProtocols({
                     <ChevronDown
                       className={`w-8 h-8 transition-transform duration-300 stroke-[2.5] ${
                         theme === "dark" ? "text-white" : "text-black"
-                      } ${expandedProtocols.has(protocol.name) ? "rotate-180" : "rotate-0"}`}
+                      } ${
+                        expandedProtocols.has(protocol.name)
+                          ? "rotate-180"
+                          : "rotate-0"
+                      }`}
                     />
                   </div>
                 </div>
                 {expandedProtocols.has(protocol.name) && (
                   <div className="mt-2 space-y-2 px-4">
                     {getProtocolPairs(protocol.name)
-                      .filter(pair => pair.apy !== undefined && pair.apy !== null && pair.apy > 0)
+                      .filter(
+                        (pair) =>
+                          pair.apy !== undefined &&
+                          pair.apy !== null &&
+                          pair.apy > 0
+                      )
                       .sort((a, b) => {
-                        const isAUsdc = a.pair_or_vault_name.toLowerCase().includes('usdc');
-                        const isBUsdc = b.pair_or_vault_name.toLowerCase().includes('usdc');
-                        
+                        const isAUsdc = a.pair_or_vault_name
+                          .toLowerCase()
+                          .includes("usdc");
+                        const isBUsdc = b.pair_or_vault_name
+                          .toLowerCase()
+                          .includes("usdc");
+
                         // Always put USDC pairs first
                         if (isAUsdc && !isBUsdc) return -1;
                         if (!isAUsdc && isBUsdc) return 1;
-                        
+
                         // If both are USDC or both are not USDC, sort by APY
                         return (a.apy || 0) - (b.apy || 0);
                       })
                       .map((pair) => {
-                        
                         return (
-                      <div
-                        key={pair.id}
-                        className={`flex flex-col ${
-                          theme === "dark" ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-white hover:bg-gray-50 shadow-sm"
-                        } p-5 rounded-xl transition-colors duration-200 relative`}
-                        onClick={() => handleProtocolClick(protocol, pair)}
-                      >
-                        <div className="flex items-center mb-4">
-                          <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
-                            <Image
-                              src={protocol.logo_url || ""}
-                              alt={pair.name}
-                              width={56}
-                              height={56}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div
-                              className={`text-lg font-semibold flex justify-between`}
-                            >
-                              <div className="pr-2">
-                                {pair.pair_or_vault_name}{" "}
-                                <span className="text-sm font-normal opacity-70">
-                                  ({pair.name})
-                                </span>
-                              </div>
-                             
-                            </div>
-                            <div
-                              className={`text-sm ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {pair.type.charAt(0).toUpperCase() +
-                                pair.type.slice(1)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-4">
                           <div
-                            className={`text-xl font-bold flex flex-wrap ${
-                              theme === "dark" ? "text-white" : "text-black"
-                            }`}
+                            key={pair.id}
+                            className={`flex flex-col ${
+                              theme === "dark"
+                                ? "bg-gray-700/50 hover:bg-gray-800/50"
+                                : "bg-white hover:bg-gray-50 shadow-sm"
+                            } p-5 rounded-xl transition-colors duration-200 relative`}
+                            onClick={() => handleProtocolClick(protocol, pair)}
                           >
-                            {`${Number(pair.apy).toFixed(3)}%`}
-                            <div
-                              className={`text-sm items-center flex font-medium ml-2 ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              APY
+                            <div className="flex items-center mb-4">
+                              <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
+                                <Image
+                                  src={protocol.logo_url || ""}
+                                  alt={pair.name}
+                                  width={56}
+                                  height={56}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div
+                                  className={`text-lg font-semibold flex justify-between`}
+                                >
+                                  <div className="pr-2">
+                                    {pair.pair_or_vault_name}{" "}
+                                    <span className="text-sm font-normal opacity-70">
+                                      ({pair.name})
+                                    </span>
+                                  </div>
+                                </div>
+                                <div
+                                  className={`text-sm ${
+                                    theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {pair.type.charAt(0).toUpperCase() +
+                                    pair.type.slice(1)}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center mt-4">
+                              <div
+                                className={`text-xl font-bold flex flex-wrap ${
+                                  theme === "dark" ? "text-white" : "text-black"
+                                }`}
+                              >
+                                {`${Number(pair.apy).toFixed(3)}%`}
+                                <div
+                                  className={`text-sm items-center flex font-medium ml-2 ${
+                                    theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  APY
+                                </div>
+                              </div>
+                              <div
+                                className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
+                                  pair.type
+                                )}`}
+                              >
+                                Risk: {getRiskLabel(pair.type)}
+                              </div>
                             </div>
                           </div>
-                            <div
-                              className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
-                                pair.type
-                              )}`}
-                            >
-                              Risk: {getRiskLabel(pair.type)}
-                            </div>
-                        </div>
-                      </div>
                         );
                       })}
                   </div>

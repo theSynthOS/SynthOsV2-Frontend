@@ -392,7 +392,7 @@ export default function Home() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className={`px-4 py-6 pt-[90px] border-b ${
+          className={`px-4 mt-[90px] border-b ${
             theme === "dark" ? "border-gray-800" : "border-gray-200"
           }`}
         >
@@ -421,12 +421,12 @@ export default function Home() {
               {isTxProcessing ? "Processing..." : "Claim Test USDC"}
             </button>
           </motion.div>
-          <div className="flex items-center">
+          <div className="flex items-center justify-center py-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
-              className="text-4xl font-bold"
+              className="text-4xl font-normal"
             >
               {isLoadingBalance ? (
                 <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800" />
