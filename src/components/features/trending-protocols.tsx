@@ -268,7 +268,11 @@ export default function TrendingProtocols({
 
   return (
     <>
-      <div className="px-4 py-6">
+      <div
+        className={`px-4 py-6 ${
+          theme === "dark" ? "bg-[#1a1a2e]" : "bg-white"
+        } rounded-b-2xl`}
+      >
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
             {investorProfile && (
@@ -474,7 +478,7 @@ export default function TrendingProtocols({
               }`}
             />
             <h2
-              className={`text-2xl font-bold ${
+              className={`text-xl font-light ${
                 theme === "dark" ? "text-white" : "text-black"
               }`}
             >
