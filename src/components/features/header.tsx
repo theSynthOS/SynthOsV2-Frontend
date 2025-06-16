@@ -18,7 +18,7 @@ export default function Header() {
       className={`flex justify-between items-center p-4 ${
         theme === "dark"
           ? "bg-[#0f0b22] border-gray-700/0 hover:border-gray-700"
-          : "bg-white border-gray-200/0 hover:border-gray-200"
+          : "bg-[#f0eef9] border-gray-200/0 hover:border-gray-200"
       } border-b`}
     >
       <button

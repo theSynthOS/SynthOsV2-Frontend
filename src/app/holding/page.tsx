@@ -98,7 +98,7 @@ export default function HoldingPage() {
       initial={{ x: 0 }}
       whileDrag={{ cursor: "grabbing" }}
       className={`flex flex-col min-h-screen ${
-        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f3f3f3] text-black"
+        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f0eef9] text-black"
       } p-4`}
     >
       <motion.div
@@ -300,24 +300,15 @@ export default function HoldingPage() {
 
       {/* Modals */}
       {showModal === "deposit" && (
-        <DepositModal
-          isOpen={showModal === "deposit"}
-          onClose={closeModal}
-        />
+        <DepositModal isOpen={showModal === "deposit"} onClose={closeModal} />
       )}
 
       {showModal === "withdraw" && (
-        <WithdrawModal
-          isOpen={showModal === "withdraw"}
-          onClose={closeModal}
-        />
+        <WithdrawModal isOpen={showModal === "withdraw"} onClose={closeModal} />
       )}
 
       {showModal === "send" && (
-        <SendModal
-          isOpen={showModal === "send"}
-          onClose={closeModal}
-        />
+        <SendModal isOpen={showModal === "send"} onClose={closeModal} />
       )}
     </motion.div>
   );

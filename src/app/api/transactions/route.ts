@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-    
+
     const transactions = await Transaction.find({
       address: { $regex: `^${address}$`, $options: "i" },
     })

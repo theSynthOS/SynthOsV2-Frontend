@@ -67,7 +67,7 @@ export default function Navbar() {
       className={`relative border-t ${
         theme === "dark"
           ? "border-gray-800 bg-[#0f0b22]"
-          : "border-gray-200 bg-white"
+          : "border-gray-200 bg-[#f0eef9]"
       } transition-all duration-200 ${
         isScrolled ? "shadow-lg" : ""
       } rounded-t-[2rem]`}

@@ -98,7 +98,9 @@ export default function Home() {
         fetchBalance(account.address);
 
         // Set up additional refresh attempts with increasing delays
-        const refreshTimeouts = [setTimeout(() => fetchBalance(account.address), 3000)];
+        const refreshTimeouts = [
+          setTimeout(() => fetchBalance(account.address), 3000),
+        ];
 
         return () => {
           if (progressTimerRef.current) {
@@ -192,7 +194,6 @@ export default function Home() {
         value: BigInt(0),
       });
 
-
       // Use sendAndConfirmTransaction with the correct API signature
       const result = await sendAndConfirmTransaction({
         transaction: tx,
@@ -208,8 +209,7 @@ export default function Home() {
         body: JSON.stringify({ address: account.address }),
       })
         .then((res) => res.json())
-        .then((data) => {
-        })
+        .then((data) => {})
         .catch((err) => {
           console.error("/api/points/testnet-claim error:", err);
         });
@@ -259,11 +259,11 @@ export default function Home() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
       className={`flex flex-col min-h-screen ${
-        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f3f3f3] text-black"
+        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f0eef9] text-black"
       }`}
     >
       <div className="flex flex-col min-h-screen">
-           {/* Transaction Success Banner */}
+        {/* Transaction Success Banner */}
         {bannerVisible && (
           <div
             className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
@@ -406,7 +406,7 @@ export default function Home() {
           >
             <span>Total balance</span>
             {/* button to claim test funds */}
-              <button
+            <button
               onClick={handleClaimTestFunds}
               disabled={isTxProcessing}
               className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
@@ -420,7 +420,6 @@ export default function Home() {
             >
               {isTxProcessing ? "Processing..." : "Claim Test USDC"}
             </button>
-            
           </motion.div>
           <div className="flex items-center">
             <motion.div
