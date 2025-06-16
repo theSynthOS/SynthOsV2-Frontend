@@ -547,7 +547,7 @@ export default function TrendingProtocols({
             </div>
           ) : (
             protocols.map((protocol) => (
-              <div key={protocol.id} className={`mb-6 rounded-lg`}>
+              <div key={protocol.id} className={`rounded-lg`}>
                 <div
                   className={`flex flex-col cursor-pointer ${
                     theme === "dark"
