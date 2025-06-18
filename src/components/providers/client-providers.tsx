@@ -29,7 +29,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   };
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <PointsProvider>
         {/* Only show header on non-landing pages */}
         {!isLandingPage && (
@@ -38,7 +38,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
           </div>
         )}
 
-        <main className={!isLandingPage ? "pt-16 pb-20" : ""}>
+        <main className={`${!isLandingPage ? "pt-16 pb-20" : ""} dark:bg-[#0f0b22] bg-[#f0eef9]`}>
           <PullToRefresh onRefresh={handleGlobalRefresh}>
             {children}
           </PullToRefresh>

@@ -64,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <title>SynthOS</title>
         <meta
@@ -81,7 +81,7 @@ export default function RootLayout({
         {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
         suppressHydrationWarning
       >
         <DynamicProviders>{children}</DynamicProviders>

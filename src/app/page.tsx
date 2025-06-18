@@ -195,8 +195,6 @@ export default function Home() {
         return renderWelcome();
       case "wallet-analysis":
         return renderWalletAnalysis();
-      case "preferences":
-        return renderPreferences();
       default:
         return renderWelcome();
     }
@@ -256,7 +254,7 @@ export default function Home() {
         client={client} 
         onConnect={handleWalletConnected}  
         wallets={wallets}
-        theme={"dark"}
+        theme={theme === "dark" ? "dark" : "light"}
         connectModal={{ size: "compact" }}
         accountAbstraction={{
           chain: scrollSepolia, // replace with the chain you want
@@ -271,8 +269,8 @@ export default function Home() {
   if (!initialAuthChecked) {
     return (
       <div
-        className={`flex items-center justify-center min-h-screen ${
-          theme === "dark" ? "bg-[#0f0b22]" : "bg-white"
+        className={`flex items-center justify-center ${
+          theme === "dark" ? "bg-[#0f0b22]" : "bg-[#f0eef9]"
         }`}
       >
         <motion.div
@@ -306,7 +304,7 @@ export default function Home() {
       <div className="w-full max-w-sm">
         <div
           className={`h-2 w-full rounded-full ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            theme === "dark" ? "bg-gray-700" : "bg-[#f0eef9]"
           }`}
         >
           <div
@@ -345,14 +343,6 @@ export default function Home() {
     </motion.div>
   );
 
-  // Render preferences step
-  const renderPreferences = () => {
-    const currentProfile = profile || {
-      title: "New to DeFi",
-      description:
-        "You're just getting started with DeFi. We'll help you navigate the ecosystem safely.",
-    };
-
     const handleContinueToDashboard = () => {
       if (account?.address) {
         // Get existing completed addresses
@@ -373,93 +363,11 @@ export default function Home() {
       // Navigate to dashboard
       router.push("/home");
     };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col items-center text-center max-w-md"
-      >
-        <div
-          className={`text-lg md:text-xl font-bold mb-6 ${
-            theme === "dark" ? "text-white" : "text-black"
-          }`}
-        >
-          Here's what we found from your{" "}
-          {walletAnalysis?.analysis.details.totalTransactions} transactions :
-        </div>
-
-        {/* Profile Information Card */}
-        <div
-          className={`p-6 rounded-xl mb-4 w-full ${
-            theme === "dark"
-              ? "bg-purple-900/40 text-white"
-              : "bg-purple-100 text-black"
-          }`}
-        >
-          <p className="mb-3 text-xl font-medium">
-            You are a{" "}
-            <span className="text-purple-500 font-bold">
-              {walletAnalysis?.profile?.profileType || currentProfile.title}
-            </span>
-          </p>
-          <p className="text-md">
-            {walletAnalysis?.profile?.personalizedDescription ||
-              currentProfile.description}
-          </p>
-        </div>
-
-        {/* Profile Details Card */}
-        {walletAnalysis?.profile && (
-          <div
-            className={`p-6 rounded-xl mb-5 w-full ${
-              theme === "dark"
-                ? "bg-purple-800/30 text-white"
-                : "bg-purple-50/70 text-purple-900"
-            }`}
-          >
-            <p className="mb-3 text-lg font-bold text-left">Profile Details:</p>
-            <div className="grid grid-cols-2 gap-y-3 text-sm text-left">
-              <div>
-                <p className="font-bold">Experience Level:</p>
-                <p>{walletAnalysis.profile.experienceLevel}</p>
-              </div>
-              <div>
-                <p className="font-bold">Investment Strategy:</p>
-                <p>{walletAnalysis.profile.investmentStrategy}</p>
-              </div>
-              <div>
-                <p className="font-bold">Management Style:</p>
-                <p>{walletAnalysis.profile.managementStyle}</p>
-              </div>
-              <div>
-                <p className="font-bold">Profile Type:</p>
-                <p>{walletAnalysis.profile.profileType}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="text-sm mb-8 text-gray-500 dark:text-gray-400">
-          AI-powered results tailored to your wallet activity
-        </div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={handleContinueToDashboard}
-          className="bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-8 rounded-xl w-64"
-        >
-          Continue to Dashboard
-        </motion.button>
-      </motion.div>
-    );
-  };
-
+        
   return (
     <div
       className={`flex flex-col items-center justify-center min-h-screen p-4 ${
-        theme === "dark" ? "bg-[#0f0b22]" : "bg-white"
+        theme === "dark" ? "bg-[#0f0b22]" : "bg-[#f0eef9]"
       }`}
     >
       {/* Only show logo on wallet analysis and preferences steps */}
