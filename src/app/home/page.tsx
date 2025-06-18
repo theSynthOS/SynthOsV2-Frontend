@@ -11,7 +11,11 @@ import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
 import { client, scrollSepolia } from "@/client";
 import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MoveUp, MoveDown, Send } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
+import DepositModal from "@/components/features/deposit-modal";
+import WithdrawModal from "@/components/features/wallet-withdraw";
+import SendModal from "@/components/features/wallet-send";
 
 // Storage key for last claim timestamp
 const LAST_CLAIM_KEY = "last_claim_timestamp";
@@ -35,23 +39,9 @@ export default function Home() {
   const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
+  const [showModal, setShowModal] = useState<"deposit" | "withdraw" | "send" | null>(null);
 
-  // Load last claim time from localStorage
-  // useEffect(() => {
-  //   if (typeof window !== "undefined" && address) {
-  //     try {
-  //       const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
-  //       if (storedData) {
-  //         const timestamp = parseInt(storedData, 10);
-  //         setLastClaimTime(timestamp);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading last claim time:", error);
-  //     }
-  //   }
-  // }, [address]);
 
-  // Fetch balance from backend
   const fetchBalance = async (walletAddress: string) => {
     try {
       setIsLoadingBalance(true);
@@ -71,6 +61,11 @@ export default function Home() {
     } finally {
       setIsLoadingBalance(false);
     }
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setShowModal(null);
   };
 
   // Effect to handle transaction success banner and progress bar
@@ -423,6 +418,38 @@ export default function Home() {
                 `$${balance}`
               )}
             </div>
+            {/* Action Buttons-- originally justify-between */}
+            <div className="flex justify-between w-full max-w-xs mx-auto p-4">
+              <button
+                onClick={() => setShowModal("deposit")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <MoveDown size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Deposit</span>
+              </button>
+
+              <button
+                onClick={() => setShowModal("withdraw")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <MoveUp size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Withdraw</span>
+              </button>
+
+              <button
+                onClick={() => setShowModal("send")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <Send size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Send</span>
+              </button>
+            </div>
             <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
           </div>
         </div>
@@ -446,6 +473,30 @@ export default function Home() {
           </div>
         </motion.div>
       </div>
+
+       {/* Modals */}
+      {showModal === "deposit" && (
+        <DepositModal
+          pool={null}
+          onClose={closeModal}
+          balance={balance}
+          isLoadingBalance={isLoadingBalance}
+          address={account?.address || ""}
+          refreshBalance={() => {
+            if (account?.address) {
+              fetchBalance(account.address);
+            }
+          }}
+        />
+      )}
+
+      {showModal === "withdraw" && (
+        <WithdrawModal isOpen={showModal === "withdraw"} onClose={closeModal} />
+      )}
+
+      {showModal === "send" && (
+        <SendModal isOpen={showModal === "send"} onClose={closeModal} />
+      )}
     </motion.div>
   );
 }

@@ -33,14 +33,16 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
       <PointsProvider>
         {/* Only show header on non-landing pages */}
         {!isLandingPage && (
-          <div className="fixed top-0 left-0 right-0 bg-[#0f0b22] z-50">
+          <div className="fixed top-0 left-0 right-0 z-50">
             <Header />
           </div>
         )}
 
-        <PullToRefresh onRefresh={handleGlobalRefresh}>
-          {children}
-        </PullToRefresh>
+        <main className={!isLandingPage ? "pt-16 pb-20" : ""}>
+          <PullToRefresh onRefresh={handleGlobalRefresh}>
+            {children}
+          </PullToRefresh>
+        </main>
 
         {/* Only show navbar on non-landing pages */}
         {!isLandingPage && (

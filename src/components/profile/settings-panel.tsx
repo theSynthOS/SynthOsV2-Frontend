@@ -206,41 +206,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
           {/* Menu Items */}
           <div className="px-4 py-4 space-y-4">
-            <div
-              className={`flex items-center justify-between p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-              } rounded-lg`}
-            >
-              <div className="flex items-center">
-                {mounted && theme === "dark" ? (
-                  <Moon
-                    className={`h-5 w-5 mr-3 ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  />
-                ) : (
-                  <Sun
-                    className={`h-5 w-5 mr-3 ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  />
-                )}
-                <span>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
-              </div>
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                  theme === "dark" ? "bg-green-400" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    theme === "dark" ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-
             <Link
               href="/holding"
               className={`flex items-center p-3 ${
