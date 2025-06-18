@@ -269,7 +269,7 @@ export default function Home() {
   if (!initialAuthChecked) {
     return (
       <div
-        className={`flex items-center justify-center ${
+        className={`flex items-center justify-center min-h-screen ${
           theme === "dark" ? "bg-[#0f0b22]" : "bg-[#f0eef9]"
         }`}
       >
