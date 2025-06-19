@@ -27,7 +27,7 @@ import {
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
-import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { ThemeBackground } from "@/components/ui/theme-background";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -125,7 +125,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       {/* Sliding panel */}
       <div
-        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out`}
+        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-hidden`}
         style={{
           animation: isExiting
             ? "slideOut 0.3s ease-out"
@@ -137,7 +137,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               : "0 0 40px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <BackgroundGradientAnimation className="flex flex-col min-h-screen pt-6">
+        <ThemeBackground className="flex flex-col min-h-screen pt-6">
           {/* Header */}
           <div className="px-4 pb-6 flex items-center justify-between">
             <button
@@ -254,7 +254,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <p>SynthOS</p>
             <p>© 2025 SynthOS. All rights reserved.</p>
           </div>
-        </BackgroundGradientAnimation>
+        </ThemeBackground>
       </div>
     </div>
   );

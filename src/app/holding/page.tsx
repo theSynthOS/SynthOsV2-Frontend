@@ -12,7 +12,6 @@ import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { ThemeBackground } from "@/components/ui/theme-background";
 
 export default function HoldingPage() {
   const account = useActiveAccount();
@@ -86,103 +85,101 @@ export default function HoldingPage() {
   if (!mounted) return null;
 
   return (
-    <ThemeBackground className="min-h-screen">
+    <motion.div
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.2}
+      onDragEnd={handleDragEnd}
+      animate={controls}
+      initial={{ x: 0 }}
+      whileDrag={{ cursor: "grabbing" }}
+      className={`flex flex-col bg-transparent ${
+        theme === "dark" ? "text-white" : "text-black"
+      } p-4`}
+    >
+      {/* Section 1: User Profile */}
       <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={handleDragEnd}
-        animate={controls}
-        initial={{ x: 0 }}
-        whileDrag={{ cursor: "grabbing" }}
-        className={`flex flex-col ${
-          theme === "dark" ? "text-white" : "text-black"
-        } p-4`}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        {/* Section 1: User Profile */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+          className={`${
+            theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
+          } rounded-2xl p-5 mb-3`}
         >
-          <div
-            className={`${
-              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-            } rounded-2xl p-5 mb-3`}
-          >
-            {/* Total holding value */}
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex flex-col items-start">
-                <span className={`text-sm tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}>Total Holding Value</span>
-                <span className={`text-xl font-bold my-2 ${
-                  theme === "dark" ? "text-white" : "text-black"
-                }`}>0.00</span>
-              </div>
-            </div>
-
+          {/* Total holding value */}
+          <div className="flex flex-row items-center justify-between">
             <div className="flex flex-col items-start">
-              {/* Wallet Address */}
-              <div
-                className={`text-sm ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                } flex items-center`}
-              >
-                <span>{displayAddress
-                  ? formatAddress(displayAddress)
-                  : "Wallet not connected"}</span>
-                
-                {displayAddress && (
-                  <button
-                    onClick={handleCopyAddress}
-                    className={`ml-2 p-1 rounded-full transition-colors ${
-                      theme === "dark" 
-                        ? "hover:bg-gray-700/70" 
-                        : "hover:bg-gray-100"
-                    }`}
-                    aria-label="Copy address to clipboard"
-                  >
-                    {copied ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                )}
-              </div>
+              <span className={`text-sm tracking-widest font-medium ${
+                theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+              }`}>Total Holding Value</span>
+              <span className={`text-xl font-bold my-2 ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}>0.00</span>
             </div>
           </div>
-        </motion.div>
 
-        {/* Section 2: Holdings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div
-            className={`${
-              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-            } rounded-2xl p-5 mb-3`}
-          >
-            <div className="flex flex-col items-center">
-              <div className="flex justify-between items-center w-full text-sm">
-                <span className={`tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}>YOUR HOLDINGS</span>
-
-                <div className={`flex items-center gap-1 underline ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}>
-                  <span className="tracking-widest font-medium">View All</span>
-                  <ArrowRight size={16} />
-                </div>
-              </div>
+          <div className="flex flex-col items-start">
+            {/* Wallet Address */}
+            <div
+              className={`text-sm ${
+                theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+              } flex items-center`}
+            >
+              <span>{displayAddress
+                ? formatAddress(displayAddress)
+                : "Wallet not connected"}</span>
+              
+              {displayAddress && (
+                <button
+                  onClick={handleCopyAddress}
+                  className={`ml-2 p-1 rounded-full transition-colors ${
+                    theme === "dark" 
+                      ? "hover:bg-gray-700/70" 
+                      : "hover:bg-gray-100"
+                  }`}
+                  aria-label="Copy address to clipboard"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
-    </ThemeBackground>
+
+      {/* Section 2: Holdings */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div
+          className={`${
+            theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
+          } rounded-2xl p-5 mb-3`}
+        >
+          <div className="flex flex-col items-center">
+            <div className="flex justify-between items-center w-full text-sm">
+              <span className={`tracking-widest font-medium ${
+                theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+              }`}>YOUR HOLDINGS</span>
+
+              <div className={`flex items-center gap-1 underline ${
+                theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+              }`}>
+                <span className="tracking-widest font-medium">View All</span>
+                <ArrowRight size={16} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

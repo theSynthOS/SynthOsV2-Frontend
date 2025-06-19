@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { PointsProvider } from "@/contexts/PointsContext";
 import Header from "@/components/features/header";
 import Navbar from "@/components/features/navigation";
+import { ThemeBackground } from "@/components/ui/theme-background";
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -31,25 +32,27 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <PointsProvider>
-        {/* Only show header on non-landing pages */}
-        {!isLandingPage && (
-          <div className="fixed top-0 left-0 right-0 z-50">
-            <Header />
-          </div>
-        )}
+        <ThemeBackground className="min-h-screen">
+          {/* Only show header on non-landing pages */}
+          {!isLandingPage && (
+            <div className="fixed top-0 left-0 right-0 z-50">
+              <Header />
+            </div>
+          )}
 
-        <main className={`${!isLandingPage ? "pt-16 pb-20" : ""} dark:bg-[#0f0b22] bg-[#f0eef9]`}>
-          <PullToRefresh onRefresh={handleGlobalRefresh}>
-            {children}
-          </PullToRefresh>
-        </main>
+          <main className={`${!isLandingPage ? "pt-16 pb-20" : ""}`}>
+            <PullToRefresh onRefresh={handleGlobalRefresh}>
+              {children}
+            </PullToRefresh>
+          </main>
 
-        {/* Only show navbar on non-landing pages */}
-        {!isLandingPage && (
-          <div className="fixed bottom-0 left-0 right-0">
-            <Navbar />
-          </div>
-        )}
+          {/* Only show navbar on non-landing pages */}
+          {!isLandingPage && (
+            <div className="fixed bottom-0 left-0 right-0">
+              <Navbar />
+            </div>
+          )}
+        </ThemeBackground>
       </PointsProvider>
     </ThemeProvider>
   );

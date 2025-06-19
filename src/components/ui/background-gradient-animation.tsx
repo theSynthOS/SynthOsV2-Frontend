@@ -50,7 +50,7 @@ export const BackgroundGradientAnimation = ({
       <div className="absolute inset-0 overflow-hidden" style={{ filter: isSafari ? 'blur(60px)' : 'url(#gooey-blur)' }}>
         {/* Purple ball - bottom left */}
         <div
-          className="absolute w-[100%] h-[100%] bottom-[-40%] right-[50%] animate-fourth"
+          className="absolute w-[100%] h-[100%] bottom-[-40%] right-[40%] animate-fourth"
           style={{
             background: "radial-gradient(circle at center, rgba(143, 99, 233, 0.8) 0%, rgba(143, 99, 233, 0) 70%)",
             opacity: 0.6

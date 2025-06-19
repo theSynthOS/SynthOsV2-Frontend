@@ -16,7 +16,6 @@ import { usePoints } from "@/contexts/PointsContext";
 import DepositModal from "@/components/features/deposit-modal";
 import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
-import { ThemeBackground } from "@/components/ui/theme-background";
 
 // Storage key for last claim timestamp
 const LAST_CLAIM_KEY = "last_claim_timestamp";
@@ -226,278 +225,274 @@ export default function Home() {
   // Show loading state while checking authentication
   if (!account?.address) {
     return (
-      <ThemeBackground className="min-h-screen">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex items-center justify-center min-h-screen"
-        >
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1, opacity: [0.5, 1, 0.5] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className={`text-xl ${
-              theme === "dark" ? "text-white" : "text-black"
-            }`}
-          >
-            Loading...
-          </motion.div>
-        </motion.div>
-      </ThemeBackground>
-    );
-  }
-
-  return (
-    <ThemeBackground>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col min-h-screen"
+        className="flex items-center justify-center min-h-screen"
       >
-        <div className="flex flex-col min-h-screen">
-          {/* Transaction Success Banner */}
-          {bannerVisible && (
-            <div
-              className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-              ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
-              rounded-lg shadow-lg overflow-hidden`}
-            >
-              <div className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className={`rounded-full p-1 mr-3 
-                      ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
-                    >
-                      <Check
-                        className={`h-5 w-5 
-                        ${
-                          theme === "dark" ? "text-green-300" : "text-green-600"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <h3
-                        className={`font-medium 
-                        ${
-                          theme === "dark" ? "text-green-100" : "text-green-800"
-                        }`}
-                      >
-                        Funds Claimed Successfully
-                      </h3>
-                      <div className="mt-1 flex items-center">
-                        <a
-                          href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`text-xs flex items-center
-                            ${
-                              theme === "dark"
-                                ? "text-green-300 hover:text-green-200"
-                                : "text-green-700 hover:text-green-800"
-                            }`}
-                        >
-                          View Transaction
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setBannerVisible(false)}
-                    className={`rounded-full p-1 
-                      ${
-                        theme === "dark"
-                          ? "hover:bg-green-800"
-                          : "hover:bg-green-200"
-                      }`}
-                  >
-                    <X
-                      className={`h-4 w-4 
-                      ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
-                    />
-                  </button>
-                </div>
+        <motion.div
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1, opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className={`text-xl ${
+            theme === "dark" ? "text-white" : "text-black"
+          }`}
+        >
+          Loading...
+        </motion.div>
+      </motion.div>
+    );
+  }
 
-                {/* Progress bar */}
-                <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="flex flex-col min-h-screen"
+    >
+      <div className="flex flex-col min-h-screen">
+        {/* Transaction Success Banner */}
+        {bannerVisible && (
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+            ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
+            rounded-lg shadow-lg overflow-hidden`}
+          >
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
                   <div
-                    className="h-full bg-green-500 transition-all duration-100 ease-linear"
-                    style={{ width: `${progressValue}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error Banner */}
-          {errorBannerVisible && (
-            <div
-              className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-              ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
-              rounded-lg shadow-lg overflow-hidden`}
-            >
-              <div className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className={`rounded-full p-1 mr-3 
-                      ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
-                    >
-                      <AlertCircle
-                        className={`h-5 w-5 
-                        ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
-                      />
-                    </div>
-                    <div>
-                      <h3
-                        className={`font-medium 
-                        ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
-                      >
-                        <span className="font-bold">
-                          Failed to Claim Test Funds:
-                        </span>{" "}
-                        Please try again later or reconnect your wallet.
-                      </h3>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setErrorBannerVisible(false)}
-                    className={`rounded-full p-1 
-                      ${
-                        theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
-                      }`}
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
                   >
-                    <X
-                      className={`h-4 w-4 
-                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                    <Check
+                      className={`h-5 w-5 
+                      ${
+                        theme === "dark" ? "text-green-300" : "text-green-600"
+                      }`}
                     />
-                  </button>
+                  </div>
+                  <div>
+                    <h3
+                      className={`font-medium 
+                      ${
+                        theme === "dark" ? "text-green-100" : "text-green-800"
+                      }`}
+                    >
+                      Funds Claimed Successfully
+                    </h3>
+                    <div className="mt-1 flex items-center">
+                      <a
+                        href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-xs flex items-center
+                          ${
+                            theme === "dark"
+                              ? "text-green-300 hover:text-green-200"
+                              : "text-green-700 hover:text-green-800"
+                          }`}
+                      >
+                        View Transaction
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-          {/* Transaction Success Banner end */}
-
-          {/* Balance */}
-          <div className="w-full flex justify-center mt-[90px] px-4">
-            <div
-              className={`${
-                theme === "dark" ? "bg-[#1a1a2e]" : "bg-white"
-              } rounded-t-2xl px-4 pt-6 w-full text-center `}
-            >
-              <div className="text-xs tracking-widest text-gray-400 font-medium mb-2">
-                TOTAL BALANCE
-              </div>
-              {/* button to claim test funds */}
-              <button
-                onClick={handleClaimTestFunds}
-                disabled={isTxProcessing}
-                className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
-                  ${
-                    theme === "dark"
-                      ? "bg-purple-600 hover:bg-purple-700 text-white"
-                      : "bg-white hover:bg-gray-400 text-black border border-gray-200"
-                  } transition-colors
-                  ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
-                `}
-              >
-                {isTxProcessing ? "Processing..." : "Claim Test USDC"}
-              </button>
-              <div
-                className={`text-4xl py-6 font-normal tracking-tight ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {isLoadingBalance ? (
-                  <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
-                ) : (
-                  `$${balance}`
-                )}
-              </div>
-              {/* Action Buttons-- originally justify-between */}
-              <div className="flex justify-between w-full max-w-xs mx-auto p-4">
                 <button
-                  onClick={() => setShowModal("deposit")}
-                  className="flex flex-col items-center"
+                  onClick={() => setBannerVisible(false)}
+                  className={`rounded-full p-1 
+                    ${
+                      theme === "dark"
+                        ? "hover:bg-green-800"
+                        : "hover:bg-green-200"
+                    }`}
                 >
-                  <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
-                    <MoveDown size={24} className="text-white" />
-                  </div>
-                  <span className="text-sm font-medium">Deposit</span>
-                </button>
-
-                <button
-                  onClick={() => setShowModal("withdraw")}
-                  className="flex flex-col items-center"
-                >
-                  <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
-                    <MoveUp size={24} className="text-white" />
-                  </div>
-                  <span className="text-sm font-medium">Withdraw</span>
-                </button>
-
-                <button
-                  onClick={() => setShowModal("send")}
-                  className="flex flex-col items-center"
-                >
-                  <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
-                    <Send size={24} className="text-white" />
-                  </div>
-                  <span className="text-sm font-medium">Send</span>
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
+                  />
                 </button>
               </div>
-              <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
+
+              {/* Progress bar */}
+              <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all duration-100 ease-linear"
+                  style={{ width: `${progressValue}%` }}
+                ></div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Dynamic Features */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="px-4"
+        {/* Error Banner */}
+        {errorBannerVisible && (
+          <div
+            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
+            ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
+            rounded-lg shadow-lg overflow-hidden`}
           >
-            <DynamicFeatures
-              refreshBalance={() => {
-                if (account?.address) {
-                  fetchBalance(account.address);
-                }
-              }}
-            />
-            <div className="flex justify-center mt-6">
-              {/* This space is intentionally left for spacing below the investments section */}
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div
+                    className={`rounded-full p-1 mr-3 
+                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
+                  >
+                    <AlertCircle
+                      className={`h-5 w-5 
+                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                    />
+                  </div>
+                  <div>
+                    <h3
+                      className={`font-medium 
+                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
+                    >
+                      <span className="font-bold">
+                        Failed to Claim Test Funds:
+                      </span>{" "}
+                      Please try again later or reconnect your wallet.
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setErrorBannerVisible(false)}
+                  className={`rounded-full p-1 
+                    ${
+                      theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+                    }`}
+                >
+                  <X
+                    className={`h-4 w-4 
+                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
+                  />
+                </button>
+              </div>
             </div>
-          </motion.div>
+          </div>
+        )}
+        {/* Transaction Success Banner end */}
+
+        {/* Balance */}
+        <div className="w-full flex justify-center mt-[90px] px-4">
+          <div
+            className={`${
+              theme === "dark" ? "bg-[#1a1a2e]" : "bg-white"
+            } rounded-t-2xl px-4 pt-6 w-full text-center `}
+          >
+            <div className="text-xs tracking-widest text-gray-400 font-medium mb-2">
+              TOTAL BALANCE
+            </div>
+            {/* button to claim test funds */}
+            <button
+              onClick={handleClaimTestFunds}
+              disabled={isTxProcessing}
+              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
+                ${
+                  theme === "dark"
+                    ? "bg-purple-600 hover:bg-purple-700 text-white"
+                    : "bg-white hover:bg-gray-400 text-black border border-gray-200"
+                } transition-colors
+                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
+              `}
+            >
+              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
+            </button>
+            <div
+              className={`text-4xl py-6 font-normal tracking-tight ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {isLoadingBalance ? (
+                <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
+              ) : (
+                `$${balance}`
+              )}
+            </div>
+            {/* Action Buttons-- originally justify-between */}
+            <div className="flex justify-between w-full max-w-xs mx-auto p-4">
+              <button
+                onClick={() => setShowModal("deposit")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <MoveDown size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Deposit</span>
+              </button>
+
+              <button
+                onClick={() => setShowModal("withdraw")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <MoveUp size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Withdraw</span>
+              </button>
+
+              <button
+                onClick={() => setShowModal("send")}
+                className="flex flex-col items-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                  <Send size={24} className="text-white" />
+                </div>
+                <span className="text-sm font-medium">Send</span>
+              </button>
+            </div>
+            <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
+          </div>
         </div>
 
-         {/* Modals */}
-        {showModal === "deposit" && (
-          <DepositModal
-            pool={null}
-            onClose={closeModal}
-            balance={balance}
-            isLoadingBalance={isLoadingBalance}
-            address={account?.address || ""}
+        {/* Dynamic Features */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="px-4"
+        >
+          <DynamicFeatures
             refreshBalance={() => {
               if (account?.address) {
                 fetchBalance(account.address);
               }
             }}
           />
-        )}
+          <div className="flex justify-center mt-6">
+            {/* This space is intentionally left for spacing below the investments section */}
+          </div>
+        </motion.div>
+      </div>
 
-        {showModal === "withdraw" && (
-          <WithdrawModal isOpen={showModal === "withdraw"} onClose={closeModal} />
-        )}
+       {/* Modals */}
+      {showModal === "deposit" && (
+        <DepositModal
+          pool={null}
+          onClose={closeModal}
+          balance={balance}
+          isLoadingBalance={isLoadingBalance}
+          address={account?.address || ""}
+          refreshBalance={() => {
+            if (account?.address) {
+              fetchBalance(account.address);
+            }
+          }}
+        />
+      )}
 
-        {showModal === "send" && (
-          <SendModal isOpen={showModal === "send"} onClose={closeModal} />
-        )}
-      </motion.div>
-    </ThemeBackground>
+      {showModal === "withdraw" && (
+        <WithdrawModal isOpen={showModal === "withdraw"} onClose={closeModal} />
+      )}
+
+      {showModal === "send" && (
+        <SendModal isOpen={showModal === "send"} onClose={closeModal} />
+      )}
+    </motion.div>
   );
 }
