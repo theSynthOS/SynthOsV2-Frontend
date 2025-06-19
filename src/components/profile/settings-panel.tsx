@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
+import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -136,11 +137,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               : "0 0 40px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <div
-          className={`flex flex-col min-h-screen ${
-            theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-white text-black"
-          } pt-6`}
-        >
+        <BackgroundGradientAnimation className="flex flex-col min-h-screen pt-6">
           {/* Header */}
           <div className="px-4 pb-6 flex items-center justify-between">
             <button
@@ -149,7 +146,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <h1 className="text-xl font-bold">Profile</h1>
+            <h1 className="text-xl uppercase tracking-widest text-black dark:text-white">Setting</h1>
             <div className="w-8 h-8"></div>
           </div>
 
@@ -209,7 +206,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <Link
               href="/holding"
               className={`flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
+                theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
               } rounded-lg hover:bg-opacity-80 transition-colors`}
               onClick={(e) => {
                 e.preventDefault();
@@ -232,7 +229,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <button
               onClick={handleAuth}
               className={`w-full flex items-center p-3 ${
-                theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
+                theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
               } rounded-lg text-red-400`}
             >
               {account ? (
@@ -257,7 +254,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <p>SynthOS</p>
             <p>© 2025 SynthOS. All rights reserved.</p>
           </div>
-        </div>
+        </BackgroundGradientAnimation>
       </div>
     </div>
   );
