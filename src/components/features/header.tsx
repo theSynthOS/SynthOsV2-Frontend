@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import SettingsPanel from "@/components/profile/settings-panel";
+import SettingsPanel from "@/components/setting-panel/settings-panel";
 import HistoryPanel from "@/components/features/history-panel";
 
 export default function Header() {
