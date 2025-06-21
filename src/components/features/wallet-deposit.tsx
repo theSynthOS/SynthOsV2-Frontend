@@ -11,7 +11,7 @@ interface DepositModalProps {
   onClose: () => void;
 }
 
-export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
+export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [copied, setCopied] = useState(false);
   const { theme } = useTheme();

@@ -16,6 +16,7 @@ import { usePoints } from "@/contexts/PointsContext";
 import DepositModal from "@/components/features/deposit-modal";
 import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
+import WalletDeposit from "@/components/features/wallet-deposit";
 
 // Storage key for last claim timestamp
 const LAST_CLAIM_KEY = "last_claim_timestamp";
@@ -506,17 +507,7 @@ export default function Home() {
 
       {/* Modals */}
       {showModal === "deposit" && (
-        <DepositModal
-          pool={null}
-          onClose={closeModal}
-          balance={balance}
-          isLoadingBalance={isLoadingBalance}
-          address={account?.address || ""}
-          refreshBalance={() => {
-            if (account?.address) {
-              fetchBalance(account.address);
-            }
-          }}
+        <WalletDeposit isOpen={showModal === "deposit"} onClose={closeModal}
         />
       )}
 

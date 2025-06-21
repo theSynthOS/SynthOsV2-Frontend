@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ArrowRight, Upload } from "lucide-react";
 import { MoveUp, MoveDown, Send, Copy, Check } from "lucide-react";
-import DepositModal from "@/components/features/wallet-deposit";
+import WalletDeposit from "@/components/features/wallet-deposit";
 import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
 import { useActiveAccount, ConnectButton } from "thirdweb/react";
