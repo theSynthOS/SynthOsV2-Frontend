@@ -419,18 +419,20 @@ export default function Home() {
             <div className="flex justify-between w-full max-w-xs mx-auto p-4">
               <button
                 onClick={() => setShowModal("deposit")}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center group"
               >
                 <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
-                      : "bg-[#8266E6]"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
+                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
                   }`}
                 >
                   <MoveDown
                     size={15}
-                    className="text-white transform rotate-45"
+                    className={`transform rotate-45 transition-colors duration-200 ${
+                      theme === "dark" ? "text-white" : "text-[#8266E6]"
+                    } group-hover:text-white`}
                   />
                 </div>
                 <span className="text-sm font-medium">Deposit</span>
@@ -438,18 +440,20 @@ export default function Home() {
 
               <button
                 onClick={() => setShowModal("withdraw")}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center group"
               >
                 <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
-                      : "bg-[#8266E6]"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
+                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
                   }`}
                 >
                   <MoveUp
                     size={15}
-                    className="text-white transform -rotate-45"
+                    className={`transform -rotate-45 transition-colors duration-200 ${
+                      theme === "dark" ? "text-white" : "text-[#8266E6]"
+                    } group-hover:text-white`}
                   />
                 </div>
                 <span className="text-sm font-medium">Withdraw</span>
@@ -457,16 +461,21 @@ export default function Home() {
 
               <button
                 onClick={() => setShowModal("send")}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center group"
               >
                 <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
-                      : "bg-[#8266E6]"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
+                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
                   }`}
                 >
-                  <Send size={15} className="text-white" />
+                  <Send
+                    size={15}
+                    className={`transition-colors duration-200 ${
+                      theme === "dark" ? "text-white" : "text-[#8266E6]"
+                    } group-hover:text-white`}
+                  />
                 </div>
                 <span className="text-sm font-medium">Send</span>
               </button>

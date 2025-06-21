@@ -78,21 +78,31 @@ export default function Navbar() {
           href="/home"
           className={`flex flex-col items-center ${
             isActive("/home")
-              ? "text-purple-500"
+              ? "text-[#8266E6"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
           }`}
         >
           <Home
-            className={`h-6 w-6 ${isActive("/home") ? "text-purple-500" : ""}`}
+            className={`h-6 w-6 ${isActive("/home") ? "text-[#8266E6]" : ""}`}
           />
-          <span className="text-xs mt-1 font-semibold">Home</span>
+          <span
+            className={`text-xs mt-1 font-semibold ${
+              isActive("/home")
+                ? "text-[#8266E6]"
+                : theme === "dark"
+                ? "text-gray-500"
+                : "text-gray-400"
+            }`}
+          >
+            Home
+          </span>
         </Link>
         {/* Points */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
-          <div className="rounded-full bg-purple-100 border-2 border-purple-400 shadow-lg shadow-purple-500/50 flex flex-col items-center justify-center w-24 h-24 p-2">
-            <Award className="h-8 w-8 text-purple-500" />
+          <div className="rounded-full bg-purple-100 border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2">
+            <Award className="h-8 w-8 text-[#8266E6]" />
             {isLoadingPoints || totalPoints === null ? (
               <div className="flex flex-col items-center mt-2 w-full">
                 <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
@@ -102,10 +112,10 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <span className="text-lg font-bold text-purple-700 mt-2">
+                <span className="text-lg font-bold text-[#573faf] mt-2">
                   {totalPoints}
                 </span>
-                <span className="text-sm font-semibold text-purple-600">
+                <span className="text-sm font-semibold text-[#8266E6]">
                   Pts
                 </span>
               </>
@@ -117,7 +127,7 @@ export default function Navbar() {
           href="/holding"
           className={`flex flex-col items-center ${
             isActive("/holding")
-              ? "text-purple-500"
+              ? "text-[#8266E6]"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
@@ -125,10 +135,20 @@ export default function Navbar() {
         >
           <Wallet
             className={`h-6 w-6 ${
-              isActive("/holding") ? "text-purple-500" : ""
+              isActive("/holding") ? "text-[#8266E6]" : ""
             }`}
           />
-          <span className="text-xs mt-1 font-semibold">Holdings</span>
+          <span
+            className={`text-xs mt-1 font-semibold ${
+              isActive("/holding")
+                ? "text-[#8266E6]"
+                : theme === "dark"
+                ? "text-gray-500"
+                : "text-gray-400"
+            }`}
+          >
+            Holdings
+          </span>
         </Link>
       </div>
     </div>
