@@ -12,6 +12,7 @@ import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import HoldingCard from "@/components/ui/holding-card";
 
 export default function HoldingPage() {
   const account = useActiveAccount();
@@ -165,7 +166,7 @@ export default function HoldingPage() {
           } rounded-2xl p-5 mb-3`}
         >
           <div className="flex flex-col items-center">
-            <div className="flex justify-between items-center w-full text-sm">
+            <div className="flex justify-between items-center w-full text-sm mb-4">
               <span className={`tracking-widest font-medium ${
                 theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
               }`}>YOUR HOLDINGS</span>
@@ -177,6 +178,14 @@ export default function HoldingPage() {
                 <ArrowRight size={16} />
               </div>
             </div>
+            <HoldingCard
+              symbol="USDT"
+              name="AAVE"
+              tvl="$463M TVL"
+              apy="9,96%APY"
+              logoUrl="/aave.png"
+              onClick={() => {}}
+            />
           </div>
         </div>
       </motion.div>
