@@ -383,10 +383,10 @@ export default function Home() {
         <div className="w-full flex justify-center mt-[0px] px-4">
           <div
             className={`${
-              theme === "dark" ? "bg-[#1a1a2e]" : "bg-white"
+              theme === "dark" ? "bg-[#1a1a2e]" : "bg-[#FFFFFFA6]"
             } rounded-t-2xl px-4 pt-6 w-full text-center `}
           >
-            <div className="text-xs tracking-widest text-gray-400 font-medium mb-2">
+            <div className="text-xs tracking-widest text-[#727272] font-light mb-2">
               TOTAL BALANCE
             </div>
             {/* button to claim test funds */}
@@ -429,7 +429,7 @@ export default function Home() {
                   }`}
                 >
                   <MoveDown
-                    size={24}
+                    size={15}
                     className="text-white transform rotate-45"
                   />
                 </div>
@@ -447,7 +447,10 @@ export default function Home() {
                       : "bg-[#8266E6]"
                   }`}
                 >
-                  <MoveUp size={24} className="text-white" />
+                  <MoveUp
+                    size={15}
+                    className="text-white transform -rotate-45"
+                  />
                 </div>
                 <span className="text-sm font-medium">Withdraw</span>
               </button>
@@ -463,7 +466,7 @@ export default function Home() {
                       : "bg-[#8266E6]"
                   }`}
                 >
-                  <Send size={24} className="text-white" />
+                  <Send size={15} className="text-white" />
                 </div>
                 <span className="text-sm font-medium">Send</span>
               </button>
