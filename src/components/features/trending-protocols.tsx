@@ -58,6 +58,7 @@ export default function TrendingProtocols({
   // });
   // const [showFilter, setShowFilter] = useState(false);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [balance, setBalance] = useState<string>("0");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [protocols, setProtocols] = useState<Protocol[]>([]);
@@ -164,18 +165,44 @@ export default function TrendingProtocols({
   }, [account?.address]);
 
   useEffect(() => {
-    try {
-      const storedProfile = localStorage.getItem("investor_profile");
-      if (storedProfile) {
-        setInvestorProfile(JSON.parse(storedProfile).title);
-      } else {
+    const fetchInvestorProfile = async () => {
+      if (!account?.address) {
         setInvestorProfile("Degen Learner");
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching investor profile:", error);
-      setInvestorProfile("Degen Learner");
-    }
-  }, []);
+      setIsLoadingProfile(true);
+      try {
+        const response = await fetch(
+          `/api/ai-analyser?address=${account.address}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch investor profile");
+        }
+        const data = await response.json();
+        // Store the profile in localStorage for future use
+        localStorage.setItem("investor_profile", JSON.stringify(data));
+        setInvestorProfile(data.profile.profileType || "Degen Learner");
+      } catch (error) {
+        console.error("Error fetching investor profile:", error);
+        // Fallback to localStorage if API fails
+        try {
+          const storedProfile = localStorage.getItem("investor_profile");
+          if (storedProfile) {
+            const parsedProfile = JSON.parse(storedProfile);
+            setInvestorProfile(parsedProfile.profile.profileType);
+          } else {
+            setInvestorProfile("Degen Learner");
+          }
+        } catch (localStorageError) {
+          console.error("Error reading from localStorage:", localStorageError);
+          setInvestorProfile("Degen Learner");
+        }
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchInvestorProfile();
+  }, [account?.address]);
 
   // const getRiskCategory = (type: string) => {
   //   // Placeholder risk level for now
@@ -275,7 +302,9 @@ export default function TrendingProtocols({
       >
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
-            {investorProfile && (
+            {isLoadingProfile ? (
+              <Skeleton className="h-8 w-32 rounded-sm bg-gray-300 dark:bg-gray-800" />
+            ) : investorProfile ? (
               <div
                 className={`px-3 py-1 rounded-lg text-sm font-medium ${
                   theme === "dark"
@@ -285,7 +314,7 @@ export default function TrendingProtocols({
               >
                 {investorProfile}
               </div>
-            )}
+            ) : null}
 
             {/* Risk Filter
             <div ref={filterRef}>

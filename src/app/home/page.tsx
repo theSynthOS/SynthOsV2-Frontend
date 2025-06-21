@@ -39,8 +39,9 @@ export default function Home() {
   const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
-  const [showModal, setShowModal] = useState<"deposit" | "withdraw" | "send" | null>(null);
-
+  const [showModal, setShowModal] = useState<
+    "deposit" | "withdraw" | "send" | null
+  >(null);
 
   const fetchBalance = async (walletAddress: string) => {
     try {
@@ -379,7 +380,7 @@ export default function Home() {
         {/* Transaction Success Banner end */}
 
         {/* Balance */}
-        <div className="w-full flex justify-center mt-[90px] px-4">
+        <div className="w-full flex justify-center mt-[0px] px-4">
           <div
             className={`${
               theme === "dark" ? "bg-[#1a1a2e]" : "bg-white"
@@ -420,8 +421,17 @@ export default function Home() {
                 onClick={() => setShowModal("deposit")}
                 className="flex flex-col items-center"
               >
-                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
-                  <MoveDown size={24} className="text-white" />
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                    theme === "dark"
+                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
+                      : "bg-[#8266E6]"
+                  }`}
+                >
+                  <MoveDown
+                    size={24}
+                    className="text-white transform rotate-45"
+                  />
                 </div>
                 <span className="text-sm font-medium">Deposit</span>
               </button>
@@ -430,7 +440,13 @@ export default function Home() {
                 onClick={() => setShowModal("withdraw")}
                 className="flex flex-col items-center"
               >
-                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                    theme === "dark"
+                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
+                      : "bg-[#8266E6]"
+                  }`}
+                >
                   <MoveUp size={24} className="text-white" />
                 </div>
                 <span className="text-sm font-medium">Withdraw</span>
@@ -440,7 +456,13 @@ export default function Home() {
                 onClick={() => setShowModal("send")}
                 className="flex flex-col items-center"
               >
-                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-2">
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 ${
+                    theme === "dark"
+                      ? "bg-gradient-to-br from-gray-800 to-purple-600"
+                      : "bg-[#8266E6]"
+                  }`}
+                >
                   <Send size={24} className="text-white" />
                 </div>
                 <span className="text-sm font-medium">Send</span>
@@ -470,7 +492,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-       {/* Modals */}
+      {/* Modals */}
       {showModal === "deposit" && (
         <DepositModal
           pool={null}
