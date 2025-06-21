@@ -30,7 +30,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   };
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class">
       <PointsProvider>
         <ThemeBackground className="min-h-screen">
           {/* Only show header on non-landing pages */}
