@@ -16,7 +16,7 @@ export function ThemeBackground({ children, className = "" }: ThemeBackgroundPro
       <div
         className={`${className}`}
         style={{
-          background: "linear-gradient(to left, #3C229C66, #0B042466), #0B0424"
+          background: "linear-gradient( to bottom left, #3C229C66, #0B042466), #0B0424"
         }}
       >
         {children}
