@@ -381,7 +381,12 @@ export default function Home() {
         {/* Transaction Success Banner end */}
 
         {/* Balance */}
-        <div className="w-full flex justify-center mt-[0px] px-4">
+        <motion.div
+          className="w-full flex justify-center mt-[0px] px-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <div
             className={`${
               theme === "dark" ? "bg-[#1a1a2e]" : "bg-[#FFFFFFA6]"
@@ -483,7 +488,7 @@ export default function Home() {
             </div>
             <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Dynamic Features */}
         <motion.div
@@ -507,8 +512,7 @@ export default function Home() {
 
       {/* Modals */}
       {showModal === "deposit" && (
-        <WalletDeposit isOpen={showModal === "deposit"} onClose={closeModal}
-        />
+        <WalletDeposit isOpen={showModal === "deposit"} onClose={closeModal} />
       )}
 
       {showModal === "withdraw" && (
