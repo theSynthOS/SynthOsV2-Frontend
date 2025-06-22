@@ -26,14 +26,19 @@ export function ThemeBackground({
         {children}
       </div>
     );
+    {
+      theme === "dark" && (
+        <div
+          className="fixed -top-24 -left-24 w-96 h-96 rounded-full opacity-[50%] z-10 overflow-hidden"
+          style={{
+            background: "#3C229C80",
+            filter: "blur(40px)",
+            backdropFilter: "blur(228px)",
+          }}
+        />
+      );
+    }
   }
-  <div
-    className="fixed top-8 left-8 w-48 h-48 rounded-full opacity-50 z-10"
-    style={{
-      background: "#3C229C80",
-      filter: "blur(40px)",
-    }}
-  />;
 
   // For light theme, use the BackgroundGradientAnimation component
   return (

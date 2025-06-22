@@ -39,9 +39,9 @@ export default function Home() {
   const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const account = useActiveAccount();
-  const [showModal, setShowModal] = useState<
-    "deposit" | "send" | "buy" | null
-  >(null);
+  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
+    null
+  );
 
   const fetchBalance = async (walletAddress: string) => {
     try {
@@ -255,16 +255,6 @@ export default function Home() {
       className="flex flex-col min-h-screen"
     >
       <div className="flex flex-col min-h-screen">
-        {/* Decorative background element for dark theme */}
-        {theme === "dark" && (
-          <div
-            className="fixed -top-24 -left-24 w-96 h-96 rounded-full opacity-[50%] z-10"
-            style={{
-              background: "#3C229C80",
-              filter: "blur(40px)",
-            }}
-          />
-        )}
         {/* Transaction Success Banner */}
         {bannerVisible && (
           <div
