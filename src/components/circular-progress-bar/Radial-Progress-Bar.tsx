@@ -8,6 +8,7 @@ interface RadialProgressBarProps {
   onAngleChange?: (percentage: number) => void; // Calls back with 0-100 percentage
   onWheel?: (e: React.WheelEvent) => void;
   onTouchMove?: (e: React.TouchEvent) => void;
+  isLoadingBalance?: boolean; // Add loading state prop
 }
 
 export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
@@ -16,6 +17,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   onAngleChange,
   onWheel,
   onTouchMove,
+  isLoadingBalance = false, // Default to false
 }) => {
   // Keep track of the current angle internally
   const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
@@ -137,38 +139,54 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
       <div
         className="rounded-full overflow-hidden relative h-48 w-48 mb-4 cursor-pointer"
         style={{
-          background: `conic-gradient(rgb(211, 134, 247) 0deg ${angleDegrees}deg, #e5e7eb ${angleDegrees}deg 360deg)`,
+          background: `conic-gradient(rgb(255, 214, 89) 0deg ${angleDegrees}deg, #e2e2e3 ${angleDegrees}deg 360deg)`,
         }}
       >
         <div
-          className={`rounded-full absolute inset-4 ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
+          className={`rounded-full absolute inset-1 ${
+            theme === "dark" ? "bg-[#1A0D4A]" : "bg-white"
           }`}
         />
 
-        <div className="absolute inset-2 flex items-center justify-center">
+        <div className="absolute inset-1 flex items-center justify-center">
           <div
-            className="bg-[rgb(75,23,114)] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none z-10"
+            className="bg-[#ffd659] rounded-full h-4 w-4 absolute top-0 left-0 cursor-move select-none touch-none z-10"
             ref={draggbleRef}
             style={{
               transform: `translate(${dx}px, ${dy}px)`,
               transition: 'none', // Remove transition for more precise tracking
-              boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.8)', // Add white border for better visibility
+              boxShadow: '0 0 0 2px rgba(255, 232, 161, 0.4)', // Add white border for better visibility
             }}
           />
           <span className="text-xl font-bold">${amount}</span>
         </div>
       </div>
 
+      {/* Balance Display */}
+      <div
+        className={`text-center text-sm ${
+          theme === "dark" ? "text-gray-400" : "text-gray-500"
+        } mt-1 w-full mb-2`}
+      >
+        Balance:{" "}
+        {isLoadingBalance ? (
+          <span className="inline-flex items-center">
+            <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+          </span>
+        ) : (
+          `${maxBalance.toFixed(2)} USDC`
+        )}
+      </div>
+
       {/* Percentage Buttons */}
-      <div className="flex justify-between w-full mt-2  gap-2">
+      <div className="flex justify-between w-full mt-2 gap-2">
         <button
           onClick={() => handlePercentageClick(25)}
-          className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
+          className={`px-4 py-2 md:px-6 md:py-3 text-center font-bold rounded-lg transition-colors
             ${
               selectedPercentage === 25
-                ? "bg-purple-500 text-white border-purple-500"
-                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
+                ? "bg-[#8266E6] text-white "
+                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-[#3C229C]"
             }
           `}
         >
@@ -176,11 +194,11 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
         </button>
         <button
           onClick={() => handlePercentageClick(50)}
-          className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
+          className={`px-4 py-2 md:px-6 md:py-3 text-center font-bold rounded-lg transition-colors
             ${
               selectedPercentage === 50
-                ? "bg-purple-500 text-white border-purple-500"
-                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
+                ? "bg-[#8266E6] text-white "
+                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-purple-200"
             }
           `}
         >
@@ -188,11 +206,11 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
         </button>
         <button
           onClick={() => handlePercentageClick(75)}
-          className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
+          className={`px-4 py-2 md:px-6 md:py-3 text-center font-bold rounded-lg transition-colors
             ${
               selectedPercentage === 75
-                ? "bg-purple-500 text-white border-purple-500"
-                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
+                ? "bg-[#8266E6] text-white "
+                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-purple-200"
             }
           `}
         >
@@ -200,11 +218,11 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
         </button>
         <button
           onClick={() => handlePercentageClick(100)}
-          className={`px-4 py-1 text-center font-bold rounded-lg transition-colors border
+          className={`px-4 py-2 md:px-6 md:py-3 text-center font-bold rounded-lg transition-colors
             ${
               selectedPercentage === 100
-                ? "bg-purple-500 text-white border-purple-500"
-                : "bg-purple-100 text-purple-700 border-purle-500 hover:bg-purple-200"
+                ? "bg-[#8266E6] text-white "
+                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-purple-200"
             }
           `}
         >

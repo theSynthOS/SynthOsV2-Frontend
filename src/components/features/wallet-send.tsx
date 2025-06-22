@@ -1,377 +1,282 @@
-import { useState, useEffect } from 'react';
-import { X, Scan, ArrowRight, ChevronRight, ArrowLeft, Delete } from 'lucide-react';
-import { ConnectButton, useActiveAccount } from 'thirdweb/react';
-import { client } from '@/client';
-import { useToast } from '@/hooks/use-toast';
-import { useTheme } from 'next-themes';
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { useActiveAccount, useSendTransaction } from "thirdweb/react";
+import { prepareContractCall, getContract } from "thirdweb";
+import { client, scrollSepolia } from "@/client";
+import { useToast } from "@/hooks/use-toast";
+import Card from "@/components/ui/card";
+import Image from "next/image";
+import { parseUnits } from "viem";
 
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// USDC token details for Scroll Sepolia
+const USDC_TOKEN = {
+  name: "USD Coin",
+  symbol: "USDC",
+  decimals: 6,
+  address: "0x2c9678042d52b97d27f2bd2947f7111d93f3dd0d", // Scroll Sepolia USDC address
+  logoUrl: "/usdc.png",
+};
+
 export default function SendModal({ isOpen, onClose }: SendModalProps) {
-  const [isClosing, setIsClosing] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [recentAddresses, setRecentAddresses] = useState<string[]>([]);
-  const [amount, setAmount] = useState('');
-  const [step, setStep] = useState<'address' | 'amount' | 'confirm'>('address');
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
-  const { toast } = useToast();
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
   const account = useActiveAccount();
-  const [balance, setBalance] = useState('0.00');
-  const [isSending, setIsSending] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(0);
-
-  // Set mounted state once hydration is complete
-  useEffect(() => {
-    setMounted(true);
-    
-    // Check if the device is mobile and update window height
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-      setWindowHeight(window.innerHeight);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
+  const { toast } = useToast();
+  const [balance, setBalance] = useState("0.00");
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   
-  // Control body scrolling based on modal open state
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
-    
-    // Re-enable scrolling when component unmounts or modal closes
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [txError, setTxError] = useState<string | null>(null);
+  
+  const { mutate: sendTx, isPending } = useSendTransaction();
 
-  // Mock balance for demo purposes
+  // Fetch token balance when account changes
   useEffect(() => {
-    // In a real app, this would fetch the actual balance from the blockchain
-    // For now, we'll just use a mock value
-    setBalance('100.00');
+    if (account?.address) {
+      fetchTokenBalance();
+    }
   }, [account]);
-  
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-      // Reset state when closing
-      setStep('address');
-      setAmount('0');
-      setRecipientAddress('');
-    }, 200); // Match animation duration
-  };
-  
-  const handleScanComplete = (result: string) => {
-    setRecipientAddress(result);
-    setShowScanner(false);
-  };
-  
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-  
-  const handleNumberPress = (num: string) => {
-    if (amount === '0' && num !== '.') {
-      setAmount(num);
-    } else {
-      // Prevent multiple decimal points
-      if (num === '.' && amount.includes('.')) return;
-      setAmount(prev => prev + num);
-    }
-  };
-  
-  const handleDelete = () => {
-    if (amount.length <= 1) {
-      setAmount('0');
-    } else {
-      setAmount(prev => prev.slice(0, -1));
-    }
-  };
-  
-  const handlePercentage = (percentage: number) => {
-    const balanceValue = parseFloat(balance);
-    const calculatedAmount = (balanceValue * percentage / 100).toFixed(2);
-    setAmount(calculatedAmount);
-  };
-  
-  const handleNextStep = () => {
-    if (parseFloat(amount) > 0) {
-      setStep('confirm');
-    }
-  };
-  
-  const handlePreviousStep = () => {
-    setStep('address');
-  };
 
-  const handleSend = () => {
-    if (!recipientAddress) {
-      toast({
-        variant: "destructive",
-        title: "Missing Recipient",
-        description: "Please enter a valid recipient address."
-      });
-      return;
-    }
-
-    if (parseFloat(amount) <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Please enter a valid amount to send."
-      });
-      return;
-    }
-
-    setIsSending(true);
-
-    // Simulate sending process
-    setTimeout(() => {
-      toast({
-        variant: "success",
-        title: "Transfer Successful",
-        description: `You have successfully sent $${amount} to ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(recipientAddress.length - 4)}`
-      });
+  // Function to fetch USDC token balance
+  const fetchTokenBalance = async () => {
+    if (!account?.address) return;
+    
+    setIsLoadingBalance(true);
+    try {
+      const response = await fetch(`/api/balance?address=${account.address}`);
       
-      setIsSending(false);
-      setAmount('0');
-      setRecipientAddress('');
-      setStep('address');
-      handleClose();
-    }, 2000);
+      if (!response.ok) {
+        throw new Error("Failed to fetch balance");
+      }
+      
+      const data = await response.json();
+      setBalance(data.usdBalance || "0.00");
+    } catch (error) {
+      console.error("Error fetching USDC balance:", error);
+      setBalance("0.00");
+      toast({
+        variant: "destructive",
+        title: "Balance Error",
+        description: "Failed to fetch your USDC balance",
+      });
+    } finally {
+      setIsLoadingBalance(false);
+    }
   };
 
-  // If theme isn't loaded yet or modal not open, return nothing
-  if (!mounted || !isOpen) return null;
+  // Handle setting max amount
+  const handleSetMaxAmount = () => {
+    setAmount(balance);
+  };
 
-  // Calculate dynamic styles based on device height
-  const isSmallHeight = windowHeight < 700;
-  const modalMaxHeight = isSmallHeight ? '95vh' : '90vh';
-  const amountFontSize = isMobile ? (isSmallHeight ? 'text-5xl' : 'text-6xl') : 'text-7xl';
-  const keypadGap = isMobile ? (isSmallHeight ? 'gap-2' : 'gap-3') : 'gap-6';
-  const keypadFontSize = isMobile ? (isSmallHeight ? 'text-xl' : 'text-2xl') : 'text-3xl';
-  const sectionSpacing = isMobile ? (isSmallHeight ? 'mb-3' : 'mb-4') : 'mb-8';
+  // Handle sending USDC
+  const handleSendFunds = () => {
+    // Get USDC contract
+    const usdcContract = getContract({
+      client,
+      chain: scrollSepolia,
+      address: USDC_TOKEN.address,
+    });
+
+    // Convert amount to wei (USDC has 6 decimals)
+    const amountInWei = parseUnits(amount, USDC_TOKEN.decimals);
+
+    // Construct USDC transfer transaction
+    const transaction = prepareContractCall({
+      contract: usdcContract,
+      method: "function transfer(address to, uint256 amount) returns (bool)",
+      params: [recipient, amountInWei],
+    });
+    
+    sendTx(transaction, {
+      onSuccess: (result) => {
+        // Clear any previous error
+        setTxError(null);
+        
+        // Set transaction hash for success display
+        setTxHash(result.transactionHash);
+        
+        toast({
+          title: "Transaction Sent",
+          description: "Your USDC has been sent successfully!",
+        });
+        
+        // Reset form
+        setAmount("");
+        setRecipient("");
+        
+        // Refresh balance
+        fetchTokenBalance();
+      },
+      onError: (error) => {
+        console.error("Transaction error:", error);
+        
+        // Clear any previous success
+        setTxHash(null);
+        
+        let errorMessage = "Transaction failed";
+        if (error.message.includes("user rejected transaction")) {
+          errorMessage = "You rejected the transaction";
+        } else if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for transaction";
+        }
+        
+        // Set error for display
+        setTxError(errorMessage);
+        
+        toast({
+          variant: "destructive",
+          title: "Transaction Failed",
+          description: errorMessage,
+        });
+      }
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 touch-none" onClick={handleClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
         aria-hidden="true"
       ></div>
       
-      {/* Modal Content */}
-      <div 
-        className={`absolute bottom-0 left-0 right-0 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} rounded-t-[32px] shadow-xl ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} z-50 overflow-hidden flex flex-col`}
-        style={{ maxHeight: modalMaxHeight }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Drag Handle */}
-        <div className={`w-12 h-1.5 ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'} rounded-full mx-auto my-3`}></div>
-        
-        {/* Close Button */}
-        <button 
-          onClick={handleClose} 
-          className={`absolute top-3 right-3 p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-        >
-          <X className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
-        </button>
-        
-        {/* Modal Header */}
-        <h2 className={`text-${isMobile ? 'xl' : '2xl'} font-bold text-center mt-2 mb-3`}>Send</h2>
-        
-        {/* Modal Content - Scrollable Area */}
-        <div 
-          className={`px-4 pb-safe overflow-y-auto overscroll-contain flex-1`}
-          style={{ paddingBottom: isMobile ? '6rem' : '8rem' }}
-        >
-          {!account ? (
-            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
-              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-                Connect your wallet to send funds.
-              </p>
-            </div>
-          ) : showScanner ? (
-            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
-              <div className="mb-4">
-                <div className="w-full h-48 bg-black rounded-lg flex items-center justify-center mb-4">
-                  <div className="text-white">Scanning QR Code...</div>
-                </div>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Position the QR code in the center of the camera
+      {/* Card Content */}
+      <div className="relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <Card title="Send USDC" onClose={onClose}>
+          <div className="max-h-[60vh]">
+            {!account ? (
+              <div className={`${theme === "dark" ? "bg-gray-700" : "bg-gray-50"} rounded-lg p-4 text-center`}>
+                <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-4`}>
+                  Connect your wallet to send funds
                 </p>
               </div>
-              <button 
-                onClick={() => setShowScanner(false)}
-                className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} py-2 px-6 rounded-lg font-medium`}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : step === 'address' ? (
-            <div className="relative">
-              {/* Blurred Content */}
-              <div className="filter blur-sm">
-                <div className="flex flex-col items-center">
-                  {/* Asset Selector */}
-                  <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full px-4 py-1.5 ${sectionSpacing}`}>
-                    <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} ${isMobile ? 'text-sm' : ''}`}>Balance: ${balance}</span>
-                  </div>
-                  
-                  {/* Amount Display */}
-                  <div className={`text-center ${sectionSpacing}`}>
-                    <div className={`${amountFontSize} font-light ${amount !== '0' ? (theme === 'dark' ? 'text-white' : 'text-black') : (theme === 'dark' ? 'text-gray-600' : 'text-gray-300')}`}>
-                      ${amount}
+            ) : (
+              <div className="space-y-4">
+                {/* Token Display */}
+                <div className="w-full flex items-center justify-between p-3 mb-4 border rounded-lg border-gray-200 dark:border-white/40 bg-white dark:bg-white/5">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 relative">
+                      <Image 
+                        src={USDC_TOKEN.logoUrl}
+                        alt={USDC_TOKEN.name}
+                        width={32} 
+                        height={32}
+                        style={{ objectFit: "contain" }}
+                      />
+                    </div>
+                    <div>
+                      <div className={`font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{USDC_TOKEN.name}</div>
+                      <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        {isLoadingBalance ? "Loading..." : `${balance} ${USDC_TOKEN.symbol}`}
+                      </div>
                     </div>
                   </div>
-                  {/* Numeric Keypad - Fixed at the bottom */}
-                  <div className={`grid grid-cols-3 ${keypadGap} w-full ${sectionSpacing} ${isSmallHeight ? 'mt-1' : ''}`}>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleNumberPress(num.toString())}
-                        className={`${keypadFontSize} font-medium text-center py-1`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                    <button
-                      onClick={handleDelete}
-                      className="flex items-center justify-center"
-                    >
-                      <Delete className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
-                    </button>
-                  </div>
-                  
-                  {/* Continue Button */}
-                  <button 
-                    onClick={handleNextStep}
-                    disabled={parseFloat(amount) <= 0}
-                    className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full py-3 px-4 flex items-center justify-between ${sectionSpacing}`}
-                  >
-                    <div className="w-6"></div> {/* Spacer for alignment */}
-                    <div className="text-center flex-1">
-                      Next 
-                    </div>
-                    <div className="flex items-center">
-                      <ChevronRight className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                    </div>
-                  </button>
                 </div>
-              </div>
 
-              {/* Coming Soon Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <p className={`text-xl font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    Coming Soon
-                  </p>
-                  <p className={`mt-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                    Send functionality will be available on mainnet launch. 
-                  </p>
+                {/* Recipient Address */}
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                    Send to
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="0x... or ENS name"
+                    className={`w-full p-3 border ${
+                      theme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white"
+                        : "bg-white border-gray-300 text-black"
+                    } rounded-lg`}
+                    value={recipient}
+                    onChange={(e) => setRecipient(e.target.value)}
+                    disabled={isPending}
+                  />
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Back Button */}
-              <button 
-                onClick={handlePreviousStep}
-                className={`flex items-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-2`}
-              >
-                <ArrowLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} mr-1`} />
-                <span className={`${isMobile ? 'text-sm' : ''}`}>Back</span>
-              </button>
-              
-              {/* Amount Summary */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-3 mb-4`}>
-                <div className="flex justify-between items-center">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-sm' : ''}`}>Amount</span>
-                  <div className="flex items-center">
-                    <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>${amount}</span>
-                    <button 
-                      onClick={handlePreviousStep} 
-                      className={`ml-2 text-blue-500 ${isMobile ? 'text-xs' : 'text-sm'}`}
-                    >
-                      Edit
-                    </button>
+
+                {/* Amount */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className={`block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                      Amount
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        Balance: {balance} {USDC_TOKEN.symbol}
+                      </span>
+                      <button 
+                        className={`text-xs px-2 py-1 rounded ${theme === "dark" ? "bg-gray-700 text-blue-400 hover:bg-gray-600" : "bg-gray-100 text-blue-600 hover:bg-gray-200"}`}
+                        onClick={handleSetMaxAmount}
+                        disabled={isPending}
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className={`w-full p-3 border ${
+                        theme === "dark"
+                          ? "bg-gray-800 border-gray-700 text-white"
+                          : "bg-white border-gray-300 text-black"
+                      } rounded-lg`}
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      disabled={isPending}
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <span className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{USDC_TOKEN.symbol}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Error Message */}
+                {txError && (
+                  <div className={`mt-4 p-3 rounded-lg ${theme === "dark" ? "bg-red-900/30 text-red-200" : "bg-red-100 text-red-800"}`}>
+                    <p className="text-sm">
+                      <span className="font-bold">Error:</span> {txError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Send Button */}
+                <button
+                  onClick={handleSendFunds}
+                  disabled={!recipient || !amount || parseFloat(amount) <= 0 || isLoadingBalance || isPending}
+                  className={`w-full mt-4 bg-[#8266E6] dark:bg-[#3C229C] hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors ${
+                    (!recipient || !amount || parseFloat(amount) <= 0 || isLoadingBalance || isPending) ? 
+                      "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isPending ? "Sending..." : "Send USDC"}
+                </button>
+                
+                {/* Transaction Success */}
+                {txHash && (
+                  <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg">
+                    <p className="text-sm">Transaction sent successfully!</p>
+                    <a 
+                      href={`https://sepolia.scrollscan.dev/tx/${txHash}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs mt-1 block"
+                    >
+                      <p className="underline">[View on Scroll Explorer]</p>
+                    </a>
+                  </div>
+                )}
               </div>
-              
-              {/* Recipient Address */}
-              <div>
-                <div className='flex'>
-                <label className={`block ${isMobile ? 'text-xs' : 'text-sm'} font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Recipient Address
-                </label>
-                <p className='text-red-500'>*</p>
-                </div>
-                <div className="flex">
-                  <input 
-                    type="text" 
-                    placeholder="0x123...45AB5" 
-                    className={`flex-1 p-2 ${isMobile ? 'text-sm' : ''} ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} rounded-l-lg`}
-                    value={recipientAddress}
-                    onChange={(e) => setRecipientAddress(e.target.value)}
-                    required
-                  />
-                  <button 
-                    onClick={handleScanClick}
-                    className={`${theme === 'dark' ? 'bg-gray-700 border-gray-700' : 'bg-gray-100 border-gray-300'} p-2 border border-l-0 rounded-r-lg`}
-                  >
-                    <Scan className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Network Fee */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg p-3 mt-4`}>
-                <div className="flex justify-between mb-2">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Network Fee</span>
-                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>~0.0001 ETH</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Estimated Total</span>
-                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>${(parseFloat(amount) + 0.01).toFixed(2)}</span>
-                </div>
-              </div>
-              
-              {/* Chain Information */}
-              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-3 mt-4`}>
-                <div className="flex justify-between">
-                  <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Network</span>
-                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Scroll Sepolia</span>
-                </div>
-              </div>
-              
-              {/* Send Button */}
-              <button 
-                className={`mt-4 w-full bg-green-600 text-white py-2.5 px-4 rounded-lg flex items-center justify-center disabled:bg-green-400 mb-4`}
-                disabled={!recipientAddress || parseFloat(amount) <= 0 || isSending}
-                onClick={handleSend}
-              >
-                <span className={`mr-2 ${isMobile ? 'text-sm' : ''}`}>{isSending ? 'Sending...' : 'Send'}</span>
-                {!isSending && <ArrowRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />}
-              </button>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   );
-} 
+}

@@ -31,7 +31,7 @@ const Card: React.FC<CardProps> = ({
       } shadow-md ${className}`}
       style={{
         boxShadow: isDark 
-          ? 'inset 0 0 20px rgba(143, 99, 233, 0.45)' 
+          ? 'inset 0 0 20px rgba(143, 99, 233, 1)' 
           : 'inset 0 0 20px rgba(143, 99, 233, 0.2)'
       }}
     >
