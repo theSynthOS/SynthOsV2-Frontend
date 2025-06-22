@@ -120,16 +120,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-xl uppercase tracking-widest text-black dark:text-white">Setting</h1>
+        <h1 className="text-xl uppercase tracking-widest text-[#8266E6] dark:text-white">
+          Setting
+        </h1>
         <div className="w-8 h-8"></div>
       </div>
 
       {/* User Info */}
-      <div
-        className={`px-4 pb-6 flex items-center border-b ${
-          theme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
-      >
+      <div className={`px-4 pb-6 flex items-center`}>
         <div
           className={`w-16 h-16 rounded-full ${
             theme === "dark" ? "bg-gray-700" : "bg-gray-100"
@@ -143,9 +141,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         </div>
         <div className="flex-1">
           <h2 className={`text-lg truncate font-semibold`}>
-            {displayAddress
-              ? formatAddress(displayAddress)
-              : "Not connected"}
+            {displayAddress ? formatAddress(displayAddress) : "Not connected"}
           </h2>
           {displayAddress && (
             <div className="flex items-center mt-1">
@@ -174,7 +170,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           )}
         </div>
       </div>
-
+      <div className="px-4">
+        <div className="h-px w-full bg-[#DDDDDD] dark:bg-[#444048]" />
+      </div>
       {/* Menu Items */}
       <div className="px-4 py-4 space-y-4">
         <Link
@@ -212,8 +210,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           </button>
         ) : (
           <div className="flex w-full items-center mt-2">
-            <ConnectButton 
-              client={client} 
+            <ConnectButton
+              client={client}
               wallets={wallets}
               theme={theme === "dark" ? "dark" : "light"}
               connectModal={{ size: "compact" }}
@@ -265,8 +263,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               ? "0 0 40px rgba(0, 0, 0, 0.3)"
               : "0 0 40px rgba(0, 0, 0, 0.1)",
           ...(theme === "dark" && {
-            background: "linear-gradient(to left, #3C229C66, #0B042466), #0B0424"
-          })
+            background:
+              "linear-gradient(311.14deg, rgba(11, 4, 36, 0.4) 16.15%, rgba(60, 34, 156, 0.4) 94.41%)",
+            backdropFilter: "blur(90px)",
+          }),
         }}
       >
         {theme === "dark" ? (

@@ -420,7 +420,7 @@ export default function Home() {
                 {isTxProcessing ? "Processing..." : "Claim Test USDC"}
               </button>
               <div
-                className={`text-4xl py-6 font-normal tracking-tight ${
+                className={`py-6 font-medium text-4xl leading-[100%] tracking-[-0.03em] text-center uppercase ${
                   theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
                 }`}
                 style={
@@ -500,7 +500,7 @@ export default function Home() {
                   <span className="text-sm font-medium">Buy</span>
                 </button>
               </div>
-              <div className="h-px w-full bg-gray-200 dark:border-[#444048]" />
+              <div className="h-px w-full bg-gray-200 dark:bg-[#444048]" />
             </div>
           </div>
         </motion.div>
