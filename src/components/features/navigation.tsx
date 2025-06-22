@@ -101,18 +101,34 @@ export default function Navbar() {
         </Link>
         {/* Points */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
-          <div className="rounded-full bg-purple-100 border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2">
+          <div
+            className={`rounded-full border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2 ${
+              theme === "dark" ? "bg-gray-800" : "bg-purple-100"
+            }`}
+          >
             <Award className="h-8 w-8 text-[#8266E6]" />
             {isLoadingPoints || totalPoints === null ? (
               <div className="flex flex-col items-center mt-2 w-full">
-                <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
-                <span className="text-sm font-semibold text-purple-600">
+                <Skeleton
+                  className={`w-12 h-6 rounded mb-2 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-purple-200"
+                  }`}
+                />
+                <span
+                  className={`text-sm font-semibold ${
+                    theme === "dark" ? "text-purple-400" : "text-purple-600"
+                  }`}
+                >
                   Pts
                 </span>
               </div>
             ) : (
               <>
-                <span className="text-lg font-bold text-[#573faf] mt-2">
+                <span
+                  className={`text-lg font-bold mt-2 ${
+                    theme === "dark" ? "text-purple-300" : "text-[#573faf]"
+                  }`}
+                >
                   {totalPoints}
                 </span>
                 <span className="text-sm font-semibold text-[#8266E6]">

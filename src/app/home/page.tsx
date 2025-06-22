@@ -256,6 +256,16 @@ export default function Home() {
       className="flex flex-col min-h-screen"
     >
       <div className="flex flex-col min-h-screen">
+        {/* Decorative background element for dark theme */}
+        {theme === "dark" && (
+          <div
+            className="fixed -top-24 -left-24 w-96 h-96 rounded-full opacity-[50%] z-10"
+            style={{
+              background: "#3C229C80",
+              filter: "blur(40px)",
+            }}
+          />
+        )}
         {/* Transaction Success Banner */}
         {bannerVisible && (
           <div
@@ -389,7 +399,7 @@ export default function Home() {
         >
           <div
             className={`${
-              theme === "dark" ? "bg-[#1a1a2e]" : "bg-[#FFFFFFA6]"
+              theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
             } rounded-t-2xl px-4 pt-6 w-full text-center `}
           >
             <div className="text-xs tracking-widest text-[#727272] font-light mb-2">
@@ -430,8 +440,8 @@ export default function Home() {
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
-                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
                   }`}
                 >
                   <MoveDown
@@ -451,8 +461,8 @@ export default function Home() {
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
-                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
                   }`}
                 >
                   <MoveUp
@@ -472,7 +482,7 @@ export default function Home() {
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-gradient-to-br group-hover:from-gray-800 group-hover:to-purple-600 group-hover:border-transparent"
+                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
                       : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
                   }`}
                 >

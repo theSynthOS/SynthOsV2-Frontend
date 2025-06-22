@@ -46,7 +46,7 @@ export default function DynamicFeatures({
   return (
     <>
       {/* Trending */}
-      <div className="mb-[140px]">
+      <div className="mb-[60px]">
         <TrendingProtocols
           refreshBalance={refreshBalance}
           renderFeedbackButton={renderFeedbackButton}

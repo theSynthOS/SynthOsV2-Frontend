@@ -238,7 +238,7 @@ export default function TrendingProtocols({
     <>
       <div
         className={`px-6 py-6 ${
-          theme === "dark" ? "bg-[#1a1a2e]" : "bg-[#FFFFFFA6]"
+          theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
         } rounded-b-2xl`}
       >
         <div className="flex-col mb-6">
@@ -537,7 +537,7 @@ export default function TrendingProtocols({
                   key={pair.id}
                   className={`flex flex-col ${
                     theme === "dark"
-                      ? "bg-gray-700/50 hover:bg-gray-800/50"
+                      ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40 hover:from-[#0B0424]/60 hover:to-[#3C229C]/60 border-2 border-[#402D86]"
                       : "bg-[#FDFDFF] hover:bg-gray-50 shadow-sm"
                   } p-5 rounded-xl transition-colors duration-200 relative cursor-pointer`}
                   onClick={() => handleProtocolClick(pair)}
