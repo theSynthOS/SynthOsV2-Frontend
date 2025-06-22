@@ -21,12 +21,14 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 }) => {
   // Keep track of the current angle internally
   const [currentAngle, setCurrentAngle] = React.useState(initialAngle);
-  
+
   // Keep track of whether the component was just mounted
   const isInitialMount = React.useRef(true);
 
   // Keep track of the selected percentage button
-  const [selectedPercentage, setSelectedPercentage] = React.useState<number | null>(null);
+  const [selectedPercentage, setSelectedPercentage] = React.useState<
+    number | null
+  >(null);
 
   const { theme } = useTheme();
 
@@ -57,7 +59,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
     if (processingPercentageClick.current) {
       return;
     }
-    
+
     // Handle zero angle explicitly
     if (angle === 0) {
       if (onAngleChange) {
@@ -67,7 +69,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
       setCurrentAngle(0);
       return;
     }
-    
+
     if (onAngleChange) {
       onAngleChange(angle * 100);
     }
@@ -112,11 +114,11 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   const handlePercentageClick = (percentage: number) => {
     // Set flag to prevent feedback loops during animation
     processingPercentageClick.current = true;
-    
+
     const targetAngle = percentage / 100;
     animateAngle(currentAngle, targetAngle);
     setSelectedPercentage(percentage);
-    
+
     // Call onAngleChange directly with the exact percentage
     if (onAngleChange) {
       // Make sure we're passing the exact percentage value (25, 50, 75, 100)
@@ -125,26 +127,27 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
   };
 
   // Calculate the amount based on currentAngle
-  const amount = currentAngle === 0 ? "0.00" : (currentAngle * maxBalance).toFixed(2);
+  const amount =
+    currentAngle === 0 ? "0.00" : (currentAngle * maxBalance).toFixed(2);
 
   // Calculate angle in degrees for the conic gradient
   const angleDegrees = currentAngle * 360;
 
   return (
-    <div 
+    <div
       className="flex flex-col items-center w-full"
       onWheel={onWheel}
       onTouchMove={onTouchMove}
     >
       <div
-        className="rounded-full overflow-hidden relative h-48 w-48 mb-4 cursor-pointer"
+        className="rounded-full relative h-48 w-48 mb-4 cursor-pointer flex-shrink-0 aspect-square"
         style={{
           background: `conic-gradient(rgb(255, 214, 89) 0deg ${angleDegrees}deg, #e2e2e3 ${angleDegrees}deg 360deg)`,
         }}
       >
         <div
           className={`rounded-full absolute inset-1 ${
-            theme === "dark" ? "bg-[#1A0D4A]" : "bg-white"
+            theme === "dark" ? "bg-[#1A0D4A]" : "bg-[#FAFAF9]"
           }`}
         />
 
@@ -154,8 +157,8 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
             ref={draggbleRef}
             style={{
               transform: `translate(${dx}px, ${dy}px)`,
-              transition: 'none', // Remove transition for more precise tracking
-              boxShadow: '0 0 0 2px rgba(255, 232, 161, 0.4)', // Add white border for better visibility
+              transition: "none",
+              boxShadow: "0 0 0 2px rgba(255, 232, 161, 0.4)",
             }}
           />
           <span className="text-xl font-bold">${amount}</span>

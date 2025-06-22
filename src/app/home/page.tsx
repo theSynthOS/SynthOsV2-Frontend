@@ -389,16 +389,26 @@ export default function Home() {
           <div
             className={`${
               theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
-            } rounded-t-2xl px-4 pt-6 w-full text-center `}
+            } rounded-t-2xl px-4 pt-6 w-full text-center relative overflow-hidden`}
           >
-            <div className="text-xs tracking-widest text-[#727272] font-light mb-2">
-              TOTAL BALANCE
-            </div>
-            {/* button to claim test funds */}
-            <button
-              onClick={handleClaimTestFunds}
-              disabled={isTxProcessing}
-              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
+            {theme === "dark" && (
+              <div
+                className="absolute -top-28 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
+                style={{
+                  background: "#3C229C80",
+                  filter: "blur(40px)",
+                }}
+              />
+            )}
+            <div className="relative z-10">
+              <div className="text-xs tracking-widest text-[#727272] font-light mb-2">
+                TOTAL BALANCE
+              </div>
+              {/* button to claim test funds */}
+              <button
+                onClick={handleClaimTestFunds}
+                disabled={isTxProcessing}
+                className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
                 ${
                   theme === "dark"
                     ? "bg-purple-600 hover:bg-purple-700 text-white"
@@ -406,86 +416,92 @@ export default function Home() {
                 } transition-colors
                 ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
               `}
-            >
-              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
-            </button>
-            <div
-              className={`text-4xl py-6 font-normal tracking-tight ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {isLoadingBalance ? (
-                <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
-              ) : (
-                `$${balance}`
-              )}
-            </div>
-            {/* Action Buttons-- originally justify-between */}
-            <div className="flex justify-between w-full max-w-xs mx-auto p-4">
-              <button
-                onClick={() => setShowModal("deposit")}
-                className="flex flex-col items-center group"
               >
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                    theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
-                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                  }`}
-                >
-                  <MoveDown
-                    size={15}
-                    className={`transform rotate-45 transition-colors duration-200 ${
-                      theme === "dark" ? "text-white" : "text-[#8266E6]"
-                    } group-hover:text-white`}
-                  />
-                </div>
-                <span className="text-sm font-medium">Deposit</span>
+                {isTxProcessing ? "Processing..." : "Claim Test USDC"}
               </button>
+              <div
+                className={`text-4xl py-6 font-normal tracking-tight ${
+                  theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
+                }`}
+                style={
+                  theme === "dark"
+                    ? { textShadow: "0px 0px 12px #FFCA5980" }
+                    : {}
+                }
+              >
+                {isLoadingBalance ? (
+                  <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
+                ) : (
+                  `$${balance}`
+                )}
+              </div>
+              {/* Action Buttons-- originally justify-between */}
+              <div className="flex justify-between w-full max-w-xs mx-auto p-4">
+                <button
+                  onClick={() => setShowModal("deposit")}
+                  className="flex flex-col items-center group"
+                >
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
+                      theme === "dark"
+                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                    }`}
+                  >
+                    <MoveDown
+                      size={15}
+                      className={`transform rotate-45 transition-colors duration-200 ${
+                        theme === "dark" ? "text-white" : "text-[#8266E6]"
+                      } group-hover:text-white`}
+                    />
+                  </div>
+                  <span className="text-sm font-medium">Deposit</span>
+                </button>
 
-              <button
-                onClick={() => setShowModal("send")}
-                className="flex flex-col items-center group"
-              >
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                    theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
-                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                  }`}
+                <button
+                  onClick={() => setShowModal("send")}
+                  className="flex flex-col items-center group"
                 >
-                  <MoveUp
-                    size={15}
-                    className={`transform -rotate-45 transition-colors duration-200 ${
-                      theme === "dark" ? "text-white" : "text-[#8266E6]"
-                    } group-hover:text-white`}
-                  />
-                </div>
-                <span className="text-sm font-medium">Send</span>
-              </button>
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
+                      theme === "dark"
+                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                    }`}
+                  >
+                    <MoveUp
+                      size={15}
+                      className={`transform -rotate-45 transition-colors duration-200 ${
+                        theme === "dark" ? "text-white" : "text-[#8266E6]"
+                      } group-hover:text-white`}
+                    />
+                  </div>
+                  <span className="text-sm font-medium">Send</span>
+                </button>
 
-              <button
-                onClick={() => setShowModal("buy")}
-                className="flex flex-col items-center group"
-              >
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                    theme === "dark"
-                      ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
-                      : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
-                  }`}
+                <button
+                  onClick={() => setShowModal("buy")}
+                  className="flex flex-col items-center group"
                 >
-                  <Send
-                    size={15}
-                    className={`transition-colors duration-200 ${
-                      theme === "dark" ? "text-white" : "text-[#8266E6]"
-                    } group-hover:text-white`}
-                  />
-                </div>
-                <span className="text-sm font-medium">Buy</span>
-              </button>
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
+                      theme === "dark"
+                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
+                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
+                    }`}
+                  >
+                    <Send
+                      size={15}
+                      className={`transition-colors duration-200 ${
+                        theme === "dark" ? "text-white" : "text-[#8266E6]"
+                      } group-hover:text-white`}
+                    />
+                  </div>
+                  <span className="text-sm font-medium">Buy</span>
+                </button>
+              </div>
+              <div className="h-px w-full bg-gray-200 dark:border-[#444048]" />
             </div>
-            <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
           </div>
         </motion.div>
 

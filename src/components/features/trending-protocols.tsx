@@ -537,9 +537,18 @@ export default function TrendingProtocols({
                   key={pair.id}
                   className={`flex flex-col ${
                     theme === "dark"
-                      ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40 hover:from-[#0B0424]/60 hover:to-[#3C229C]/60 border-2 border-[#402D86]"
+                      ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40 hover:from-[#0B0424]/60 hover:to-[#3C229C]/60"
                       : "bg-[#FDFDFF] hover:bg-gray-50 shadow-sm"
                   } p-5 rounded-xl transition-colors duration-200 relative cursor-pointer`}
+                  style={{
+                    ...(theme === "dark" && {
+                      backdropFilter: "blur(72px)",
+                      boxShadow: "0px 0px 8px 0.8px #402D86 inset",
+                      border: "1.6px solid",
+                      borderImageSource:
+                        "linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%)",
+                    }),
+                  }}
                   onClick={() => handleProtocolClick(pair)}
                 >
                   <div className="flex items-center mb-4">

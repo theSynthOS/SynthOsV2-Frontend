@@ -14,8 +14,8 @@ import {
   sendAndConfirmTransaction,
   sendBatchTransaction,
 } from "thirdweb";
-import QRCode from 'react-qr-code';
-import Image from 'next/image';
+import QRCode from "react-qr-code";
+import Image from "next/image";
 import Card from "@/components/ui/card";
 
 // Add Ethereum window type
@@ -254,7 +254,6 @@ export default function DepositModal({
   // Enhanced fetchBalance function that combines direct fetch and parent refresh
   const fetchBalanceAndUpdate = async () => {
     try {
-
       // First try direct fetch for immediate UI update
       await fetchBalance();
 
@@ -416,30 +415,30 @@ export default function DepositModal({
       }
 
       // Add 25 points for deposit
-      console.log('Starting points deposit for address:', address);
+      console.log("Starting points deposit for address:", address);
       fetch("/api/points/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       })
         .then((res) => {
-          console.log('Points deposit response status:', res.status);
+          console.log("Points deposit response status:", res.status);
           return res.json();
         })
         .then((data) => {
-          console.log('Points deposit response data:', data);
+          console.log("Points deposit response data:", data);
           // Fetch updated points
-          console.log('Fetching updated points for address:', address);
+          console.log("Fetching updated points for address:", address);
           return fetch(
             `/api/points?address=${encodeURIComponent(address ?? "")}`
           );
         })
         .then((res) => {
-          console.log('Get points response status:', res.status);
+          console.log("Get points response status:", res.status);
           return res.json();
         })
         .then((data) => {
-          console.log('Get points response data:', data);
+          console.log("Get points response data:", data);
         })
         .catch((err) => {
           console.error("Points operation error:", err);
@@ -493,7 +492,6 @@ export default function DepositModal({
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
-  
       toast({
         variant: "destructive",
         title: "Invalid Amount",
@@ -510,9 +508,6 @@ export default function DepositModal({
     if (pool?.protocol_pair_id) {
       setProcessingPoolId(pool.protocol_pair_id);
     }
-   
-
-
 
     try {
       // Update progress - start progress animation
@@ -535,7 +530,6 @@ export default function DepositModal({
       setTxProgressPercent(30);
 
       const responseData = await response.json();
-    
 
       // Update progress
       setTxProgressPercent(50);
@@ -583,7 +577,6 @@ export default function DepositModal({
         // Update progress to complete
         setTxProgressPercent(100);
 
-     
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible
@@ -755,13 +748,11 @@ export default function DepositModal({
             onClose={handleClose}
             className="max-h-[90vh] w-full max-w-md"
           >
-            <div
-              className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4"
-            >
+            <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
               {/* Input and Circle Section */}
               <div>
                 {/* Radial progress bar */}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center mt-2">
                   <RadialProgressBar
                     initialAngle={initialAngle}
                     maxBalance={maxBalance}
@@ -829,7 +820,6 @@ export default function DepositModal({
                   // Ensure we capture the most recent amount calculation directly from the ref
                   const currentAmount =
                     lastCalculatedAmountRef.current || amount;
-       
 
                   // Make sure the amount in the ref is immediately available for handleConfirmDeposit
                   handleConfirmDeposit();
@@ -936,7 +926,9 @@ export default function DepositModal({
 
               <div
                 className={`w-full ${
-                  theme === "dark" ? "bg-white/5 border-white/60" : "bg-gray-100"
+                  theme === "dark"
+                    ? "bg-white/5 border-white/60"
+                    : "bg-gray-100"
                 } p-4 rounded-lg mb-6 border`}
               >
                 <div className="flex justify-between mb-2">

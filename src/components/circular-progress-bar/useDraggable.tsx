@@ -65,18 +65,18 @@ export const useDraggable = ({
 
       const handleMouseMove = (e: MouseEvent) => {
         e.preventDefault();
-        
+
         // Get mouse position relative to container
         const rect = node.parentElement?.getBoundingClientRect();
         if (!rect) return;
-        
+
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         // Calculate new angle
         const newAngle = calculateAngle(x, y, center);
         setAngle(newAngle);
-        
+
         // Calculate new position
         const angleInRadians = newAngle * 2 * Math.PI;
         const newDx = center + radius * Math.sin(angleInRadians);
@@ -109,18 +109,18 @@ export const useDraggable = ({
       const handleTouchMove = (e: TouchEvent) => {
         e.preventDefault();
         const touch = e.touches[0];
-        
+
         // Get touch position relative to container
         const rect = node.parentElement?.getBoundingClientRect();
         if (!rect) return;
-        
+
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
-        
+
         // Calculate new angle
         const newAngle = calculateAngle(x, y, center);
         setAngle(newAngle);
-        
+
         // Calculate new position
         const angleInRadians = newAngle * 2 * Math.PI;
         const newDx = center + radius * Math.sin(angleInRadians);
@@ -133,7 +133,9 @@ export const useDraggable = ({
         document.removeEventListener("touchend", handleTouchEnd);
       };
 
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
       document.addEventListener("touchend", handleTouchEnd);
     },
     [node]
@@ -146,7 +148,9 @@ export const useDraggable = ({
     const parentElement = node.parentElement;
     if (parentElement) {
       parentElement.addEventListener("mousedown", handleMouseDown);
-      parentElement.addEventListener("touchstart", handleTouchStart, { passive: false });
+      parentElement.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
 
       return () => {
         parentElement.removeEventListener("mousedown", handleMouseDown);
