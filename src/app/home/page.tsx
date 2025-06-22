@@ -13,9 +13,8 @@ import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoveUp, MoveDown, Send } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
-import DepositModal from "@/components/features/deposit-modal";
-import WithdrawModal from "@/components/features/wallet-withdraw";
 import SendModal from "@/components/features/wallet-send";
+import BuyModal from "@/components/features/wallet-buy";
 import WalletDeposit from "@/components/features/wallet-deposit";
 
 // Storage key for last claim timestamp
@@ -41,7 +40,7 @@ export default function Home() {
   const { toast } = useToast();
   const account = useActiveAccount();
   const [showModal, setShowModal] = useState<
-    "deposit" | "withdraw" | "send" | null
+    "deposit" | "send" | "buy" | null
   >(null);
 
   const fetchBalance = async (walletAddress: string) => {
@@ -445,7 +444,7 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => setShowModal("withdraw")}
+                onClick={() => setShowModal("send")}
                 className="flex flex-col items-center group"
               >
                 <div
@@ -462,11 +461,11 @@ export default function Home() {
                     } group-hover:text-white`}
                   />
                 </div>
-                <span className="text-sm font-medium">Withdraw</span>
+                <span className="text-sm font-medium">Send</span>
               </button>
 
               <button
-                onClick={() => setShowModal("send")}
+                onClick={() => setShowModal("buy")}
                 className="flex flex-col items-center group"
               >
                 <div
@@ -483,7 +482,7 @@ export default function Home() {
                     } group-hover:text-white`}
                   />
                 </div>
-                <span className="text-sm font-medium">Send</span>
+                <span className="text-sm font-medium">Buy</span>
               </button>
             </div>
             <div className="h-px w-full bg-gray-200 dark:bg-gray-800" />
@@ -515,12 +514,12 @@ export default function Home() {
         <WalletDeposit isOpen={showModal === "deposit"} onClose={closeModal} />
       )}
 
-      {showModal === "withdraw" && (
-        <WithdrawModal isOpen={showModal === "withdraw"} onClose={closeModal} />
-      )}
-
       {showModal === "send" && (
         <SendModal isOpen={showModal === "send"} onClose={closeModal} />
+      )}
+
+      {showModal === "buy" && (
+        <BuyModal isOpen={showModal === "buy"} onClose={closeModal} />
       )}
     </motion.div>
   );

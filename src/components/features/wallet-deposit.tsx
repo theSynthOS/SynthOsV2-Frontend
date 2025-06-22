@@ -126,8 +126,8 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                           }}
                         >
                           <Image
-                            src="/SynthOS-transparent.png"
-                            alt="SynthOS Logo"
+                            src="/usdc.png"
+                            alt="USDC Logo"
                             width={logoSize}
                             height={logoSize}
                             style={{ objectFit: 'contain' }}
