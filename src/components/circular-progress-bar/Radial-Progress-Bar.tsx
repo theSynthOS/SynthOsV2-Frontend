@@ -144,7 +144,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
       >
         <div
           className={`rounded-full absolute inset-1 ${
-            theme === "dark" ? "bg-[#0B0424]" : "bg-white"
+            theme === "dark" ? "bg-[#1A0D4A]" : "bg-white"
           }`}
         />
 

@@ -67,8 +67,6 @@ export default function DepositModal({
   const { toast } = useToast();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const successModalRef = useRef<HTMLDivElement>(null);
   const wallet = useActiveWallet();
   const account = useActiveAccount();
   const [depositError, setDepositError] = useState<string | null>(null);
@@ -318,125 +316,7 @@ export default function DepositModal({
   // Set mounted state and handle scroll lock
   useEffect(() => {
     setMounted(true);
-
-    if (pool) {
-      // Save current body styles and position
-      const scrollY = window.scrollY;
-      const originalStyle = {
-        overflow: document.body.style.overflow,
-        position: document.body.style.position,
-        top: document.body.style.top,
-        width: document.body.style.width,
-        height: document.body.style.height,
-      };
-
-      // Prevent background scrolling and interactions
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.height = "100%";
-
-      return () => {
-        // Restore original body styles
-        document.body.style.overflow = originalStyle.overflow;
-        document.body.style.position = originalStyle.position;
-        document.body.style.top = originalStyle.top;
-        document.body.style.width = originalStyle.width;
-        document.body.style.height = originalStyle.height;
-
-        // Restore scroll position
-        window.scrollTo(0, scrollY);
-      };
-    }
   }, [pool]);
-
-  // Prevent touchmove events from propagating to body
-  useEffect(() => {
-    const preventTouchMove = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-
-      // Check if we're inside the modal content
-      if (
-        (modalRef.current && modalRef.current.contains(target)) ||
-        (successModalRef.current && successModalRef.current.contains(target))
-      ) {
-        // Allow scrolling within scrollable elements inside the modal
-        const isScrollable = (el: HTMLElement) => {
-          // Check if the element has a scrollbar
-          const hasScrollableContent = el.scrollHeight > el.clientHeight;
-          // Get the computed overflow-y style
-          const overflowYStyle = window.getComputedStyle(el).overflowY;
-          // Check if overflow is set to something scrollable
-          const isOverflowScrollable = ["scroll", "auto"].includes(
-            overflowYStyle
-          );
-
-          return hasScrollableContent && isOverflowScrollable;
-        };
-
-        // Find if we're inside a scrollable container
-        let scrollableParent = target;
-        let currentModalRef = modalRef.current?.contains(target)
-          ? modalRef.current
-          : successModalRef.current;
-
-        while (
-          scrollableParent &&
-          currentModalRef &&
-          currentModalRef.contains(scrollableParent)
-        ) {
-          if (isScrollable(scrollableParent)) {
-            // If we're at the top or bottom edge of the scrollable container, prevent default behavior
-            const atTop = scrollableParent.scrollTop <= 0;
-            const atBottom =
-              scrollableParent.scrollHeight - scrollableParent.scrollTop <=
-              scrollableParent.clientHeight + 1;
-
-            // Check scroll direction using touch position
-            if (e.touches.length > 0) {
-              const touch = e.touches[0];
-              const touchY = touch.clientY;
-
-              // Store the last touch position
-              const lastTouchY =
-                scrollableParent.getAttribute("data-last-touch-y");
-              scrollableParent.setAttribute(
-                "data-last-touch-y",
-                touchY.toString()
-              );
-
-              if (lastTouchY) {
-                const touchDelta = touchY - parseFloat(lastTouchY);
-                const scrollingUp = touchDelta > 0;
-                const scrollingDown = touchDelta < 0;
-
-                // Only prevent default if trying to scroll past the edges
-                if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
-                  e.preventDefault();
-                }
-
-                // Allow scrolling within the container
-                return;
-              }
-            }
-            return;
-          }
-          scrollableParent = scrollableParent.parentElement as HTMLElement;
-        }
-        // If we're not in a scrollable container within the modal, prevent default
-        e.preventDefault();
-      }
-    };
-    // Add the touchmove listener
-    document.addEventListener("touchmove", preventTouchMove, {
-      passive: false,
-    });
-    return () => {
-      // Remove the touchmove listener
-      document.removeEventListener("touchmove", preventTouchMove);
-    };
-  }, []);
 
   // Handle radial progress update
   const handleRadialProgressUpdate = (progressPercentage: number) => {
@@ -876,12 +756,7 @@ export default function DepositModal({
             className="max-h-[90vh] w-full max-w-md"
           >
             <div
-              className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
-              style={{
-                WebkitOverflowScrolling: "touch",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
+              className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4"
             >
               {/* Input and Circle Section */}
               <div>
@@ -938,7 +813,7 @@ export default function DepositModal({
             {/* Buttons - Fixed at the bottom */}
             <div className="mt-4 flex justify-center gap-3 pt-2 ">
               <button
-                className={`w-[60%] py-3 rounded-lg relative ${
+                className={`w-[60%] py-3 rounded-lg relative mb-2 ${
                   // Only show as processing if this specific pool is being processed
                   isSubmitting && pool?.protocol_pair_id === processingPoolId
                     ? "bg-gray-300 text-gray-500"
