@@ -16,6 +16,7 @@ import {
 } from "thirdweb";
 import QRCode from 'react-qr-code';
 import Image from 'next/image';
+import Card from "@/components/ui/card";
 
 // Add Ethereum window type
 declare global {
@@ -869,20 +870,11 @@ export default function DepositModal({
           // Allow closing by clicking outside even during processing
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-          <div
-            ref={modalRef}
-            className={`${
-              theme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-black"
-            } 
-              rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
-            onClick={(e) => e.stopPropagation()}
+          <Card
+            title={`Deposit to ${pool?.pair_or_vault_name}`}
+            onClose={handleClose}
+            className="max-h-[90vh] w-full max-w-md"
           >
-            <h3 className="text-2xl font-bold mb-4">
-              Deposit to {pool.pair_or_vault_name}
-            </h3>
-
             <div
               className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
               style={{
@@ -899,35 +891,21 @@ export default function DepositModal({
                     initialAngle={initialAngle}
                     maxBalance={maxBalance}
                     onAngleChange={handleRadialProgressUpdate}
+                    isLoadingBalance={localIsLoadingBalance}
                   />
-                </div>
-
-                <div
-                  className={`text-right text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  } mt-1 w-full`}
-                >
-                  Balance:{" "}
-                  {localIsLoadingBalance ? (
-                    <span className="inline-flex items-center">
-                      <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
-                    </span>
-                  ) : (
-                    `${maxBalance.toFixed(2)} USDC`
-                  )}
                 </div>
               </div>
 
               {/* Statistics */}
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#0f0b22]/30" : "bg-gray-100/50"
+                  theme === "dark" ? "bg-[#0f0b22]/30" : "bg-[#070219]/5"
                 } rounded-lg p-4`}
               >
                 <div className="flex justify-between text-sm mb-2">
                   <span
                     className={
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      theme === "dark" ? "text-gray-300" : "text-black"
                     }
                   >
                     Estimated APY
@@ -935,7 +913,7 @@ export default function DepositModal({
                   {isLoadingApy ? (
                     <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                   ) : (
-                    <span className="text-green-400">
+                    <span className="text-[#8266E6] dark:text-[#FFD659]">
                       {currentApy?.toFixed(3) || 0}%
                     </span>
                   )}
@@ -943,7 +921,7 @@ export default function DepositModal({
                 <div className="flex justify-between text-sm">
                   <span
                     className={
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      theme === "dark" ? "text-gray-300" : "text-black"
                     }
                   >
                     Estimated Yearly Yield
@@ -958,20 +936,14 @@ export default function DepositModal({
             </div>
 
             {/* Buttons - Fixed at the bottom */}
-            <div className="mt-4 flex gap-3 pt-2 ">
+            <div className="mt-4 flex justify-center gap-3 pt-2 ">
               <button
-                onClick={handleClose}
-                className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                className={`flex-1 font-semibold py-3 rounded-lg relative ${
+                className={`w-[60%] py-3 rounded-lg relative ${
                   // Only show as processing if this specific pool is being processed
                   isSubmitting && pool?.protocol_pair_id === processingPoolId
                     ? "bg-gray-300 text-gray-500"
                     : parseFloat(amount) > 0
-                    ? "bg-purple-400 text-black hover:bg-purple-500"
+                    ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
                     : "bg-gray-300 text-gray-500"
                 }`}
                 disabled={
@@ -1059,7 +1031,7 @@ export default function DepositModal({
                 </button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       ) : (
         /* Success Modal */
@@ -1067,22 +1039,15 @@ export default function DepositModal({
           className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
           onClick={(e) => e.target === e.currentTarget && handleCloseAll()}
         >
-          <div
-            ref={successModalRef}
-            className={`${
-              theme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-black"
-            } 
-              rounded-lg w-full max-w-md p-6 text-center`}
-            onClick={(e) => e.stopPropagation()}
+          <Card
+            title="Deposit Successful!"
+            onClose={handleCloseAll}
+            className="w-full max-w-md text-center"
           >
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <CheckCircle className="w-12 h-12 text-green-500" />
+              <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                <CheckCircle className="w-12 h-12 text-purple-500" />
               </div>
-
-              <h3 className="text-2xl font-bold mb-2">Deposit Successful!</h3>
 
               <div className="mb-6">
                 <p className="text-lg mb-1">You've deposited</p>
@@ -1096,8 +1061,8 @@ export default function DepositModal({
 
               <div
                 className={`w-full ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                } p-4 rounded-lg mb-6`}
+                  theme === "dark" ? "bg-white/5 border-white/60" : "bg-gray-100"
+                } p-4 rounded-lg mb-6 border`}
               >
                 <div className="flex justify-between mb-2">
                   <span className="opacity-70">Expected APY</span>
@@ -1121,7 +1086,7 @@ export default function DepositModal({
                   rel="noopener noreferrer"
                   className={`flex items-center justify-center w-full ${
                     theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
+                      ? "bg-white/10 hover:bg-gray-600"
                       : "bg-gray-100 hover:bg-gray-200"
                   } py-3 px-4 rounded-lg mb-4 transition-colors`}
                 >
@@ -1132,12 +1097,12 @@ export default function DepositModal({
 
               <button
                 onClick={handleCloseAll}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full bg-[#8266E6] hover:bg-[#3C229C] text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 Done
               </button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </>
