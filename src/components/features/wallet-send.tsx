@@ -143,7 +143,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm"
         aria-hidden="true"
       ></div>
       

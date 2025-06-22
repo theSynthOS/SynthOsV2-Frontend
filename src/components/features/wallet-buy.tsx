@@ -170,7 +170,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
     <div className="fixed inset-0 z-50 touch-none" onClick={handleClose}>
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm"
         aria-hidden="true"
       ></div>
       

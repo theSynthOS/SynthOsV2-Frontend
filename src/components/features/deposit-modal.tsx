@@ -746,7 +746,7 @@ export default function DepositModal({
       {/* Main Deposit Modal */}
       {!showSuccessModal ? (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden"
+          className="fixed inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
           // Allow closing by clicking outside even during processing
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
@@ -911,7 +911,7 @@ export default function DepositModal({
       ) : (
         /* Success Modal */
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => e.target === e.currentTarget && handleCloseAll()}
         >
           <Card
