@@ -46,33 +46,19 @@ export default function Home() {
     }
   };
 
+  // Fetch balance when account changes
+  useEffect(() => {
+    if (account?.address) {
+      fetchBalance(account.address);
+    } else {
+      setIsLoadingBalance(false);
+    }
+  }, [account]);
+
   // Close modal
   const closeModal = () => {
     setShowModal(null);
   };
-
-  // Show loading state while checking authentication
-  if (!account?.address) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="flex items-center justify-center min-h-screen"
-      >
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1, opacity: [0.5, 1, 0.5] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className={`text-xl ${
-            theme === "dark" ? "text-white" : "text-black"
-          }`}
-        >
-          Loading...
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
