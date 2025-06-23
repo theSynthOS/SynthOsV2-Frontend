@@ -7,6 +7,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { scroll } from "thirdweb/chains";
 
 interface HistoryPanelProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ interface TransactionData {
 export default function HistoryPanel({
   isOpen,
   onClose,
-  chain = "scrollSepolia",
+  chain = "scroll",
 }: HistoryPanelProps) {
   const { theme } = useTheme();
   const account = useActiveAccount();

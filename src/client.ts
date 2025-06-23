@@ -2,6 +2,7 @@
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
+
 // Define Scroll Sepolia chain
 export const scrollSepolia = defineChain({
   id: 534_351,

@@ -2,24 +2,37 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { prepareContractCall, getContract } from "thirdweb";
-import { client, scrollSepolia } from "@/client";
+import { client } from "@/client";
 import { useToast } from "@/hooks/use-toast";
 import Card from "@/components/ui/card";
 import Image from "next/image";
 import { parseUnits } from "viem";
+import { ChevronDown } from "lucide-react";
+import { scroll } from "thirdweb/chains";
 
 interface SendModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// USDC token details for Scroll Sepolia
-const USDC_TOKEN = {
-  name: "USD Coin",
-  symbol: "USDC",
-  decimals: 6,
-  address: "0x2c9678042d52b97d27f2bd2947f7111d93f3dd0d", // Scroll Sepolia USDC address
-  logoUrl: "/usdc.png",
+type TokenType = "USDC" | "USDT";
+
+// Token details for Scroll Mainnet
+const TOKENS = {
+  USDC: {
+    name: "USD Coin",
+    symbol: "USDC",
+    decimals: 6,
+    address: "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4", // Scroll Mainnet USDC address
+    logoUrl: "/usdc.png",
+  },
+  USDT: {
+    name: "Tether USD",
+    symbol: "USDT",
+    decimals: 6,
+    address: "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df", // Scroll Mainnet USDT address
+    logoUrl: "/usdt.png",
+  }
 };
 
 export default function SendModal({ isOpen, onClose }: SendModalProps) {
@@ -30,40 +43,63 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const { toast } = useToast();
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<TokenType>("USDC");
   
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
   
   const { mutate: sendTx, isPending } = useSendTransaction();
 
-  // Fetch token balance when account changes
+  // Toggle between USDC and USDT
+  const toggleToken = () => {
+    const newToken = selectedToken === "USDC" ? "USDT" : "USDC";
+    setSelectedToken(newToken);
+    setAmount("");
+    fetchTokenBalance(newToken);
+  };
+
+  // Fetch token balance when account or selected token changes
   useEffect(() => {
     if (account?.address) {
-      fetchTokenBalance();
+      fetchTokenBalance(selectedToken);
     }
-  }, [account]);
+  }, [account, selectedToken]);
 
-  // Function to fetch USDC token balance
-  const fetchTokenBalance = async () => {
+  // Function to fetch token balance
+  const fetchTokenBalance = async (tokenType: TokenType = selectedToken) => {
     if (!account?.address) return;
     
     setIsLoadingBalance(true);
     try {
-      const response = await fetch(`/api/balance?address=${account.address}`);
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch balance");
+      // For USDC, use the existing API endpoint
+      if (tokenType === "USDC") {
+        const response = await fetch(`/api/balance?address=${account.address}`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch balance");
+        }
+        
+        const data = await response.json();
+        setBalance(data.usdBalance || "0.00");
+      } 
+      // For USDT, use the same endpoint but specify the token
+      else if (tokenType === "USDT") {
+        const response = await fetch(`/api/balance?address=${account.address}&token=usdt`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch balance");
+        }
+        
+        const data = await response.json();
+        setBalance(data.usdBalance || "0.00");
       }
-      
-      const data = await response.json();
-      setBalance(data.usdBalance || "0.00");
     } catch (error) {
-      console.error("Error fetching USDC balance:", error);
+      console.error(`Error fetching ${tokenType} balance:`, error);
       setBalance("0.00");
       toast({
         variant: "destructive",
         title: "Balance Error",
-        description: "Failed to fetch your USDC balance",
+        description: `Failed to fetch your ${tokenType} balance`,
       });
     } finally {
       setIsLoadingBalance(false);
@@ -75,21 +111,23 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     setAmount(balance);
   };
 
-  // Handle sending USDC
+  // Handle sending tokens
   const handleSendFunds = () => {
-    // Get USDC contract
-    const usdcContract = getContract({
+    const tokenConfig = TOKENS[selectedToken];
+    
+    // Get token contract
+    const tokenContract = getContract({
       client,
-      chain: scrollSepolia,
-      address: USDC_TOKEN.address,
+      chain: scroll,
+      address: tokenConfig.address,
     });
 
-    // Convert amount to wei (USDC has 6 decimals)
-    const amountInWei = parseUnits(amount, USDC_TOKEN.decimals);
+    // Convert amount to wei (both USDC and USDT have 6 decimals)
+    const amountInWei = parseUnits(amount, tokenConfig.decimals);
 
-    // Construct USDC transfer transaction
+    // Construct token transfer transaction
     const transaction = prepareContractCall({
-      contract: usdcContract,
+      contract: tokenContract,
       method: "function transfer(address to, uint256 amount) returns (bool)",
       params: [recipient, amountInWei],
     });
@@ -104,7 +142,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         
         toast({
           title: "Transaction Sent",
-          description: "Your USDC has been sent successfully!",
+          description: `Your ${selectedToken} has been sent successfully!`,
         });
         
         // Reset form
@@ -139,17 +177,19 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     });
   };
 
+  const currentToken = TOKENS[selectedToken];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm"
         aria-hidden="true"
       ></div>
       
       {/* Card Content */}
       <div className="relative z-10 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <Card title="Send USDC" onClose={onClose}>
+        <Card title={`Send ${selectedToken}`} onClose={onClose}>
           <div className="max-h-[60vh]">
             {!account ? (
               <div className={`${theme === "dark" ? "bg-gray-700" : "bg-gray-50"} rounded-lg p-4 text-center`}>
@@ -159,22 +199,32 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Token Display */}
-                <div className="w-full flex items-center justify-between p-3 mb-4 border rounded-lg border-gray-200 dark:border-white/40 bg-white dark:bg-white/5">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 relative">
-                      <Image 
-                        src={USDC_TOKEN.logoUrl}
-                        alt={USDC_TOKEN.name}
-                        width={32} 
-                        height={32}
-                        style={{ objectFit: "contain" }}
-                      />
-                    </div>
-                    <div>
-                      <div className={`font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>{USDC_TOKEN.name}</div>
-                      <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                        {isLoadingBalance ? "Loading..." : `${balance} ${USDC_TOKEN.symbol}`}
+                {/* Token Display with Direct Toggle */}
+                <div 
+                  className="w-full p-3 mb-4 border rounded-lg border-gray-200 dark:border-white/40 bg-white dark:bg-white/5 cursor-pointer"
+                  onClick={toggleToken}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 relative">
+                        <Image 
+                          src={currentToken.logoUrl}
+                          alt={currentToken.name}
+                          width={32} 
+                          height={32}
+                          style={{ objectFit: "contain" }}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium flex items-center">
+                          <span className={`uppercase ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
+                            {selectedToken}
+                          </span>
+                          <ChevronDown className={`ml-1 h-4 w-4 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
+                        </div>
+                        <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          {isLoadingBalance ? "Loading..." : `${balance} ${currentToken.symbol}`}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -207,7 +257,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                     </label>
                     <div className="flex items-center space-x-2">
                       <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                        Balance: {balance} {USDC_TOKEN.symbol}
+                        Balance: {balance} {currentToken.symbol}
                       </span>
                       <button 
                         className={`text-xs px-2 py-1 rounded ${theme === "dark" ? "bg-gray-700 text-blue-400 hover:bg-gray-600" : "bg-gray-100 text-blue-600 hover:bg-gray-200"}`}
@@ -232,7 +282,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                       disabled={isPending}
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <span className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{USDC_TOKEN.symbol}</span>
+                      <span className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{currentToken.symbol}</span>
                     </div>
                   </div>
                 </div>
@@ -255,7 +305,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                       "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isPending ? "Sending..." : "Send USDC"}
+                  {isPending ? "Sending..." : `Send ${selectedToken}`}
                 </button>
                 
                 {/* Transaction Success */}
@@ -263,7 +313,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                   <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg">
                     <p className="text-sm">Transaction sent successfully!</p>
                     <a 
-                      href={`https://sepolia.scrollscan.dev/tx/${txHash}`}
+                      href={`https://scrollscan.com/tx/${txHash}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-xs mt-1 block"

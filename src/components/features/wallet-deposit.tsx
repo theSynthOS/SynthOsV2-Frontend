@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, ChevronDown } from 'lucide-react';
 import { useActiveAccount } from 'thirdweb/react';
 import { client } from '@/client';
 import QRCode from 'react-qr-code';
@@ -12,6 +12,8 @@ interface DepositModalProps {
   onClose: () => void;
 }
 
+type StablecoinType = 'USDC' | 'USDT';
+
 export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [copied, setCopied] = useState(false);
   const { theme } = useTheme();
@@ -20,6 +22,9 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [windowHeight, setWindowHeight] = useState(0);
   const account = useActiveAccount();
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  const [selectedCoin, setSelectedCoin] = useState<StablecoinType>('USDC');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -46,6 +51,20 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
     }
   }, [account]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal close
     if (displayAddress) {
@@ -53,6 +72,17 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
+  };
+
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const selectCoin = (coin: StablecoinType, e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event propagation
+    setSelectedCoin(coin);
+    setDropdownOpen(false);
   };
 
   // If theme isn't loaded yet or modal not open, return nothing
@@ -70,7 +100,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm"
         aria-hidden="true"
       ></div>
       
@@ -88,6 +118,62 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
               </div>
             ) : (
               <div className={`space-y-${isSmallHeight ? '3' : '4'}`}>
+                {/* Stablecoin Selector */}
+                <div className="relative w-full mb-4" ref={dropdownRef}>
+                  <div 
+                    className={`flex items-center justify-between ${theme === 'dark' ? 'bg-white/5 border-white/40' : 'bg-white/50 border-gray-200'} border rounded-lg p-3 cursor-pointer`}
+                    onClick={toggleDropdown}
+                  >
+                    <div className="flex items-center">
+                      <Image
+                        src={`/${selectedCoin.toLowerCase()}.png`}
+                        alt={`${selectedCoin} Logo`}
+                        width={24}
+                        height={24}
+                        className="mr-2"
+                      />
+                      <span className={`uppercase ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
+                        {selectedCoin}
+                      </span>
+                    </div>
+                    <ChevronDown className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} transition-transform ${dropdownOpen ? 'transform rotate-180' : ''}`} />
+                  </div>
+                  
+                  {/* Dropdown */}
+                  {dropdownOpen && (
+                    <div className={`absolute mt-1 w-full rounded-md shadow-lg z-10 ${theme === 'dark' ? 'bg-[#321b87] border-gray-700' : 'bg-white border-gray-200'} border`}>
+                      <div className="py-1">
+                        <button 
+                          className={`flex items-center w-full px-4 py-2 text-left cursor-pointer ${selectedCoin === 'USDC' ? (theme === 'dark' ? 'bg-[#14054e]' : 'bg-gray-100') : ''} ${theme === 'dark' ? 'hover:bg-[#494385]' : 'hover:bg-gray-100'}`}
+                          onClick={(e) => selectCoin('USDC', e)}
+                        >
+                          <Image
+                            src="/usdc.png"
+                            alt="USDC Logo"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className={theme === 'dark' ? 'text-white' : 'text-gray-800'}>USDC</span>
+                        </button>
+                        <button 
+                          className={`flex items-center w-full px-4 py-2 text-left cursor-pointer ${selectedCoin === 'USDT' ? (theme === 'dark' ? 'bg-[#14054e]' : 'bg-gray-100') : ''} ${theme === 'dark' ? 'hover:bg-[#494385]' : 'hover:bg-gray-100'}`}
+                          onClick={(e) => selectCoin('USDT', e)}
+                        >
+                          <Image
+                            src="/usdt.png"
+                            alt="USDT Logo"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className={theme === 'dark' ? 'text-white' : 'text-gray-800'}>USDT</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Wallet Address Section */}
                 <div>
                   
@@ -126,8 +212,8 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                           }}
                         >
                           <Image
-                            src="/usdc.png"
-                            alt="USDC Logo"
+                            src={`/${selectedCoin.toLowerCase()}.png`}
+                            alt={`${selectedCoin} Logo`}
                             width={logoSize}
                             height={logoSize}
                             style={{ objectFit: 'contain' }}
@@ -167,7 +253,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                 <div>
                   <h3 className={`font-medium mb-2 ${isMobile ? 'text-sm' : ''}`}> ❗️ Important Information</h3>
                   <ul className={`${isMobile ? 'text-xs' : 'text-sm'} ${theme === 'dark' ? 'text-[#747474]' : 'text-gray-500'} space-y-1`}>
-                    <li>• Only send assets on the Scroll Sepolia network</li>
+                    <li>• Only send assets on the <span className='text-red-500 dark:text-red-400'>Scroll Mainnet</span></li>
                     <li>• You can send any asset to this address</li>
                     <li>• Transactions may take a few minutes to confirm</li>
                   </ul>

@@ -355,7 +355,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
               <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-3 mt-4`}>
                 <div className="flex justify-between">
                   <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ${isMobile ? 'text-xs' : 'text-sm'}`}>Network</span>
-                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Scroll Sepolia</span>
+                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Scroll</span>
                 </div>
               </div>
               

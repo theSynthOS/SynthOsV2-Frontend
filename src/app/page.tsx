@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { useActiveAccount, ConnectButton } from "thirdweb/react";
-import { client, scrollSepolia, wallets } from "@/client";
+import { client, wallets } from "@/client";
+import { scroll } from "thirdweb/chains";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -111,7 +112,7 @@ export default function Home() {
             theme={theme === "dark" ? "dark" : "light"}
             connectModal={{ size: "compact" }}
             accountAbstraction={{
-              chain: scrollSepolia, // replace with the chain you want
+              chain: scroll, 
               sponsorGas: true,
             }}
           />

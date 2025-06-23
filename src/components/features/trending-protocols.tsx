@@ -493,7 +493,7 @@ export default function TrendingProtocols({
                   mainnet rates.
                 </p>
                 <div className="mt-3 text-xs opacity-70">
-                  All investments are simulated on Scroll Sepolia testnet.
+                  All investments are simulated on Scroll Mainnet.
                 </div>
               </div>
             )}

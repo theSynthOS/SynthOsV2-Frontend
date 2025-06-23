@@ -8,14 +8,12 @@ import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
-import { scrollSepolia } from "@/client";
+import { scroll } from "thirdweb/chains";
 import {
   prepareTransaction,
   sendAndConfirmTransaction,
   sendBatchTransaction,
 } from "thirdweb";
-import QRCode from "react-qr-code";
-import Image from "next/image";
 import Card from "@/components/ui/card";
 
 // Add Ethereum window type
@@ -550,14 +548,14 @@ export default function DepositModal({
           value: responseData[0].value
             ? BigInt(responseData[0].value)
             : BigInt(0),
-          chain: scrollSepolia,
+          chain: scroll,
           client: client,
         });
 
         const depositIntoVaultTx = prepareTransaction({
           to: responseData[1].to,
           data: responseData[1].data,
-          chain: scrollSepolia,
+          chain: scroll,
           client: client,
           // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
           value: responseData[1].value
@@ -948,7 +946,7 @@ export default function DepositModal({
               {/* Transaction Link */}
               {txHash && (
                 <a
-                  href={`https://sepolia.scrollscan.dev/tx/${txHash}`}
+                  href={`https://scrollscan.com/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-center w-full ${

@@ -29,7 +29,8 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
-import { client, scrollSepolia, wallets } from "@/client";
+import { client, wallets } from "@/client";
+import { scroll } from "thirdweb/chains";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -216,7 +217,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               theme={theme === "dark" ? "dark" : "light"}
               connectModal={{ size: "compact" }}
               accountAbstraction={{
-                chain: scrollSepolia,
+                chain: scroll,
                 sponsorGas: true,
               }}
             />
