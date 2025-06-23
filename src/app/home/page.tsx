@@ -109,7 +109,7 @@ export default function Home() {
                 {isLoadingBalance ? (
                   <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
                 ) : (
-                  `$${balance}`
+                  `$${parseFloat(balance).toFixed(2)}` 
                 )}
               </div>
               {/* Action Buttons-- originally justify-between */}
