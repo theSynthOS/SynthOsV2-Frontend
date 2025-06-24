@@ -21,6 +21,7 @@ import {
   Send,
   ChevronRight,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -36,6 +37,26 @@ import { useToast } from "@/hooks/use-toast";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { client, wallets } from "@/client";
 import { scroll } from "thirdweb/chains";
+import { getWalletBalance } from "thirdweb/wallets";
+import Image from "next/image";
+
+// Token details for Scroll Mainnet
+const TOKENS = {
+  USDC: {
+    name: "USD Coin",
+    symbol: "USDC",
+    decimals: 6,
+    address: "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4", // Scroll Mainnet USDC address
+    logoUrl: "/usdc.png",
+  },
+  USDT: {
+    name: "Tether USD",
+    symbol: "USDT",
+    decimals: 6,
+    address: "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df", // Scroll Mainnet USDT address
+    logoUrl: "/usdt.png",
+  }
+};
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -54,6 +75,15 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(null);
+  const [showFundsDropdown, setShowFundsDropdown] = useState(false);
+  const [tokenBalances, setTokenBalances] = useState<{
+    USDC: string;
+    USDT: string;
+  }>({
+    USDC: "0.00",
+    USDT: "0.00",
+  });
+  const [isLoadingBalances, setIsLoadingBalances] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -71,10 +101,49 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   useEffect(() => {
     if (account?.address) {
       setDisplayAddress(account.address);
+      fetchTokenBalances(account.address);
     } else {
       setDisplayAddress(null);
     }
   }, [account]);
+
+  // Fetch token balances using ThirdWeb's getWalletBalance
+  const fetchTokenBalances = async (address: string) => {
+    if (!address) return;
+    
+    setIsLoadingBalances(true);
+    try {
+      // Fetch USDC balance
+      const usdcBalance = await getWalletBalance({
+        address,
+        client,
+        chain: scroll,
+        tokenAddress: TOKENS.USDC.address,
+      });
+      
+      // Fetch USDT balance
+      const usdtBalance = await getWalletBalance({
+        address,
+        client,
+        chain: scroll,
+        tokenAddress: TOKENS.USDT.address,
+      });
+      
+      setTokenBalances({
+        USDC: usdcBalance ? parseFloat(usdcBalance.displayValue).toFixed(2) : "0.00",
+        USDT: usdtBalance ? parseFloat(usdtBalance.displayValue).toFixed(2) : "0.00",
+      });
+    } catch (error) {
+      console.error("Error fetching token balances:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch token balances",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingBalances(false);
+    }
+  };
 
   const handleAuth = () => {
     if (account && wallet) {
@@ -122,6 +191,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       setIsExiting(false);
       router.push(`/home?modal=${modalType}`);
     }, 300);
+  };
+
+  // Toggle funds dropdown
+  const toggleFundsDropdown = () => {
+    setShowFundsDropdown(!showFundsDropdown);
+    if (!showFundsDropdown && account?.address) {
+      fetchTokenBalances(account.address);
+    }
   };
 
   if (!isOpen) return null;
@@ -184,7 +261,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         {/* Deposit */}
         <button
           onClick={() => handleOpenModal("deposit")}
-          className={`w-full flex items-center p-3 border border-white/60 ${
+          className={`w-full flex items-center p-3 border border-white/40 ${
             theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
           } rounded-lg hover:bg-opacity-80 transition-colors`}
         >
@@ -226,29 +303,72 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <span>Buy</span>
         </button>
 
-        <Link
-          href="/holding"
-          className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-red-400`}
-          onClick={(e) => {
-            e.preventDefault();
-            setIsExiting(true);
-            setTimeout(() => {
-              onClose();
-              setIsExiting(false);
-              router.push("/holding");
-            }, 300);
-          }}
-        >
-          <div className="flex items-center text-black dark:text-white">
-          <CreditCard
-            className={`h-5 w-5 mr-3 ${
-              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
-            }`}
-          />
-          <span>View Funds</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
-        </Link>
+        {/* View Funds with Dropdown */}
+        <div className="w-full">
+          <button
+            onClick={toggleFundsDropdown}
+            className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-black dark:text-white ${showFundsDropdown ? 'bg-white/5' : ''}`}
+          >
+            <div className="flex items-center">
+              <CreditCard
+                className={`h-5 w-5 mr-3 ${
+                  theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
+                }`}
+              />
+              <span>View Funds</span>
+            </div>
+            <ChevronRight
+              className={`h-5 w-5 text-[#202020] dark:text-white transition-transform ${
+                showFundsDropdown ? 'transform rotate-90' : ''
+              }`} 
+            />
+          </button>
+          
+          {/* Dropdown Content */}
+          {showFundsDropdown && (
+            <div className={`mt-2 p-3 rounded-lg ${theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"}`}>
+              {isLoadingBalances ? (
+                <div className="py-2 text-center text-sm">Loading balances...</div>
+              ) : (
+                <div className="space-y-3">
+                  {/* USDC Balance */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 relative mr-2">
+                        <Image 
+                          src={TOKENS.USDC.logoUrl}
+                          alt="USDC"
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">USDC</span>
+                    </div>
+                    <span className="text-sm font-medium">{tokenBalances.USDC}</span>
+                  </div>
+                  
+                  {/* USDT Balance */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 relative mr-2">
+                        <Image 
+                          src={TOKENS.USDT.logoUrl}
+                          alt="USDT"
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">USDT</span>
+                    </div>
+                    <span className="text-sm font-medium">{tokenBalances.USDT}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {account ? (
           <button

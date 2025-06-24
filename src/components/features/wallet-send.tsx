@@ -9,6 +9,7 @@ import Image from "next/image";
 import { parseUnits } from "viem";
 import { ChevronDown } from "lucide-react";
 import { scroll } from "thirdweb/chains";
+import { getWalletBalance } from "thirdweb/wallets";
 
 interface SendModalProps {
   isOpen: boolean;
@@ -65,33 +66,24 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     }
   }, [account, selectedToken]);
 
-  // Function to fetch token balance
+  // Function to fetch token balance using ThirdWeb's getWalletBalance
   const fetchTokenBalance = async (tokenType: TokenType = selectedToken) => {
     if (!account?.address) return;
     
     setIsLoadingBalance(true);
     try {
-      // For USDC, use the existing API endpoint
-      if (tokenType === "USDC") {
-        const response = await fetch(`/api/balance?address=${account.address}`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch balance");
-        }
-        
-        const data = await response.json();
-        setBalance(data.usdBalance || "0.00");
-      } 
-      // For USDT, use the same endpoint but specify the token
-      else if (tokenType === "USDT") {
-        const response = await fetch(`/api/balance?address=${account.address}&token=usdt`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch balance");
-        }
-        
-        const data = await response.json();
-        setBalance(data.usdBalance || "0.00");
+      const tokenConfig = TOKENS[tokenType];
+      const tokenBalance = await getWalletBalance({
+        address: account?.address,
+        client,
+        chain: scroll,
+        tokenAddress: tokenConfig.address,
+      });
+      
+      if (tokenBalance) {
+        setBalance(parseFloat(tokenBalance.displayValue).toFixed(2));
+      } else {
+        setBalance("0.00");
       }
     } catch (error) {
       console.error(`Error fetching ${tokenType} balance:`, error);
