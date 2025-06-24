@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import DynamicFeatures from "@/components/home/dynamic-features";
 import { useTheme } from "next-themes";
@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoveUp, MoveDown, Send } from "lucide-react";
+import { MoveUp, MoveDown, Send, Plus } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
 import SendModal from "@/components/features/wallet-send";
 import BuyModal from "@/components/features/wallet-buy";
@@ -16,6 +16,7 @@ import WalletDeposit from "@/components/features/wallet-deposit";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
   const [balance, setBalance] = useState<string>("0.00");
@@ -24,6 +25,19 @@ export default function Home() {
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
+
+  // Check URL parameters for modal to open
+  useEffect(() => {
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'deposit' || modalParam === 'send' || modalParam === 'buy') {
+      setShowModal(modalParam);
+      
+      // Clear the URL parameter without page refresh
+      const url = new URL(window.location.href);
+      url.searchParams.delete('modal');
+      window.history.replaceState({}, '', url);
+    }
+  }, [searchParams]);
 
   const fetchBalance = async (walletAddress: string) => {
     try {
@@ -167,7 +181,7 @@ export default function Home() {
                         : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
                     }`}
                   >
-                    <Send
+                    <Plus
                       size={15}
                       className={`transition-colors duration-200 ${
                         theme === "dark" ? "text-white" : "text-[#8266E6]"

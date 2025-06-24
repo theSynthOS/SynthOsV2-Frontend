@@ -317,7 +317,7 @@ export default function HistoryPanel({
 
       {/* Sliding panel */}
       <div
-        className={`fixed left-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out`}
+        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out`}
         style={{
           animation: isExiting
             ? "slideOut 0.3s ease-out"

@@ -16,6 +16,11 @@ import {
   Sun,
   Copy,
   Check,
+  MoveDown,
+  MoveUp,
+  Send,
+  ChevronRight,
+  Plus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -48,6 +53,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -108,6 +114,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   };
 
+  // Handle opening modals
+  const handleOpenModal = (modalType: "deposit" | "send" | "buy") => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose();
+      setIsExiting(false);
+      router.push(`/home?modal=${modalType}`);
+    }, 300);
+  };
+
   if (!isOpen) return null;
 
   // Panel content that remains the same regardless of theme
@@ -129,17 +145,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       {/* User Info */}
       <div className={`px-4 pb-6 flex items-center`}>
-        <div
-          className={`w-16 h-16 rounded-full ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-          } flex items-center justify-center mr-4`}
-        >
-          <User
-            className={`h-8 w-8 ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}
-          />
-        </div>
         <div className="flex-1">
           <h2 className={`text-lg truncate font-semibold`}>
             {displayAddress ? formatAddress(displayAddress) : "Not connected"}
@@ -176,11 +181,54 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       </div>
       {/* Menu Items */}
       <div className="px-4 py-4 space-y-4">
-        <Link
-          href="/holding"
-          className={`flex items-center p-3 ${
+        {/* Deposit */}
+        <button
+          onClick={() => handleOpenModal("deposit")}
+          className={`w-full flex items-center p-3 border border-white/60 ${
             theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
           } rounded-lg hover:bg-opacity-80 transition-colors`}
+        >
+          <MoveDown
+            className={`h-5 w-5 mr-3 transform rotate-45 ${
+              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
+            }`}
+          />
+          <span>Deposit</span>
+        </button>
+
+        {/* Send */}
+        <button
+          onClick={() => handleOpenModal("send")}
+          className={`w-full flex items-center p-3 border border-white/60 ${
+            theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
+          } rounded-lg hover:bg-opacity-80 transition-colors`}
+        >
+          <MoveUp
+            className={`h-5 w-5 mr-3 transform -rotate-45 ${
+              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
+            }`}
+          />
+          <span>Send</span>
+        </button>
+
+        {/* Buy */}
+        <button
+          onClick={() => handleOpenModal("buy")}
+          className={`w-full flex items-center p-3 border border-white/60 ${
+            theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
+          } rounded-lg hover:bg-opacity-80 transition-colors`}
+        >
+          <Plus
+            className={`h-5 w-5 mr-3 ${
+              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
+            }`}
+          />
+          <span>Buy</span>
+        </button>
+
+        <Link
+          href="/holding"
+          className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-red-400`}
           onClick={(e) => {
             e.preventDefault();
             setIsExiting(true);
@@ -191,23 +239,27 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             }, 300);
           }}
         >
+          <div className="flex items-center text-black dark:text-white">
           <CreditCard
             className={`h-5 w-5 mr-3 ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
+              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
             }`}
           />
           <span>View Funds</span>
+          </div>
+          <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
         </Link>
 
         {account ? (
           <button
             onClick={handleAuth}
-            className={`w-full flex items-center p-3 ${
-              theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
-            } rounded-lg text-red-400`}
+            className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-red-400"
           >
-            <LogOut className="h-5 w-5 mr-3" />
-            <span>Log Out</span>
+            <div className="flex items-center">
+              <LogOut className="h-5 w-5 mr-3" />
+              <span>Log Out</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
           </button>
         ) : (
           <div className="flex w-full items-center mt-2">
