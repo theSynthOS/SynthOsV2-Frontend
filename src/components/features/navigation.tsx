@@ -64,7 +64,7 @@ export default function Navbar() {
 
   return (
     <div
-      className={`relative border-t ${
+      className={`relative border-t xl:hidden ${
         theme === "dark"
           ? "border-gray-800 bg-[#0f0b22]"
           : "border-gray-200 bg-[#f0eef9]"

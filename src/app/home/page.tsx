@@ -8,19 +8,23 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoveUp, MoveDown, Send, Plus } from "lucide-react";
+import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
 import SendModal from "@/components/features/wallet-send";
 import BuyModal from "@/components/features/wallet-buy";
 import WalletDeposit from "@/components/features/wallet-deposit";
+import HoldingPage from "@/app/holding/page";
 
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
+  const { toast } = useToast();
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const account = useActiveAccount();
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
@@ -28,14 +32,18 @@ export default function Home() {
 
   // Check URL parameters for modal to open
   useEffect(() => {
-    const modalParam = searchParams.get('modal');
-    if (modalParam === 'deposit' || modalParam === 'send' || modalParam === 'buy') {
+    const modalParam = searchParams.get("modal");
+    if (
+      modalParam === "deposit" ||
+      modalParam === "send" ||
+      modalParam === "buy"
+    ) {
       setShowModal(modalParam);
-      
+
       // Clear the URL parameter without page refresh
       const url = new URL(window.location.href);
-      url.searchParams.delete('modal');
-      window.history.replaceState({}, '', url);
+      url.searchParams.delete("modal");
+      window.history.replaceState({}, "", url);
     }
   }, [searchParams]);
 
@@ -74,146 +82,224 @@ export default function Home() {
     setShowModal(null);
   };
 
+  // Format address to show first 6 and last 4 characters
+  const formatAddress = (address: string | null) => {
+    if (!address) return "Connect your wallet";
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
+  };
+
+  // Update display address whenever account changes
+  useEffect(() => {
+    if (account?.address) {
+      setDisplayAddress(account.address);
+    } else {
+      setDisplayAddress(null);
+    }
+  }, [account]);
+
+  // Handle copy address to clipboard
+  const handleCopyAddress = () => {
+    if (displayAddress) {
+      navigator.clipboard
+        .writeText(displayAddress)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          toast({
+            title: "Address copied",
+            description: "Wallet address copied to clipboard",
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to copy address: ", err);
+        });
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col min-h-screen"
+      className="flex flex-col"
     >
-      <div className="flex flex-col min-h-screen">
-
-
-        {/* Balance */}
-        <motion.div
-          className="w-full flex justify-center mt-[0px] px-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div
-            className={`${
-              theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
-            } rounded-t-2xl px-4 pt-6 w-full text-center relative overflow-hidden`}
+      <div className="flex flex-col xl:flex-row">
+        <div className="flex flex-col xl:w-4/6 xl:pl-5">
+          {/* Balance */}
+          <motion.div
+            className="w-full flex justify-center mt-[0px] px-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            {theme === "dark" && (
-              <div
-                className="absolute -top-28 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
-                style={{
-                  background: "#3C229C80",
-                  filter: "blur(40px)",
-                }}
-              />
-            )}
-            <div className="relative z-10">
-              <div className="text-xs tracking-widest text-[#727272] font-light mb-2">
-                TOTAL BALANCE
-              </div>
-              <div
-                className={`py-6 font-medium text-4xl leading-[100%] tracking-[-0.03em] text-center uppercase ${
-                  theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
-                }`}
-                style={
-                  theme === "dark"
-                    ? { textShadow: "0px 0px 12px #FFCA5980" }
-                    : {}
-                }
-              >
-                {isLoadingBalance ? (
-                  <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto" />
-                ) : (
-                  `$${parseFloat(balance).toFixed(2)}` 
-                )}
-              </div>
-              {/* Action Buttons-- originally justify-between */}
-              <div className="flex justify-between w-full max-w-xs mx-auto p-4">
-                <button
-                  onClick={() => setShowModal("deposit")}
-                  className="flex flex-col items-center group"
+            <div
+              className={`${
+                theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
+              } rounded-t-2xl px-4 pt-6 w-full text-center xl:text-left relative overflow-hidden xl:mt-[45px]`}
+            >
+              {theme === "dark" && (
+                <div
+                  className="absolute -top-46 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
+                  style={{
+                    background: "#3C229C80",
+                    filter: "blur(40px)",
+                  }}
+                />
+              )}
+              <div className="relative z-10">
+                <div className="text-sm xl:text-lg tracking-widest text-[#727272] font-light xl:font-medium mb-2">
+                  TOTAL BALANCE
+                </div>
+                <div
+                  className={`py-6 xl:py-0 font-medium text-4xl xl:text-5xl leading-[100%] tracking-[-0.03em] uppercase ${
+                    theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
+                  }`}
+                  style={
+                    theme === "dark"
+                      ? { textShadow: "0px 0px 12px #FFCA5980" }
+                      : {}
+                  }
                 >
-                  <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                      theme === "dark"
-                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
-                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                    }`}
+                  {isLoadingBalance ? (
+                    <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />
+                  ) : (
+                    `$${parseFloat(balance).toFixed(2)}`
+                  )}
+                </div>
+                {/* Action Buttons-- originally justify-between */}
+                <div className="flex justify-between xl:justify-start w-full mx-auto xl:mx-0 p-4 xl:gap-4">
+                  <button
+                    onClick={() => setShowModal("deposit")}
+                    className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                   >
-                    <MoveDown
-                      size={15}
-                      className={`transform rotate-45 transition-colors duration-200 ${
-                        theme === "dark" ? "text-white" : "text-[#8266E6]"
-                      } group-hover:text-white`}
-                    />
-                  </div>
-                  <span className="text-sm font-medium">Deposit</span>
-                </button>
+                    <div
+                      className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-2 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-colors duration-200 relative ${
+                        theme === "dark"
+                          ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                          : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                      }`}
+                    >
+                      <MoveDown
+                        size={15}
+                        className={`transform rotate-45 transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                          theme === "dark" ? "text-white" : "text-[#8266E6]"
+                        } group-hover:text-white`}
+                      />
+                      <span
+                        className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[22px] ${
+                          theme === "dark"
+                            ? "text-white"
+                            : "text-black group-hover:text-white"
+                        }`}
+                      >
+                        Deposit
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium xl:hidden">
+                      Deposit
+                    </span>
+                  </button>
 
-                <button
-                  onClick={() => setShowModal("send")}
-                  className="flex flex-col items-center group"
-                >
-                  <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                      theme === "dark"
-                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
-                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                    }`}
+                  <button
+                    onClick={() => setShowModal("send")}
+                    className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                   >
-                    <MoveUp
-                      size={15}
-                      className={`transform -rotate-45 transition-colors duration-200 ${
-                        theme === "dark" ? "text-white" : "text-[#8266E6]"
-                      } group-hover:text-white`}
-                    />
-                  </div>
-                  <span className="text-sm font-medium">Send</span>
-                </button>
+                    <div
+                      className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-2 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-colors duration-200 relative ${
+                        theme === "dark"
+                          ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                          : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                      }`}
+                    >
+                      <MoveUp
+                        size={15}
+                        className={`transform -rotate-45 transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                          theme === "dark" ? "text-white" : "text-[#8266E6]"
+                        } group-hover:text-white`}
+                      />
+                      <span
+                        className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[22px] ${
+                          theme === "dark"
+                            ? "text-white"
+                            : "text-black group-hover:text-white"
+                        }`}
+                      >
+                        Send
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium xl:hidden">Send</span>
+                  </button>
 
-                <button
-                  onClick={() => setShowModal("buy")}
-                  className="flex flex-col items-center group"
-                >
-                  <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 border transition-colors duration-200 ${
-                      theme === "dark"
-                        ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
-                        : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
-                    }`}
+                  <button
+                    onClick={() => setShowModal("buy")}
+                    className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                   >
-                    <Plus
-                      size={15}
-                      className={`transition-colors duration-200 ${
-                        theme === "dark" ? "text-white" : "text-[#8266E6]"
-                      } group-hover:text-white`}
-                    />
-                  </div>
-                  <span className="text-sm font-medium">Buy</span>
-                </button>
+                    <div
+                      className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-2 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-colors duration-200 relative ${
+                        theme === "dark"
+                          ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
+                          : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
+                      }`}
+                    >
+                      <Plus
+                        size={15}
+                        className={`transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                          theme === "dark" ? "text-white" : "text-[#8266E6]"
+                        } group-hover:text-white`}
+                      />
+                      <span
+                        className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[22px] ${
+                          theme === "dark"
+                            ? "text-white"
+                            : "text-black group-hover:text-white"
+                        }`}
+                      >
+                        Buy
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium xl:hidden">Buy</span>
+                  </button>
+                </div>
               </div>
-              <div className="h-px w-full bg-gray-200 dark:bg-[#444048]" />
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Dynamic Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="px-4"
-        >
-          <DynamicFeatures
-            refreshBalance={() => {
-              if (account?.address) {
-                fetchBalance(account.address);
-              }
-            }}
+          <div
+            className={`w-full h-px xl:pl-5 ${
+              theme === "dark" ? "bg-[#444048]" : "bg-[#DDDDDD]"
+            }`}
           />
-          <div className="flex justify-center mt-6">
-            {/* This space is intentionally left for spacing below the investments section */}
-          </div>
-        </motion.div>
+
+          {/* Dynamic Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="px-4"
+          >
+            <DynamicFeatures
+              refreshBalance={() => {
+                if (account?.address) {
+                  fetchBalance(account.address);
+                }
+              }}
+            />
+            <div className="flex justify-center mt-6">
+              {/* This space is intentionally left for spacing below the investments section */}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Holding Page Content - Only visible on xl screens */}
+        <div
+          className={`hidden xl:flex flex-col xl:w-2/6 xl:pr-5 xl:mt-[45px]
+          }`}
+        >
+          <HoldingPage />
+        </div>
       </div>
 
       {/* Modals */}

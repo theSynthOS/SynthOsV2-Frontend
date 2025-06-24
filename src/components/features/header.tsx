@@ -32,11 +32,15 @@ export default function Header() {
       {/* Logo */}
       <div className="flex items-center">
         <Image
-          src={theme === "dark" ? "/SynthOS-icon+word-white.png" : "/SynthOS-icon+word.png"}
+          src={
+            theme === "dark"
+              ? "/SynthOS-icon+word-white.png"
+              : "/SynthOS-icon+word.png"
+          }
           alt="SynthOS Logo"
           width={200}
           height={200}
-          className="mr-2 w-32"
+          className="mr-2 w-32 xl:w-[250px]"
         />
       </div>
 
@@ -50,7 +54,9 @@ export default function Header() {
           } flex items-center justify-center transition-colors border ${
             theme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
         >
           {mounted && theme === "dark" ? (
             <Moon className="h-5 w-5 text-gray-400" />
