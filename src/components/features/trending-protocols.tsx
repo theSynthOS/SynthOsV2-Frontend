@@ -94,7 +94,7 @@ export default function TrendingProtocols({
         }
         const data = await response.json();
         const filteredPairs = data.filter(
-          (pair: ProtocolPair) => pair.chain_id === 534351
+          (pair: ProtocolPair) => pair.chain_id === 534352
         );
         setProtocolPairs(filteredPairs);
       } catch (error) {

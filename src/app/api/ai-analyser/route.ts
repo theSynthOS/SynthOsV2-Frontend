@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiEndpoints } from "@/lib/config";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,9 +10,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(
-      `https://synthos-v2-backend-production-f721.up.railway.app/api/analyze/${address}`
-    );
+    const response = await fetch(apiEndpoints.aiAnalyzer(address));
     const data = await response.json();
 
     return NextResponse.json(data);
