@@ -67,7 +67,7 @@ export default function Header() {
 
         {/* History button */}
         <button
-          className={`w-10 h-10 rounded-full ${
+          className={`w-10 h-10 rounded-full xl:hidden ${
             theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
           } flex items-center justify-center border ${
             theme === "dark" ? "border-gray-700" : "border-gray-200"

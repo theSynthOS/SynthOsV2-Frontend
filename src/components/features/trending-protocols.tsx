@@ -247,7 +247,7 @@ export default function TrendingProtocols({
               <Skeleton className="h-8 w-32 rounded-sm bg-gray-300 dark:bg-gray-800" />
             ) : investorProfile ? (
               <div
-                className={`px-4 py-2 rounded-lg text-sm font-normal ${
+                className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
                   theme === "dark"
                     ? "bg-[#7266E61A] text-white"
                     : "bg-[#7266E61A] text-black"
@@ -259,14 +259,18 @@ export default function TrendingProtocols({
             <div ref={filterRef}>
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className={`flex items-center px-3 py-4 rounded-lg ${
-                  theme === "dark"
-                    ? "bg-[#FFFFFF0D] hover:bg-[#402D86B2] text-white border border-[#402D86B2]"
-                    : "bg-white hover:bg-gray-50 text-black border border-gray-200"
-                } transition-colors duration-200`}
+                className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                {getActiveFiltersLabel()}
+                <div
+                  className={`flex items-center px-3 py-4 rounded-lg transition-all duration-200 relative ${
+                    theme === "dark"
+                      ? "bg-[#FFFFFF0D] hover:bg-[#402D86B2] text-white border border-[#402D86B2]"
+                      : "bg-white hover:bg-gray-50 text-black border border-gray-200"
+                  } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  {getActiveFiltersLabel()}
+                </div>
               </button>
               {showFilter && (
                 <div
@@ -336,11 +340,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("low")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -359,9 +363,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             Low
                           </span>
@@ -369,11 +373,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("medium")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -392,9 +396,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             Medium
                           </span>
@@ -402,11 +406,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("high")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -425,9 +429,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             High
                           </span>
@@ -446,7 +450,7 @@ export default function TrendingProtocols({
               }`}
             />
             <h2
-              className={`text-xl font-light ${
+              className={`text-xl xl:text-lg font-light ${
                 theme === "dark" ? "text-white" : "text-black"
               }`}
             >
@@ -499,7 +503,7 @@ export default function TrendingProtocols({
             )}
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
           {isLoading ? (
             <div className="flex flex-col gap-4 py-8">
               <Skeleton className="w-full h-40 rounded-xl bg-gray-300 dark:bg-gray-800" />
