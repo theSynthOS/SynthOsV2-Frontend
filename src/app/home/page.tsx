@@ -58,10 +58,10 @@ export default function Home() {
         throw new Error("Failed to fetch balance");
       }
       const data = await response.json();
-      setBalance(data.usdBalance || "0.00");
+      setBalance(data.totalUsdBalance || "0.00");
       // Refresh points after balance update
       refreshPoints();
-      return data.usdBalance || "0.00";
+      return data.totalUsdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("0.00");
