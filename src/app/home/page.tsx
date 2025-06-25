@@ -1,61 +1,55 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { History } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import DynamicFeatures from "@/components/home/dynamic-features";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useActiveAccount } from "thirdweb/react";
-import { prepareTransaction, sendAndConfirmTransaction } from "thirdweb";
-import { client, scrollSepolia } from "@/client";
-import { Check, X, ExternalLink, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import FeedbackPanel from "@/components/feedback/feedback-panel";
+import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
-
-// Storage key for last claim timestamp
-const LAST_CLAIM_KEY = "last_claim_timestamp";
+import SendModal from "@/components/features/wallet-send";
+import BuyModal from "@/components/features/wallet-buy";
+import WalletDeposit from "@/components/features/wallet-deposit";
+import HoldingPage from "@/app/holding/page";
+import HistoryPanel from "@/components/features/history-panel";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, address, email } = useAuth();
+  const searchParams = useSearchParams();
   const { theme } = useTheme();
   const { refreshPoints } = usePoints();
+  const { toast } = useToast();
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
-  const [isTxProcessing, setIsTxProcessing] = useState(false);
-  const [txSuccess, setTxSuccess] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
-  const [progressValue, setProgressValue] = useState(100);
-  const [hasAttemptedClaim, setHasAttemptedClaim] = useState(false);
-  const [lastClaimTime, setLastClaimTime] = useState<number | null>(null);
-  const [errorBannerVisible, setErrorBannerVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const account = useActiveAccount();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
+    null
+  );
 
-  // Load last claim time from localStorage
-  // useEffect(() => {
-  //   if (typeof window !== "undefined" && address) {
-  //     try {
-  //       const storedData = localStorage.getItem(`${LAST_CLAIM_KEY}_${address}`);
-  //       if (storedData) {
-  //         const timestamp = parseInt(storedData, 10);
-  //         setLastClaimTime(timestamp);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading last claim time:", error);
-  //     }
-  //   }
-  // }, [address]);
+  // Check URL parameters for modal to open
+  useEffect(() => {
+    const modalParam = searchParams.get("modal");
+    if (
+      modalParam === "deposit" ||
+      modalParam === "send" ||
+      modalParam === "buy"
+    ) {
+      setShowModal(modalParam);
 
-  // Fetch balance from backend
+      // Clear the URL parameter without page refresh
+      const url = new URL(window.location.href);
+      url.searchParams.delete("modal");
+      window.history.replaceState({}, "", url);
+    }
+  }, [searchParams]);
+
   const fetchBalance = async (walletAddress: string) => {
     try {
       setIsLoadingBalance(true);
@@ -77,191 +71,55 @@ export default function Home() {
     }
   };
 
-  // Effect to handle transaction success banner and progress bar
+  // Fetch balance when account changes
   useEffect(() => {
-    if (txSuccess && txHash) {
-      // Show the banner
-      setBannerVisible(true);
-      setProgressValue(100);
-
-      // Start countdown timer for progress bar
-      let timeLeft = 100;
-      progressTimerRef.current = setInterval(() => {
-        timeLeft -= 1;
-        setProgressValue(timeLeft);
-
-        if (timeLeft <= 0) {
-          if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-          setBannerVisible(false);
-        }
-      }, 100); // Update every 100ms for smooth animation
-
-      // Refresh balance after transaction success
-      if (address) {
-        // Initial refresh
-        fetchBalance(address);
-
-        // Set up additional refresh attempts with increasing delays
-        const refreshTimeouts = [setTimeout(() => fetchBalance(address), 3000)];
-
-        return () => {
-          if (progressTimerRef.current) {
-            clearInterval(progressTimerRef.current);
-          }
-          // Clear all refresh timeouts
-          refreshTimeouts.forEach((timeout) => clearTimeout(timeout));
-        };
-      }
-
-      return () => {
-        if (progressTimerRef.current) {
-          clearInterval(progressTimerRef.current);
-        }
-      };
-    }
-  }, [txSuccess, txHash, address]);
-
-  // Effect to handle error banner
-  useEffect(() => {
-    if (errorBannerVisible) {
-      // Auto-hide error banner after 10 seconds
-      errorTimerRef.current = setTimeout(() => {
-        setErrorBannerVisible(false);
-      }, 10000); // 10 seconds
-
-      return () => {
-        if (errorTimerRef.current) {
-          clearTimeout(errorTimerRef.current);
-        }
-      };
-    }
-  }, [errorBannerVisible]);
-
-  // Redirect to root if not authenticated and check balance for auto-claiming
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
+    if (account?.address) {
+      fetchBalance(account.address);
     } else {
-      if (address) {
-        const getBalanceAndAutoCheck = async () => {
-          const currentBalance = await fetchBalance(address);
-          checkAndClaimFunds(currentBalance);
-        };
-        getBalanceAndAutoCheck();
-      }
+      setIsLoadingBalance(false);
     }
-  }, [isAuthenticated, router, address]);
+  }, [account]);
 
-  // Show error message
-  const showError = (message: string) => {
-    setErrorMessage(message);
-    setErrorBannerVisible(true);
+  // Close modal
+  const closeModal = () => {
+    setShowModal(null);
   };
 
-  // Check balance and claim funds if needed
-  const checkAndClaimFunds = async (balanceValue: string) => {
-    if (
-      account &&
-      account.address &&
-      parseFloat(balanceValue) === 0 &&
-      !hasAttemptedClaim &&
-      !isTxProcessing
-    ) {
-      setHasAttemptedClaim(true);
-      await handleClaimTestFunds();
-    }
+  // Format address to show first 6 and last 4 characters
+  const formatAddress = (address: string | null) => {
+    if (!address) return "Connect your wallet";
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
   };
 
-  // Handle claiming test funds
-  const handleClaimTestFunds = async () => {
-    if (!account || !account.address) {
-      return;
+  // Update display address whenever account changes
+  useEffect(() => {
+    if (account?.address) {
+      setDisplayAddress(account.address);
+    } else {
+      setDisplayAddress(null);
     }
+  }, [account]);
 
-    try {
-      setIsTxProcessing(true);
-      setTxSuccess(false);
-      setTxHash(null);
-
-      // Create transaction for USDC minting with proper types
-      const data = `0xc6c3bbe60000000000000000000000002c9678042d52b97d27f2bd2947f7111d93f3dd0d000000000000000000000000${account.address.slice(
-        2
-      )}00000000000000000000000000000000000000000000000000000002540be400`;
-
-      // Use the correct API: prepareTransaction first, then sendAndConfirmTransaction
-      // This is safer than sendBatchTransaction and works with more wallet types
-      const tx = prepareTransaction({
-        to: "0x2F826FD1a0071476330a58dD1A9B36bcF7da832d",
-        data: data as `0x${string}`,
-        chain: scrollSepolia,
-        client: client,
-        value: BigInt(0),
-      });
-
-
-      // Use sendAndConfirmTransaction with the correct API signature
-      const result = await sendAndConfirmTransaction({
-        transaction: tx,
-        account: account,
-      });
-
-
-      // Set success state and transaction hash
-      setTxSuccess(true);
-      setTxHash(result.transactionHash);
-
-      // Add 5 points for testnet claim
-      fetch("/api/points/testnet-claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, address: account.address }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
+  // Handle copy address to clipboard
+  const handleCopyAddress = () => {
+    if (displayAddress) {
+      navigator.clipboard
+        .writeText(displayAddress)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          toast({
+            title: "Address copied",
+            description: "Wallet address copied to clipboard",
+          });
         })
         .catch((err) => {
-          console.error("/api/points/testnet-claim error:", err);
+          console.error("Failed to copy address: ", err);
         });
-
-      // After successful claim, refresh points
-      refreshPoints();
-    } catch (error) {
-      console.error("Transaction error:", error);
-      const cleanErrorMessage =
-        error instanceof Error
-          ? error.message.split("contract:")[0].trim()
-          : "Unknown error";
-
-      showError(cleanErrorMessage);
-    } finally {
-      setIsTxProcessing(false);
     }
   };
-
-  // Show loading state while checking authentication
-  if (!isAuthenticated) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className={`flex items-center justify-center min-h-screen ${
-          theme === "dark" ? "bg-[#0f0b22]" : "bg-white"
-        }`}
-      >
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1, opacity: [0.5, 1, 0.5] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className={`text-xl ${
-            theme === "dark" ? "text-white" : "text-black"
-          }`}
-        >
-          Loading...
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -269,236 +127,230 @@ export default function Home() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className={`flex flex-col min-h-screen ${
-        theme === "dark" ? "bg-[#0f0b22] text-white" : "bg-[#f3f3f3] text-black"
-      }`}
+      className="flex flex-col"
     >
-      <div className="flex flex-col min-h-screen">
-        {/* Transaction Success Banner */}
-        {bannerVisible && (
-          <div
-            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-            ${theme === "dark" ? "bg-green-900" : "bg-green-100"} 
-            rounded-lg shadow-lg overflow-hidden`}
+      <div className="flex flex-col xl:flex-row">
+        <div className="flex flex-col xl:w-4/6 xl:pl-5">
+          {/* Balance */}
+          <motion.div
+            className="w-full flex justify-center mt-[0px] px-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
+            <div
+              className={`${
+                theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
+              } rounded-t-2xl px-4 xl:px-6 pt-6 w-full text-center xl:text-left relative overflow-hidden xl:mt-[45px]`}
+            >
+              <div className="xl:justify-between xl:flex xl:flex-row">
+                {theme === "dark" && (
                   <div
-                    className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-green-700" : "bg-green-200"}`}
-                  >
-                    <Check
-                      className={`h-5 w-5 
-                      ${
-                        theme === "dark" ? "text-green-300" : "text-green-600"
-                      }`}
-                    />
+                    className="absolute -top-46 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
+                    style={{
+                      background: "#3C229C80",
+                      filter: "blur(40px)",
+                    }}
+                  />
+                )}
+                <div className="relative z-10">
+                  <div className="text-sm xl:text-lg tracking-widest text-[#727272] font-light xl:font-medium mb-2">
+                    TOTAL BALANCE
                   </div>
-                  <div>
-                    <h3
-                      className={`font-medium 
-                      ${
-                        theme === "dark" ? "text-green-100" : "text-green-800"
-                      }`}
-                    >
-                      Funds Claimed Successfully
-                    </h3>
-                    <div className="mt-1 flex items-center">
-                      <a
-                        href={`https://sepolia-blockscout.scroll.io/tx/${txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`text-xs flex items-center
-                          ${
-                            theme === "dark"
-                              ? "text-green-300 hover:text-green-200"
-                              : "text-green-700 hover:text-green-800"
-                          }`}
-                      >
-                        View Transaction
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setBannerVisible(false)}
-                  className={`rounded-full p-1 
-                    ${
+                  <div
+                    className={`py-6 xl:py-0 font-medium text-4xl xl:text-5xl leading-[100%] tracking-[-0.03em] uppercase ${
+                      theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
+                    }`}
+                    style={
                       theme === "dark"
-                        ? "hover:bg-green-800"
-                        : "hover:bg-green-200"
-                    }`}
-                >
-                  <X
-                    className={`h-4 w-4 
-                    ${theme === "dark" ? "text-green-300" : "text-green-600"}`}
-                  />
-                </button>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-3 bg-gray-300 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="h-full bg-green-500 transition-all duration-100 ease-linear"
-                  style={{ width: `${progressValue}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Banner */}
-        {errorBannerVisible && (
-          <div
-            className={`fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md 
-            ${theme === "dark" ? "bg-red-900" : "bg-red-100"} 
-            rounded-lg shadow-lg overflow-hidden`}
-          >
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  <div
-                    className={`rounded-full p-1 mr-3 
-                    ${theme === "dark" ? "bg-red-700" : "bg-red-200"}`}
+                        ? { textShadow: "0px 0px 12px #FFCA5980" }
+                        : {}
+                    }
                   >
-                    <AlertCircle
-                      className={`h-5 w-5 
-                      ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
-                    />
+                    {isLoadingBalance ? (
+                      <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />
+                    ) : (
+                      `$${parseFloat(balance).toFixed(2)}`
+                    )}
                   </div>
-                  <div>
-                    <h3
-                      className={`font-medium 
-                      ${theme === "dark" ? "text-red-100" : "text-red-800"}`}
+                  {/* Action Buttons-- originally justify-between */}
+                  <div className="flex justify-between xl:justify-start w-full mx-auto xl:mx-0 p-4 xl:gap-4 xl:pl-0">
+                    <button
+                      onClick={() => setShowModal("deposit")}
+                      className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                     >
-                      <span className="font-bold">
-                        Failed to Claim Test Funds:
-                      </span>{" "}
-                      Please try again later or reconnect your wallet.
-                    </h3>
+                      <div
+                        className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
+                          theme === "dark"
+                            ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                            : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                      >
+                        <MoveDown
+                          size={15}
+                          className={`transform rotate-45 transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                            theme === "dark" ? "text-white" : "text-[#8266E6]"
+                          } group-hover:text-white`}
+                        />
+                        <span
+                          className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[20px] ${
+                            theme === "dark"
+                              ? "text-white"
+                              : "text-black group-hover:text-white"
+                          }`}
+                        >
+                          Deposit
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium xl:hidden">
+                        Deposit
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowModal("send")}
+                      className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                    >
+                      <div
+                        className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
+                          theme === "dark"
+                            ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
+                            : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                      >
+                        <MoveUp
+                          size={15}
+                          className={`transform -rotate-45 transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                            theme === "dark" ? "text-white" : "text-[#8266E6]"
+                          } group-hover:text-white`}
+                        />
+                        <span
+                          className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[20px] ${
+                            theme === "dark"
+                              ? "text-white"
+                              : "text-black group-hover:text-white"
+                          }`}
+                        >
+                          Send
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium xl:hidden">
+                        Send
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowModal("buy")}
+                      className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                    >
+                      <div
+                        className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
+                          theme === "dark"
+                            ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
+                            : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                      >
+                        <Plus
+                          size={15}
+                          className={`transition-colors duration-200 xl:w-[22px] xl:h-[22px] ${
+                            theme === "dark" ? "text-white" : "text-[#8266E6]"
+                          } group-hover:text-white`}
+                        />
+                        <span
+                          className={`text-sm font-medium ml-2 hidden xl:block transition-colors duration-200 xl:text-[20px] ${
+                            theme === "dark"
+                              ? "text-white"
+                              : "text-black group-hover:text-white"
+                          }`}
+                        >
+                          Buy
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium xl:hidden">Buy</span>
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => setErrorBannerVisible(false)}
-                  className={`rounded-full p-1 
-                    ${
-                      theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
-                    }`}
-                >
-                  <X
-                    className={`h-4 w-4 
-                    ${theme === "dark" ? "text-red-300" : "text-red-600"}`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Balance */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className={`px-4 py-6 pt-[90px] border-b ${
-            theme === "dark" ? "border-gray-800" : "border-gray-200"
+                <div className="xl:block hidden">
+                  <button
+                    className={`px-4 py-3 rounded-lg transition-all duration-200 ${
+                      theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
+                    } flex items-center justify-center border gap-2 ${
+                      theme === "dark" ? "border-gray-700" : "border-gray-200"
+                    } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent`}
+                    onClick={() => setIsHistoryOpen(true)}
+                    aria-label="Transaction History"
+                  >
+                    <History
+                      className={`h-5 w-5 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={`text-[20px] font-medium ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      History
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div
+                className={`w-full h-px xl:pl-5 ${
+                  theme === "dark" ? "bg-[#444048]" : "bg-[#DDDDDD]"
+                }`}
+              />
+            </div>
+          </motion.div>
+
+          {/* Dynamic Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="px-4"
+          >
+            <DynamicFeatures
+              refreshBalance={() => {
+                if (account?.address) {
+                  fetchBalance(account.address);
+                }
+              }}
+            />
+            <div className="flex justify-center mt-6">
+              {/* This space is intentionally left for spacing below the investments section */}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Holding Page Content - Only visible on xl screens */}
+        <div
+          className={`hidden xl:flex flex-col xl:w-2/6 xl:pr-5 xl:mt-[45px]
           }`}
         >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className={`text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
-            } flex justify-between items-center`}
-          >
-            <span>Total balance</span>
-            <button
-              onClick={handleClaimTestFunds}
-              disabled={isTxProcessing}
-              className={`ml-auto px-3 py-1.5 text-xs font-medium rounded-lg
-                ${
-                  theme === "dark"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : "bg-white hover:bg-gray-400 text-black border border-gray-200"
-                } transition-colors
-                ${isTxProcessing ? "opacity-70 cursor-not-allowed" : ""}
-              `}
-            >
-              {isTxProcessing ? "Processing..." : "Claim Test USDC"}
-            </button>
-          </motion.div>
-          <div className="flex items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
-              className="text-4xl font-bold"
-            >
-              {isLoadingBalance ? (
-                <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800" />
-              ) : (
-                `$${balance}`
-              )}
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Dynamic Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-        >
-          <DynamicFeatures
-            refreshBalance={() => {
-              if (address) {
-                fetchBalance(address);
-              }
-            }}
-            renderFeedbackButton={() => (
-              <button
-                onClick={() => setIsFeedbackOpen(true)}
-                className={`flex items-center gap-2 px-5 py-4 rounded-lg border-2 transition-colors shadow-md font-semibold text-base focus:outline-none
-                  ${
-                    theme === "dark"
-                      ? "border-purple-500 text-purple-200 bg-[#18103a] hover:bg-purple-900 hover:text-white"
-                      : "border-purple-600 text-purple-700 bg-white hover:bg-purple-50 hover:text-purple-900"
-                  }
-                `}
-              >
-                <span className="inline-flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-                    />
-                  </svg>
-                   Here
-                </span>
-              </button>
-            )}
-          />
-          <div className="flex justify-center mt-6">
-            {/* This space is intentionally left for spacing below the investments section */}
-          </div>
-        </motion.div>
-        {/* FeedbackPanel rendered here */}
-        <FeedbackPanel
-          isOpen={isFeedbackOpen}
-          onClose={() => setIsFeedbackOpen(false)}
-        />
+          <HoldingPage />
+        </div>
       </div>
+
+      {/* Modals */}
+      {showModal === "deposit" && (
+        <WalletDeposit isOpen={showModal === "deposit"} onClose={closeModal} />
+      )}
+
+      {showModal === "send" && (
+        <SendModal isOpen={showModal === "send"} onClose={closeModal} />
+      )}
+
+      {showModal === "buy" && (
+        <BuyModal isOpen={showModal === "buy"} onClose={closeModal} />
+      )}
+
+      {/* History panel */}
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
     </motion.div>
   );
 }

@@ -1,57 +1,112 @@
 "use client";
 
-import { Home, Award, Wallet, Settings, History } from "lucide-react";
+import { History, Settings, Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useState } from "react";
-import SettingsPanel from "@/components/profile/settings-panel";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import SettingsPanel from "@/components/setting-panel/settings-panel";
 import HistoryPanel from "@/components/features/history-panel";
 
 export default function Header() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted to true on initial load to enable theme rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Toggle theme between dark and light
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   return (
     <div
-      className={`flex justify-between items-center p-4 ${
-        theme === "dark"
-          ? "bg-[#0f0b22] border-gray-700/0 hover:border-gray-700"
-          : "bg-white border-gray-200/0 hover:border-gray-200"
-      } border-b`}
+      className={`flex justify-between items-center px-4 py-3 bg-transparent `}
     >
-      <button
-        className={`w-8 h-8 rounded-full ${
-          theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-        } flex items-center justify-center`}
-        onClick={() => setIsHistoryOpen(true)}
-      >
-        <History
-          className={`h-4 w-4 ${
-            theme === "dark" ? "text-gray-400" : "text-gray-500"
-          }`}
+      {/* Logo */}
+      <div className="flex items-center">
+        <Image
+          src={
+            theme === "dark"
+              ? "/SynthOS-icon+word-white.png"
+              : "/SynthOS-icon+word.png"
+          }
+          alt="SynthOS Logo"
+          width={200}
+          height={200}
+          className="mr-2 w-32 xl:w-[250px]"
         />
-      </button>
+      </div>
 
-      <button
-        className={`w-8 h-8 rounded-full ${
-          theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-        } flex items-center justify-center`}
-        onClick={() => setIsSettingsOpen(true)}
-      >
-        <Settings
-          className={`h-4 w-4 ${
-            theme === "dark" ? "text-gray-400" : "text-gray-500"
+      {/* Action buttons */}
+      <div className="flex items-center space-x-2">
+        {/* Theme toggle button */}
+        <button
+          onClick={toggleTheme}
+          className={`w-10 h-10 rounded-full ${
+            theme === "dark" ? "bg-[#1E1E1E]" : "bg-[#8266E6]"
+          } flex items-center justify-center transition-colors border ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
-        />
-      </button>
+          aria-label={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
+        >
+          {mounted && theme === "dark" ? (
+            <Moon className="h-5 w-5 text-gray-400" />
+          ) : (
+            <Sun className="h-5 w-5 text-white" />
+          )}
+        </button>
 
+        {/* History button */}
+        <button
+          className={`w-10 h-10 rounded-full xl:hidden ${
+            theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
+          } flex items-center justify-center border ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+          onClick={() => setIsHistoryOpen(true)}
+          aria-label="Transaction History"
+        >
+          <History
+            className={`h-5 w-5 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          />
+        </button>
+
+        {/* Settings button */}
+        <button
+          className={`w-10 h-10 rounded-full ${
+            theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
+          } flex items-center justify-center border ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="Settings"
+        >
+          <Settings
+            className={`h-5 w-5 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Settings panel */}
       <SettingsPanel
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
 
+      {/* History panel */}
       <HistoryPanel
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}

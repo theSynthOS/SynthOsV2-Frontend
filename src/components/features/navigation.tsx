@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/contexts/AuthContext";
+import { useActiveAccount } from "thirdweb/react";
 import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,7 +13,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = useTheme();
-  const { email, address } = useAuth();
+  const account = useActiveAccount();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { lastRefresh } = usePoints();
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
@@ -30,12 +30,11 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchPoints = async () => {
-      if (!email && !address) return;
+      if (!account?.address) return;
       try {
         setIsLoadingPoints(true);
         const params = new URLSearchParams();
-        if (email) params.append("email", email);
-        if (address) params.append("address", address);
+        if (account.address) params.append("address", account.address);
         const res = await fetch(`/api/points?${params.toString()}`);
         const data = await res.json();
         if (data.user) {
@@ -57,7 +56,7 @@ export default function Navbar() {
       }
     };
     fetchPoints();
-  }, [email, address, lastRefresh]);
+  }, [account, lastRefresh]);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -65,10 +64,10 @@ export default function Navbar() {
 
   return (
     <div
-      className={`relative border-t ${
+      className={`relative border-t xl:hidden ${
         theme === "dark"
           ? "border-gray-800 bg-[#0f0b22]"
-          : "border-gray-200 bg-white"
+          : "border-gray-200 bg-[#f0eef9]"
       } transition-all duration-200 ${
         isScrolled ? "shadow-lg" : ""
       } rounded-t-[2rem]`}
@@ -79,34 +78,60 @@ export default function Navbar() {
           href="/home"
           className={`flex flex-col items-center ${
             isActive("/home")
-              ? "text-purple-500"
+              ? "text-[#8266E6"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
           }`}
         >
           <Home
-            className={`h-6 w-6 ${isActive("/home") ? "text-purple-500" : ""}`}
+            className={`h-6 w-6 ${isActive("/home") ? "text-[#8266E6]" : ""}`}
           />
-          <span className="text-xs mt-1 font-semibold">Home</span>
+          <span
+            className={`text-xs mt-1 font-semibold ${
+              isActive("/home")
+                ? "text-[#8266E6]"
+                : theme === "dark"
+                ? "text-gray-500"
+                : "text-gray-400"
+            }`}
+          >
+            Home
+          </span>
         </Link>
         {/* Points */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
-          <div className="rounded-full bg-purple-100 border-2 border-purple-400 shadow-lg shadow-purple-500/50 flex flex-col items-center justify-center w-24 h-24 p-2">
-            <Award className="h-8 w-8 text-purple-500" />
+          <div
+            className={`rounded-full border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2 ${
+              theme === "dark" ? "bg-gray-800" : "bg-purple-100"
+            }`}
+          >
+            <Award className="h-8 w-8 text-[#8266E6]" />
             {isLoadingPoints || totalPoints === null ? (
               <div className="flex flex-col items-center mt-2 w-full">
-                <Skeleton className="w-12 h-6 rounded bg-purple-200 mb-2" />
-                <span className="text-sm font-semibold text-purple-600">
+                <Skeleton
+                  className={`w-12 h-6 rounded mb-2 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-purple-200"
+                  }`}
+                />
+                <span
+                  className={`text-sm font-semibold ${
+                    theme === "dark" ? "text-purple-400" : "text-purple-600"
+                  }`}
+                >
                   Pts
                 </span>
               </div>
             ) : (
               <>
-                <span className="text-lg font-bold text-purple-700 mt-2">
+                <span
+                  className={`text-lg font-bold mt-2 ${
+                    theme === "dark" ? "text-purple-300" : "text-[#573faf]"
+                  }`}
+                >
                   {totalPoints}
                 </span>
-                <span className="text-sm font-semibold text-purple-600">
+                <span className="text-sm font-semibold text-[#8266E6]">
                   Pts
                 </span>
               </>
@@ -118,7 +143,7 @@ export default function Navbar() {
           href="/holding"
           className={`flex flex-col items-center ${
             isActive("/holding")
-              ? "text-purple-500"
+              ? "text-[#8266E6]"
               : theme === "dark"
               ? "text-gray-500"
               : "text-gray-400"
@@ -126,10 +151,20 @@ export default function Navbar() {
         >
           <Wallet
             className={`h-6 w-6 ${
-              isActive("/holding") ? "text-purple-500" : ""
+              isActive("/holding") ? "text-[#8266E6]" : ""
             }`}
           />
-          <span className="text-xs mt-1 font-semibold">Holdings</span>
+          <span
+            className={`text-xs mt-1 font-semibold ${
+              isActive("/holding")
+                ? "text-[#8266E6]"
+                : theme === "dark"
+                ? "text-gray-500"
+                : "text-gray-400"
+            }`}
+          >
+            Holdings
+          </span>
         </Link>
       </div>
     </div>

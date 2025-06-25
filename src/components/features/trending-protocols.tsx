@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import {
   Flame,
   Filter,
@@ -15,17 +15,9 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
 import DepositModal from "./deposit-modal";
-import { useAuth } from "@/contexts/AuthContext";
+import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-
-interface Protocol {
-  id: number;
-  name: string;
-  logo_url: string;
-  description: string;
-  created_at: string;
-}
 
 interface ProtocolPair {
   id: string;
@@ -36,6 +28,8 @@ interface ProtocolPair {
   contract_address: string;
   created_at: string;
   apy?: number;
+  protocol_id: string;
+  logo_url: string;
 }
 
 interface TrendingProtocolsProps {
@@ -48,38 +42,34 @@ export default function TrendingProtocols({
   renderFeedbackButton,
 }: TrendingProtocolsProps) {
   const { theme } = useTheme();
-  const { isAuthenticated, address } = useAuth();
+  const account = useActiveAccount();
   const [selectedPool, setSelectedPool] = useState<any>(null);
-  // const [riskFilters, setRiskFilters] = useState({
-  //   all: true,
-  //   low: false,
-  //   medium: false,
-  //   high: false,
-  // });
-  // const [showFilter, setShowFilter] = useState(false);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
+  const [riskFilters, setRiskFilters] = useState({
+    all: true,
+    low: false,
+    medium: false,
+    high: false,
+  });
+  const [showFilter, setShowFilter] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [balance, setBalance] = useState<string>("0");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
-  const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([]);
-  const [isLoadingProtocols, setIsLoadingProtocols] = useState(true);
-  const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(
-    new Set()
-  );
-  // const filterRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [showApyInfo, setShowApyInfo] = useState(false);
   const apyInfoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // if (
-      //   filterRef.current &&
-      //   !filterRef.current.contains(event.target as Node)
-      // ) {
-      //   setShowFilter(false);
-      // }
-      
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setShowFilter(false);
+      }
       if (
         apyInfoRef.current &&
         !apyInfoRef.current.contains(event.target as Node)
@@ -95,40 +85,23 @@ export default function TrendingProtocols({
   }, []);
 
   useEffect(() => {
-    const fetchProtocols = async () => {
-      setIsLoadingProtocols(true);
-      try {
-        const response = await fetch("/api/protocols");
-        if (!response.ok) {
-          throw new Error("Failed to fetch protocols");
-        }
-        const data = await response.json();
-        setProtocols(data);
-      } catch (error) {
-        console.error("Error fetching protocols:", error);
-        setProtocols([]);
-      } finally {
-        setIsLoadingProtocols(false);
-      }
-    };
-
-    fetchProtocols();
-  }, []);
-
-  useEffect(() => {
     const fetchProtocolPairsApy = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/protocol-pairs-apy");
         if (!response.ok) {
           throw new Error("Failed to fetch protocol pairs");
         }
         const data = await response.json();
-        // Filter only pairs with chain_id 534351 (Scroll Sepolia testnet)
-        const filteredPairs = data.filter((pair: ProtocolPair) => pair.chain_id === 534351);
+        const filteredPairs = data.filter(
+          (pair: ProtocolPair) => pair.chain_id === 534352
+        );
         setProtocolPairs(filteredPairs);
       } catch (error) {
         console.error("Error fetching protocol pairs:", error);
         setProtocolPairs([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -137,14 +110,14 @@ export default function TrendingProtocols({
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) {
+      if (!account?.address) {
         setBalance("0");
         return;
       }
 
       setIsLoadingBalance(true);
       try {
-        const response = await fetch(`/api/balance?address=${address}`);
+        const response = await fetch(`/api/balance?address=${account.address}`);
         if (!response.ok) {
           throw new Error("Failed to fetch balance");
         }
@@ -159,95 +132,61 @@ export default function TrendingProtocols({
     };
 
     fetchBalance();
-  }, [address]);
+  }, [account?.address]);
 
   useEffect(() => {
-    try {
-      const storedProfile = localStorage.getItem("investor_profile");
-      if (storedProfile) {
-        setInvestorProfile(JSON.parse(storedProfile).title);
-      } else {
+    const fetchInvestorProfile = async () => {
+      if (!account?.address) {
         setInvestorProfile("Degen Learner");
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching investor profile:", error);
-      setInvestorProfile("Degen Learner");
-    }
-  }, []);
+      setIsLoadingProfile(true);
+      try {
+        const response = await fetch(
+          `/api/ai-analyser?address=${account.address}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch investor profile");
+        }
+        const data = await response.json();
+        localStorage.setItem("investor_profile", JSON.stringify(data));
+        setInvestorProfile(data.profile.profileType || "Degen Learner");
+      } catch (error) {
+        console.error("Error fetching investor profile:", error);
+        try {
+          const storedProfile = localStorage.getItem("investor_profile");
+          if (storedProfile) {
+            const parsedProfile = JSON.parse(storedProfile);
+            setInvestorProfile(parsedProfile.profile.profileType);
+          } else {
+            setInvestorProfile("Degen Learner");
+          }
+        } catch (localStorageError) {
+          console.error("Error reading from localStorage:", localStorageError);
+          setInvestorProfile("Degen Learner");
+        }
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchInvestorProfile();
+  }, [account?.address]);
 
-  // const getRiskCategory = (type: string) => {
-  //   // Placeholder risk level for now
-  //   return "medium";
-  // };
-
-  // const getRiskLabel = (type: string) => {
-  //   // Placeholder risk label for now
-  //   return "Medium";
-  // };
-
-  // const getRiskColor = (type: string) => {
-  //   // Placeholder risk color for now
-  //   return "text-yellow-500";
-  // };
-
-  const handleProtocolClick = (protocol: any, pair: ProtocolPair) => {
+  const handleProtocolClick = (pair: ProtocolPair) => {
     setSelectedPool({
-      name: protocol.name,
-      apy: 0,
+      name: pair.name,
+      apy: pair.apy || 0,
       risk: "Medium",
       pair_or_vault_name: pair.pair_or_vault_name,
-      protocol_id: protocol.id.toString(),
+      protocol_id: pair.protocol_id.toString(),
       protocol_pair_id: pair.id,
+      logo_url: pair.logo_url,
     });
   };
 
-  // const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
-  //   // Set only the selected filter to true, all others to false
-  //   setRiskFilters({
-  //     all: category === "all",
-  //     low: category === "low",
-  //     medium: category === "medium",
-  //     high: category === "high",
-  //   });
-
-  //   // Close the filter menu after selection
-  //   setShowFilter(false);
-  // };
-
-  // // Update the filtered protocols to use the API data
-  // const filteredProtocols = protocols
-  //   .filter((protocol) => {
-  //     if (riskFilters.all) return true;
-  //     return false; // No risk filtering for parent protocols
-  //   })
-  //   .slice(0, riskFilters.all ? undefined : 4);
-
-  // const getActiveFiltersLabel = () => {
-  //   if (riskFilters.all)
-  //     return <span className="text-gray-700 dark:text-white">All Risks</span>;
-  //   if (riskFilters.low)
-  //     return <span className="text-purple-700 dark:text-purple-300">Low</span>;
-  //   if (riskFilters.medium)
-  //     return (
-  //       <span className="text-purple-700 dark:text-purple-300">Medium</span>
-  //     );
-  //   if (riskFilters.high)
-  //     return <span className="text-purple-700 dark:text-purple-300">High</span>;
-  //   return (
-  //     <span className="text-purple-700 dark:text-purple-300">No Filter</span>
-  //   );
-  // };
-
-  const toggleProtocolExpand = (protocolName: string) => {
-    setExpandedProtocols((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(protocolName)) {
-        newSet.delete(protocolName);
-      } else {
-        newSet.add(protocolName);
-      }
-      return newSet;
-    });
+  const getRiskCategory = (type: string) => {
+    // Placeholder risk level for now
+    return "medium";
   };
 
   const getRiskLabel = (type: string) => {
@@ -258,41 +197,80 @@ export default function TrendingProtocols({
     return "text-yellow-500";
   };
 
-  const getProtocolPairs = (protocolName: string) => {
-    return protocolPairs.filter(
-      (pair) => pair.name.toLowerCase() === protocolName.toLowerCase()
+  const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
+    // Set only the selected filter to true, all others to false
+    setRiskFilters({
+      all: category === "all",
+      low: category === "low",
+      medium: category === "medium",
+      high: category === "high",
+    });
+
+    // Close the filter menu after selection
+    setShowFilter(false);
+  };
+
+  // Update the filtered protocols to use the API data
+  const filteredProtocols = protocolPairs
+    .filter((pair) => {
+      if (riskFilters.all) return true;
+      return false; // No risk filtering for parent protocols
+    })
+    .slice(0, riskFilters.all ? undefined : 4);
+
+  const getActiveFiltersLabel = () => {
+    if (riskFilters.all)
+      return <span className="text-gray-700 dark:text-white">All Risks</span>;
+    if (riskFilters.low)
+      return <span className="text-purple-700 dark:text-purple-300">Low</span>;
+    if (riskFilters.medium)
+      return (
+        <span className="text-purple-700 dark:text-purple-300">Medium</span>
+      );
+    if (riskFilters.high)
+      return <span className="text-purple-700 dark:text-purple-300">High</span>;
+    return (
+      <span className="text-purple-700 dark:text-purple-300">No Filter</span>
     );
   };
 
   return (
     <>
-      <div className="px-4 py-6">
+      <div
+        className={`px-6 py-6 ${
+          theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
+        } rounded-b-2xl`}
+      >
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
-            {investorProfile && (
+            {isLoadingProfile ? (
+              <Skeleton className="h-8 w-32 rounded-sm bg-gray-300 dark:bg-gray-800" />
+            ) : investorProfile ? (
               <div
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
                   theme === "dark"
-                    ? "bg-purple-900/30 text-purple-300"
-                    : "bg-purple-100 text-purple-700"
+                    ? "bg-[#7266E61A] text-white"
+                    : "bg-[#7266E61A] text-black"
                 }`}
               >
                 {investorProfile}
               </div>
-            )}
-
-            {/* Risk Filter
+            ) : null}
             <div ref={filterRef}>
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className={`flex items-center px-4 py-2 rounded-lg ${
-                  theme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700 text-white"
-                    : "bg-white hover:bg-gray-50 text-black border border-gray-200"
-                } transition-colors duration-200`}
+                className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                {getActiveFiltersLabel()}
+                <div
+                  className={`flex items-center px-3 py-4 rounded-lg transition-all duration-200 relative ${
+                    theme === "dark"
+                      ? "bg-[#FFFFFF0D] hover:bg-[#402D86B2] text-white border border-[#402D86B2]"
+                      : "bg-white hover:bg-gray-50 text-black border border-gray-200"
+                  } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  {getActiveFiltersLabel()}
+                </div>
               </button>
               {showFilter && (
                 <div
@@ -309,7 +287,7 @@ export default function TrendingProtocols({
                           theme === "dark" ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        Risk Categories
+                        Sort By
                       </p>
                       <button
                         onClick={() => setShowFilter(false)}
@@ -362,11 +340,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("low")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -385,9 +363,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             Low
                           </span>
@@ -395,11 +373,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("medium")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -418,9 +396,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             Medium
                           </span>
@@ -428,11 +406,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("high")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
                           theme === "dark"
                             ? "hover:bg-gray-700"
                             : "hover:bg-gray-100"
-                        } rounded-md`}
+                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
                       >
                         <span className="flex items-center">
                           <div
@@ -451,9 +429,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={
+                            className={`${
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            }
+                            } xl:text-white xl:hover:text-white`}
                           >
                             High
                           </span>
@@ -463,16 +441,16 @@ export default function TrendingProtocols({
                   </div>
                 </div>
               )}
-            </div> */}
+            </div>
           </div>
-          <div className="flex items-center py-1 relative">
+          <div className="flex items-center py-1 relative mt-4">
             <Flame
               className={`w-5 h-5 mr-2 ${
                 theme === "dark" ? "text-white" : "text-black"
               }`}
             />
             <h2
-              className={`text-2xl font-bold ${
+              className={`text-xl xl:text-lg font-light ${
                 theme === "dark" ? "text-white" : "text-black"
               }`}
             >
@@ -485,16 +463,20 @@ export default function TrendingProtocols({
               }`}
               aria-label="APY Information"
             >
-              <Info className={`w-4 h-4 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`} />
+              <Info
+                className={`w-4 h-4 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              />
             </button>
-            
+
             {showApyInfo && (
-              <div 
+              <div
                 ref={apyInfoRef}
                 className={`absolute left-0 top-12 z-20 p-4 rounded-lg shadow-lg w-72 ${
-                  theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+                  theme === "dark"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white text-gray-800"
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -502,8 +484,8 @@ export default function TrendingProtocols({
                   <button
                     onClick={() => setShowApyInfo(false)}
                     className={`p-1 rounded-full ${
-                      theme === "dark" 
-                        ? "hover:bg-gray-700" 
+                      theme === "dark"
+                        ? "hover:bg-gray-700"
                         : "hover:bg-gray-100"
                     }`}
                   >
@@ -511,204 +493,122 @@ export default function TrendingProtocols({
                   </button>
                 </div>
                 <p className="text-sm">
-                  The APY values shown are on testnet and may differ from mainnet rates.
+                  The APY values shown are on testnet and may differ from
+                  mainnet rates.
                 </p>
                 <div className="mt-3 text-xs opacity-70">
-                  All investments are simulated on Scroll Sepolia testnet.
+                  All investments are simulated on Scroll Mainnet.
                 </div>
               </div>
             )}
           </div>
         </div>
-        <div className="space-y-4">
-          {isLoadingProtocols ? (
+        <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
+          {isLoading ? (
             <div className="flex flex-col gap-4 py-8">
-              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-24 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-40 rounded-xl bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-40 rounded-xl bg-gray-300 dark:bg-gray-800" />
             </div>
-          ) : protocols.length === 0 ? (
+          ) : protocolPairs.length === 0 ? (
             <div
               className={`py-8 text-center ${
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              No protocols available
+              No investment options available
             </div>
           ) : (
-            protocols.map((protocol) => (
-              <div key={protocol.id} className={`mb-6 rounded-lg`}>
+            protocolPairs
+              .filter(
+                (pair) =>
+                  pair.apy !== undefined && pair.apy !== null && pair.apy > 0
+              )
+              .sort((a, b) => {
+                const isAUsdc = a.pair_or_vault_name
+                  .toLowerCase()
+                  .includes("usdc");
+                const isBUsdc = b.pair_or_vault_name
+                  .toLowerCase()
+                  .includes("usdc");
+
+                if (isAUsdc && !isBUsdc) return -1;
+                if (!isAUsdc && isBUsdc) return 1;
+
+                return (b.apy || 0) - (a.apy || 0);
+              })
+              .map((pair) => (
                 <div
-                  className={`flex flex-col cursor-pointer ${
+                  key={pair.id}
+                  className={`flex flex-col ${
                     theme === "dark"
-                      ? "bg-gray-800 hover:bg-gray-700"
-                      : "bg-white hover:bg-gray-50 shadow-sm"
-                  } p-5 rounded-xl transition-colors duration-200 relative`}
-                  onClick={() => toggleProtocolExpand(protocol.name)}
+                      ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40 hover:from-[#0B0424]/60 hover:to-[#3C229C]/60"
+                      : "bg-[#FDFDFF] hover:bg-gray-50 shadow-sm"
+                  } p-5 rounded-xl transition-colors duration-200 relative cursor-pointer`}
+                  style={{
+                    ...(theme === "dark" && {
+                      backdropFilter: "blur(72px)",
+                      boxShadow: "0px 0px 8px 0.8px #402D86 inset",
+                      border: "1.6px solid",
+                      borderImageSource:
+                        "linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%)",
+                    }),
+                  }}
+                  onClick={() => handleProtocolClick(pair)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-32 h-32 rounded-full overflow-hidden mr-4">
-                        <Image
-                          src={protocol.logo_url || ""}
-                          alt={protocol.name}
-                          width={100}
-                          height={100}
-                        />
+                  <div className="flex items-center mb-4">
+                    <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
+                      <Image
+                        src={pair.logo_url || ""}
+                        alt={pair.name}
+                        width={56}
+                        height={56}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className={`text-lg font-semibold flex justify-between`}
+                      >
+                        <div className="pr-2">
+                          {pair.pair_or_vault_name}{" "}
+                          <span className="text-sm font-normal opacity-70">
+                            ({pair.name})
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <div
-                          className={`text-lg font-semibold ${
-                            theme === "dark" ? "text-white" : "text-black"
-                          }`}
-                        >
-                          {protocol.name}
-                        </div>
-                        <div
-                          className={`text-sm ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-500"
-                          }`}
-                        >
-                          {protocol.description}
-                        </div>
+                      <div
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {pair.type.charAt(0).toUpperCase() + pair.type.slice(1)}
                       </div>
                     </div>
-                    <ChevronDown
-                      className={`w-8 h-8 transition-transform duration-300 stroke-[2.5] ${
+                  </div>
+                  <div className="flex justify-between items-center mt-4">
+                    <div
+                      className={`text-xl font-bold flex flex-wrap ${
                         theme === "dark" ? "text-white" : "text-black"
-                      } ${expandedProtocols.has(protocol.name) ? "rotate-180" : "rotate-0"}`}
-                    />
+                      }`}
+                    >
+                      {`${Number(pair.apy).toFixed(3)}%`}
+                      <div
+                        className={`text-sm items-center flex font-medium ml-2 ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        APY
+                      </div>
+                    </div>
+                    <div
+                      className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
+                        pair.type
+                      )}`}
+                    >
+                      Risk: {getRiskLabel(pair.type)}
+                    </div>
                   </div>
                 </div>
-                {expandedProtocols.has(protocol.name) && (
-                  <div className="mt-2 space-y-2 px-4">
-                    {getProtocolPairs(protocol.name)
-                      .filter(pair => pair.apy !== undefined && pair.apy !== null && pair.apy > 0)
-                      .sort((a, b) => {
-                        const isAUsdc = a.pair_or_vault_name.toLowerCase().includes('usdc');
-                        const isBUsdc = b.pair_or_vault_name.toLowerCase().includes('usdc');
-                        
-                        // Always put USDC pairs first
-                        if (isAUsdc && !isBUsdc) return -1;
-                        if (!isAUsdc && isBUsdc) return 1;
-                        
-                        // If both are USDC or both are not USDC, sort by APY
-                        return (a.apy || 0) - (b.apy || 0);
-                      })
-                      .map((pair) => {
-                        const isUsdcPair = pair.pair_or_vault_name.toLowerCase().includes('usdc');
-                        return (
-                      <div
-                        key={pair.id}
-                        className={`flex flex-col ${isUsdcPair ? 'cursor-pointer' : 'cursor-default'} ${
-                          theme === "dark"
-                            ? isUsdcPair ? "bg-gray-700/50 hover:bg-gray-800/50" : "bg-gray-800/50 shadow-sm"
-                            : isUsdcPair ? "bg-white hover:bg-gray-50 shadow-sm" : "bg-gray-200/70 shadow-sm"
-                        } p-5 rounded-xl transition-colors duration-200 relative`}
-                        onClick={() => isUsdcPair ? handleProtocolClick(protocol, pair) : null}
-                      >
-                        <div className="flex items-center mb-4">
-                          <div className="min-w-14 h-14 rounded-full overflow-hidden mr-4">
-                            <Image
-                              src={protocol.logo_url || ""}
-                              alt={pair.name}
-                              width={56}
-                              height={56}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div
-                              className={`text-lg font-semibold flex justify-between ${
-                                theme === "dark" ? "text-white" : "text-black"
-                              }`}
-                            >
-                              <div className="pr-2">
-                                {pair.pair_or_vault_name}{" "}
-                                <span className="text-sm font-normal opacity-70">
-                                  ({pair.name})
-                                </span>
-                              </div>
-                              {!isUsdcPair && (
-                                <span className={`text-xs px-2 py-1 rounded-lg border-dashed border-2 border-purple-500 ${
-                                  theme === "dark" ? "bg-purple-700 text-gray-300" : "bg-purple-100 text-purple-600"
-                                }`}>
-                                  Coming soon
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              className={`text-sm ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {pair.type.charAt(0).toUpperCase() +
-                                pair.type.slice(1)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-4">
-                          <div
-                            className={`text-xl font-bold flex flex-wrap ${
-                              theme === "dark" ? "text-white" : "text-black"
-                            }`}
-                          >
-                            {`${Number(pair.apy).toFixed(3)}%`}
-                            <div
-                              className={`text-sm items-center flex font-medium ml-2 ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              APY
-                            </div>
-                          </div>
-                          {isUsdcPair && (
-                            <div
-                              className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
-                                pair.type
-                              )}`}
-                            >
-                              Risk: {getRiskLabel(pair.type)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                        );
-                      })}
-                  </div>
-                )}
-                
-                  <div className="flex items-center justify-center">
-                    <div className="text-lg  text-black dark:text-white">
-                      <div className={`flex flex-col ${
-                        theme === "dark" 
-                          ? "bg-gray-800 border border-gray-700" 
-                          : "bg-white border border-gray-100"
-                      } shadow-lg p-6 rounded-lg mt-10 max-w-xl mx-auto`}>
-                        <h3 className="text-xl font-bold mb-4 text-center">
-                          🚨 We want to hear from you!
-                        </h3>
-                        <p className="mb-4 text-center text-md">
-                          We know there's 1 protocol live on our testnet.
-                        </p>
-                        <p className="mb-6 text-center text-md">
-                          Which protocols would you like to see next?
-                        </p>
-                      
-                        {renderFeedbackButton && (
-                          <div className="flex justify-center">
-                            {renderFeedbackButton()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                {/* Feedback Form Button below coming soon box */}
-                
-              </div>
-            ))
+              ))
           )}
         </div>
       </div>
@@ -717,11 +617,11 @@ export default function TrendingProtocols({
         onClose={() => setSelectedPool(null)}
         balance={balance}
         isLoadingBalance={isLoadingBalance}
-        address={address || ""}
+        address={account?.address || ""}
         refreshBalance={() => {
-          if (address) {
+          if (account?.address) {
             setIsLoadingBalance(true);
-            fetch(`/api/balance?address=${address}`)
+            fetch(`/api/balance?address=${account?.address}`)
               .then((response) => {
                 if (!response.ok) {
                   throw new Error("Failed to fetch balance");

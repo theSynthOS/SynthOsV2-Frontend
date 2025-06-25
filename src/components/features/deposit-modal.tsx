@@ -3,18 +3,18 @@
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, ExternalLink, X, Copy } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
-import { scrollSepolia } from "@/client";
+import { scroll } from "thirdweb/chains";
 import {
   prepareTransaction,
   sendAndConfirmTransaction,
   sendBatchTransaction,
 } from "thirdweb";
-import { useAuth } from "@/contexts/AuthContext";
+import Card from "@/components/ui/card";
 
 // Add Ethereum window type
 declare global {
@@ -65,15 +65,12 @@ export default function DepositModal({
   const { toast } = useToast();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const successModalRef = useRef<HTMLDivElement>(null);
   const wallet = useActiveWallet();
   const account = useActiveAccount();
   const [depositError, setDepositError] = useState<string | null>(null);
   const [txProgressPercent, setTxProgressPercent] = useState(0);
   const refreshTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [localIsLoadingBalance, setLocalIsLoadingBalance] = useState(false);
-  const { email } = useAuth();
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
@@ -255,7 +252,6 @@ export default function DepositModal({
   // Enhanced fetchBalance function that combines direct fetch and parent refresh
   const fetchBalanceAndUpdate = async () => {
     try {
-
       // First try direct fetch for immediate UI update
       await fetchBalance();
 
@@ -317,125 +313,7 @@ export default function DepositModal({
   // Set mounted state and handle scroll lock
   useEffect(() => {
     setMounted(true);
-
-    if (pool) {
-      // Save current body styles and position
-      const scrollY = window.scrollY;
-      const originalStyle = {
-        overflow: document.body.style.overflow,
-        position: document.body.style.position,
-        top: document.body.style.top,
-        width: document.body.style.width,
-        height: document.body.style.height,
-      };
-
-      // Prevent background scrolling and interactions
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.height = "100%";
-
-      return () => {
-        // Restore original body styles
-        document.body.style.overflow = originalStyle.overflow;
-        document.body.style.position = originalStyle.position;
-        document.body.style.top = originalStyle.top;
-        document.body.style.width = originalStyle.width;
-        document.body.style.height = originalStyle.height;
-
-        // Restore scroll position
-        window.scrollTo(0, scrollY);
-      };
-    }
   }, [pool]);
-
-  // Prevent touchmove events from propagating to body
-  useEffect(() => {
-    const preventTouchMove = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-
-      // Check if we're inside the modal content
-      if (
-        (modalRef.current && modalRef.current.contains(target)) ||
-        (successModalRef.current && successModalRef.current.contains(target))
-      ) {
-        // Allow scrolling within scrollable elements inside the modal
-        const isScrollable = (el: HTMLElement) => {
-          // Check if the element has a scrollbar
-          const hasScrollableContent = el.scrollHeight > el.clientHeight;
-          // Get the computed overflow-y style
-          const overflowYStyle = window.getComputedStyle(el).overflowY;
-          // Check if overflow is set to something scrollable
-          const isOverflowScrollable = ["scroll", "auto"].includes(
-            overflowYStyle
-          );
-
-          return hasScrollableContent && isOverflowScrollable;
-        };
-
-        // Find if we're inside a scrollable container
-        let scrollableParent = target;
-        let currentModalRef = modalRef.current?.contains(target)
-          ? modalRef.current
-          : successModalRef.current;
-
-        while (
-          scrollableParent &&
-          currentModalRef &&
-          currentModalRef.contains(scrollableParent)
-        ) {
-          if (isScrollable(scrollableParent)) {
-            // If we're at the top or bottom edge of the scrollable container, prevent default behavior
-            const atTop = scrollableParent.scrollTop <= 0;
-            const atBottom =
-              scrollableParent.scrollHeight - scrollableParent.scrollTop <=
-              scrollableParent.clientHeight + 1;
-
-            // Check scroll direction using touch position
-            if (e.touches.length > 0) {
-              const touch = e.touches[0];
-              const touchY = touch.clientY;
-
-              // Store the last touch position
-              const lastTouchY =
-                scrollableParent.getAttribute("data-last-touch-y");
-              scrollableParent.setAttribute(
-                "data-last-touch-y",
-                touchY.toString()
-              );
-
-              if (lastTouchY) {
-                const touchDelta = touchY - parseFloat(lastTouchY);
-                const scrollingUp = touchDelta > 0;
-                const scrollingDown = touchDelta < 0;
-
-                // Only prevent default if trying to scroll past the edges
-                if ((atTop && scrollingUp) || (atBottom && scrollingDown)) {
-                  e.preventDefault();
-                }
-
-                // Allow scrolling within the container
-                return;
-              }
-            }
-            return;
-          }
-          scrollableParent = scrollableParent.parentElement as HTMLElement;
-        }
-        // If we're not in a scrollable container within the modal, prevent default
-        e.preventDefault();
-      }
-    };
-    // Add the touchmove listener
-    document.addEventListener("touchmove", preventTouchMove, {
-      passive: false,
-    });
-    return () => {
-      // Remove the touchmove listener
-      document.removeEventListener("touchmove", preventTouchMove);
-    };
-  }, []);
 
   // Handle radial progress update
   const handleRadialProgressUpdate = (progressPercentage: number) => {
@@ -535,26 +413,33 @@ export default function DepositModal({
       }
 
       // Add 25 points for deposit
+      console.log("Starting points deposit for address:", address);
       fetch("/api/points/deposit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, address }),
+        body: JSON.stringify({ address }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          console.log("Points deposit response status:", res.status);
+          return res.json();
+        })
         .then((data) => {
+          console.log("Points deposit response data:", data);
           // Fetch updated points
-          fetch(
-            `/api/points?${
-              email
-                ? `email=${encodeURIComponent(email)}`
-                : `address=${encodeURIComponent(address ?? "")}`
-            }`
-          )
-            .then((res) => res.json())
-
+          console.log("Fetching updated points for address:", address);
+          return fetch(
+            `/api/points?address=${encodeURIComponent(address ?? "")}`
+          );
+        })
+        .then((res) => {
+          console.log("Get points response status:", res.status);
+          return res.json();
+        })
+        .then((data) => {
+          console.log("Get points response data:", data);
         })
         .catch((err) => {
-          console.error("/api/points/deposit error:", err);
+          console.error("Points operation error:", err);
         });
 
       // Save transaction to database
@@ -605,7 +490,6 @@ export default function DepositModal({
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
-  
       toast({
         variant: "destructive",
         title: "Invalid Amount",
@@ -622,9 +506,6 @@ export default function DepositModal({
     if (pool?.protocol_pair_id) {
       setProcessingPoolId(pool.protocol_pair_id);
     }
-   
-
-
 
     try {
       // Update progress - start progress animation
@@ -647,7 +528,6 @@ export default function DepositModal({
       setTxProgressPercent(30);
 
       const responseData = await response.json();
-    
 
       // Update progress
       setTxProgressPercent(50);
@@ -668,14 +548,14 @@ export default function DepositModal({
           value: responseData[0].value
             ? BigInt(responseData[0].value)
             : BigInt(0),
-          chain: scrollSepolia,
+          chain: scroll,
           client: client,
         });
 
         const depositIntoVaultTx = prepareTransaction({
           to: responseData[1].to,
           data: responseData[1].data,
-          chain: scrollSepolia,
+          chain: scroll,
           client: client,
           // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
           value: responseData[1].value
@@ -695,7 +575,6 @@ export default function DepositModal({
         // Update progress to complete
         setTxProgressPercent(100);
 
-     
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
         // Add a slight delay to make the loading state more visible
@@ -858,69 +737,39 @@ export default function DepositModal({
       {/* Main Deposit Modal */}
       {!showSuccessModal ? (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-hidden"
+          className="fixed inset-0 bg-black/30 dark:bg-black/70  backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
           // Allow closing by clicking outside even during processing
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-          <div
-            ref={modalRef}
-            className={`${
-              theme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-black"
-            } 
-              rounded-lg w-full max-w-md p-4 overflow-hidden max-h-[90vh] relative isolate`}
-            onClick={(e) => e.stopPropagation()}
+          <Card
+            title={`Deposit to ${pool?.pair_or_vault_name}`}
+            onClose={handleClose}
+            className="max-h-[90vh] w-full max-w-md"
           >
-            <h3 className="text-2xl font-bold mb-4">
-              Deposit to {pool.pair_or_vault_name}
-            </h3>
-
-            <div
-              className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4 scrollbar-hide"
-              style={{
-                WebkitOverflowScrolling: "touch",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
-            >
+            <div className="flex flex-col space-y-5 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
               {/* Input and Circle Section */}
               <div>
                 {/* Radial progress bar */}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center mt-2">
                   <RadialProgressBar
                     initialAngle={initialAngle}
                     maxBalance={maxBalance}
                     onAngleChange={handleRadialProgressUpdate}
+                    isLoadingBalance={localIsLoadingBalance}
                   />
-                </div>
-
-                <div
-                  className={`text-right text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  } mt-1 w-full`}
-                >
-                  Balance:{" "}
-                  {localIsLoadingBalance ? (
-                    <span className="inline-flex items-center">
-                      <div className="h-5 w-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
-                    </span>
-                  ) : (
-                    `${maxBalance.toFixed(2)} USDC`
-                  )}
                 </div>
               </div>
 
               {/* Statistics */}
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#0f0b22]/30" : "bg-gray-100/50"
+                  theme === "dark" ? "bg-[#0f0b22]/30" : "bg-[#070219]/5"
                 } rounded-lg p-4`}
               >
                 <div className="flex justify-between text-sm mb-2">
                   <span
                     className={
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      theme === "dark" ? "text-gray-300" : "text-black"
                     }
                   >
                     Estimated APY
@@ -928,7 +777,7 @@ export default function DepositModal({
                   {isLoadingApy ? (
                     <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
                   ) : (
-                    <span className="text-green-400">
+                    <span className="text-[#8266E6] dark:text-[#FFD659]">
                       {currentApy?.toFixed(3) || 0}%
                     </span>
                   )}
@@ -936,7 +785,7 @@ export default function DepositModal({
                 <div className="flex justify-between text-sm">
                   <span
                     className={
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      theme === "dark" ? "text-gray-300" : "text-black"
                     }
                   >
                     Estimated Yearly Yield
@@ -951,20 +800,14 @@ export default function DepositModal({
             </div>
 
             {/* Buttons - Fixed at the bottom */}
-            <div className="mt-4 flex gap-3 pt-2 ">
+            <div className="mt-4 flex justify-center gap-3 pt-2 ">
               <button
-                onClick={handleClose}
-                className="flex-1 bg-gray-200 text-black font-semibold py-3 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                className={`flex-1 font-semibold py-3 rounded-lg relative ${
+                className={`w-[60%] py-3 rounded-lg relative mb-2 ${
                   // Only show as processing if this specific pool is being processed
                   isSubmitting && pool?.protocol_pair_id === processingPoolId
                     ? "bg-gray-300 text-gray-500"
                     : parseFloat(amount) > 0
-                    ? "bg-purple-400 text-black hover:bg-purple-500"
+                    ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
                     : "bg-gray-300 text-gray-500"
                 }`}
                 disabled={
@@ -975,7 +818,6 @@ export default function DepositModal({
                   // Ensure we capture the most recent amount calculation directly from the ref
                   const currentAmount =
                     lastCalculatedAmountRef.current || amount;
-       
 
                   // Make sure the amount in the ref is immediately available for handleConfirmDeposit
                   handleConfirmDeposit();
@@ -1052,30 +894,23 @@ export default function DepositModal({
                 </button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       ) : (
         /* Success Modal */
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => e.target === e.currentTarget && handleCloseAll()}
         >
-          <div
-            ref={successModalRef}
-            className={`${
-              theme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-black"
-            } 
-              rounded-lg w-full max-w-md p-6 text-center`}
-            onClick={(e) => e.stopPropagation()}
+          <Card
+            title="Deposit Successful!"
+            onClose={handleCloseAll}
+            className="w-full max-w-md text-center"
           >
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <CheckCircle className="w-12 h-12 text-green-500" />
+              <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                <CheckCircle className="w-12 h-12 text-purple-500" />
               </div>
-
-              <h3 className="text-2xl font-bold mb-2">Deposit Successful!</h3>
 
               <div className="mb-6">
                 <p className="text-lg mb-1">You've deposited</p>
@@ -1089,8 +924,10 @@ export default function DepositModal({
 
               <div
                 className={`w-full ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                } p-4 rounded-lg mb-6`}
+                  theme === "dark"
+                    ? "bg-white/5 border-white/60"
+                    : "bg-gray-100"
+                } p-4 rounded-lg mb-6 border`}
               >
                 <div className="flex justify-between mb-2">
                   <span className="opacity-70">Expected APY</span>
@@ -1109,12 +946,12 @@ export default function DepositModal({
               {/* Transaction Link */}
               {txHash && (
                 <a
-                  href={`https://sepolia.scrollscan.dev/tx/${txHash}`}
+                  href={`https://scrollscan.com/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-center w-full ${
                     theme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600"
+                      ? "bg-white/10 hover:bg-gray-600"
                       : "bg-gray-100 hover:bg-gray-200"
                   } py-3 px-4 rounded-lg mb-4 transition-colors`}
                 >
@@ -1125,12 +962,12 @@ export default function DepositModal({
 
               <button
                 onClick={handleCloseAll}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full bg-[#8266E6] hover:bg-[#3C229C] text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 Done
               </button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </>
