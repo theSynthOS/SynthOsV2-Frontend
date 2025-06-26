@@ -220,7 +220,7 @@ export default function TrendingProtocols({
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
-      return <span className="text-gray-700 dark:text-white">All Risks</span>;
+      return <span className="text-gray-700 dark:text-white ">All Risks</span>;
     if (riskFilters.low)
       return <span className="text-purple-700 dark:text-purple-300">Low</span>;
     if (riskFilters.medium)
@@ -259,18 +259,34 @@ export default function TrendingProtocols({
             <div ref={filterRef}>
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                className={`px-3 py-4 rounded-lg transition-all duration-200 group ${
+                  theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
+                } flex items-center justify-center border ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-200"
+                } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                  theme === "dark"
+                    ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                    : ""
+                } ${
+                  theme === "dark"
+                    ? "xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent"
+                    : "xl:hover:bg-[#8266E6] xl:hover:border-[#8266E6]"
+                }`}
               >
-                <div
-                  className={`flex items-center px-3 py-4 rounded-lg transition-all duration-200 relative ${
+                <Filter
+                  className={`w-4 h-4 mr-2 transition-colors duration-200 ${
+                    theme === "dark" ? "text-gray-400" : "text-[#8266E6]"
+                  } group-hover:text-white`}
+                />
+                <span
+                  className={`text-[20px] font-medium transition-colors duration-200 ${
                     theme === "dark"
-                      ? "bg-[#FFFFFF0D] hover:bg-[#402D86B2] text-white border border-[#402D86B2]"
-                      : "bg-white hover:bg-gray-50 text-black border border-gray-200"
-                  } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                      ? "text-gray-400"
+                      : "text-black group-hover:text-white"
+                  }`}
                 >
-                  <Filter className="w-4 h-4 mr-2" />
                   {getActiveFiltersLabel()}
-                </div>
+                </span>
               </button>
               {showFilter && (
                 <div
@@ -331,7 +347,7 @@ export default function TrendingProtocols({
                           </div>
                           <span
                             className={
-                              theme === "dark" ? "text-white" : "text-black"
+                              theme === "dark" ? "text-white" : "text-gray-700"
                             }
                           >
                             All Risks
@@ -340,11 +356,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("low")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
                           theme === "dark"
-                            ? "hover:bg-gray-700"
-                            : "hover:bg-gray-100"
-                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
+                            ? "text-white hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } rounded-md`}
                       >
                         <span className="flex items-center">
                           <div
@@ -363,9 +379,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={`${
+                            className={
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            } xl:text-white xl:hover:text-white`}
+                            }
                           >
                             Low
                           </span>
@@ -373,11 +389,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("medium")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
                           theme === "dark"
-                            ? "hover:bg-gray-700"
-                            : "hover:bg-gray-100"
-                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
+                            ? "text-white hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } rounded-md`}
                       >
                         <span className="flex items-center">
                           <div
@@ -396,9 +412,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={`${
+                            className={
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            } xl:text-white xl:hover:text-white`}
+                            }
                           >
                             Medium
                           </span>
@@ -406,11 +422,11 @@ export default function TrendingProtocols({
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("high")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
                           theme === "dark"
-                            ? "hover:bg-gray-700"
-                            : "hover:bg-gray-100"
-                        } rounded-md xl:bg-transparent xl:border xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent xl:text-white xl:hover:text-white`}
+                            ? "text-white hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } rounded-md`}
                       >
                         <span className="flex items-center">
                           <div
@@ -429,9 +445,9 @@ export default function TrendingProtocols({
                             )}
                           </div>
                           <span
-                            className={`${
+                            className={
                               theme === "dark" ? "text-white" : "text-gray-700"
-                            } xl:text-white xl:hover:text-white`}
+                            }
                           >
                             High
                           </span>

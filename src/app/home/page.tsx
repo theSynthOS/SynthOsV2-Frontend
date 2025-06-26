@@ -184,7 +184,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <MoveDown
                           size={15}
@@ -216,7 +224,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <MoveUp
                           size={15}
@@ -248,7 +264,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <Plus
                           size={15}
@@ -273,22 +297,32 @@ export default function Home() {
 
                 <div className="xl:block hidden">
                   <button
-                    className={`px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`px-4 py-3 rounded-lg transition-all duration-200 group ${
                       theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
                     } flex items-center justify-center border gap-2 ${
                       theme === "dark" ? "border-gray-700" : "border-gray-200"
-                    } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent`}
+                    } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                      theme === "dark"
+                        ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                        : ""
+                    } ${
+                      theme === "dark"
+                        ? "xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent"
+                        : "xl:hover:bg-[#8266E6] xl:hover:border-[#8266E6]"
+                    }`}
                     onClick={() => setIsHistoryOpen(true)}
                     aria-label="Transaction History"
                   >
                     <History
-                      className={`h-5 w-5 ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`h-5 w-5 transition-colors duration-200 ${
+                        theme === "dark" ? "text-gray-400" : "text-[#8266E6]"
+                      } group-hover:text-white`}
                     />
                     <span
-                      className={`text-[20px] font-medium ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      className={`text-[20px] font-medium transition-colors duration-200 ${
+                        theme === "dark"
+                          ? "text-gray-400"
+                          : "text-black group-hover:text-white"
                       }`}
                     >
                       History
