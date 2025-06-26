@@ -244,7 +244,7 @@ export default function TrendingProtocols({
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
             {isLoadingProfile ? (
-              <Skeleton className="h-8 w-32 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-800" />
             ) : investorProfile ? (
               <div
                 className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
@@ -521,9 +521,9 @@ export default function TrendingProtocols({
         </div>
         <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
           {isLoading ? (
-            <div className="flex flex-col gap-4 py-8">
-              <Skeleton className="w-full h-40 rounded-xl bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-40 rounded-xl bg-gray-300 dark:bg-gray-800" />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 py-8">
+              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
             </div>
           ) : protocolPairs.length === 0 ? (
             <div
