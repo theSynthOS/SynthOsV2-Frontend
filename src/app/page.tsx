@@ -111,10 +111,10 @@ export default function Home() {
             wallets={wallets}
             theme={theme === "dark" ? "dark" : "light"}
             connectModal={{ size: "compact" }}
-            accountAbstraction={{
-              chain: scroll, 
-              sponsorGas: true,
-            }}
+            // accountAbstraction={{
+            //   chain: scroll, 
+            //   sponsorGas: true,
+            // }}
           />
         </motion.div>
       </motion.div>

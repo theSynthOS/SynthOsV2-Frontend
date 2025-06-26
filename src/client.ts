@@ -1,6 +1,7 @@
 // src/client.ts
 import { createThirdwebClient, defineChain } from "thirdweb";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
+import { scroll } from "thirdweb/chains";
 
 // Create thirdweb client
 export const client = createThirdwebClient({
@@ -8,17 +9,18 @@ export const client = createThirdwebClient({
 });
 
 export const wallets = [
-   inAppWallet({
+  inAppWallet({
     auth: {
-      options: [
-        "google",
-        "discord",
-        "telegram",
-        "email",
-        "x",
-      ],
+      options: ["google", "discord", "telegram", "email", "x"],
+    },
+    smartAccount: {
+      chain: scroll,
+      sponsorGas: true,
     },
   }),
+  createWallet("io.metamask"),
+  createWallet("com.coinbase.wallet"),
+  createWallet("me.rainbow"),
 ];
 
 // // Define Scroll Sepolia chain
