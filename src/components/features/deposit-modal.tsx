@@ -230,7 +230,7 @@ export default function DepositModal({
       }
 
       const data = await response.json();
-      const newBalance = data.usdBalance || "0.00";
+      const newBalance = data.totalUsdBalance || "0.00";
 
       // Update the local maxBalance state
       setMaxBalance(Number(newBalance));
@@ -504,7 +504,8 @@ export default function DepositModal({
     // Start the loading state and track which pool is being processed
     setIsSubmitting(true);
     if (pool?.protocol_pair_id) {
-      setProcessingPoolId(pool.protocol_pair_id);
+      // setProcessingPoolId(pool.protocol_pair_id);
+      setProcessingPoolId("1");
     }
 
     try {
@@ -518,8 +519,8 @@ export default function DepositModal({
         },
         body: JSON.stringify({
           user_address: address,
-          protocol_id: pool?.protocol_id,
-          protocol_pair_id: pool?.protocol_pair_id,
+          // protocol_pair_id: pool?.protocol_pair_id,
+          protocol_pair_id: "1",
           amount: depositAmount,
         }),
       });
@@ -538,37 +539,51 @@ export default function DepositModal({
           throw new Error("Wallet not connected");
         }
 
-        // Prepare the transaction using the calldata from the API
+        // Function to check if a transaction is an approval
+        const isApprovalTransaction = (data: string): boolean => {
+          if (!data || data.length < 10) return false;
+
+          // Extract function selector (first 4 bytes after 0x)
+          const functionSelector = data.slice(0, 10).toLowerCase();
+
+          // Common ERC20 approval function selectors
+          const approvalSelectors = [
+            "0x095ea7b3", // approve(address,uint256)
+            "0xa9059cbb", // transfer(address,uint256)
+          ];
+
+          return approvalSelectors.includes(functionSelector);
+        };
+
+        // Reorder transactions to put approvals first
+        const approvalTxs = responseData.filter((tx: any) =>
+          isApprovalTransaction(tx.data)
+        );
+        const nonApprovalTxs = responseData.filter(
+          (tx: any) => !isApprovalTransaction(tx.data)
+        );
+        const orderedTxs = [...approvalTxs, ...nonApprovalTxs];
+
         // Update progress
         setTxProgressPercent(60);
 
-        const approvalTx = prepareTransaction({
-          to: responseData[0].to,
-          data: responseData[0].data,
-          value: responseData[0].value
-            ? BigInt(responseData[0].value)
-            : BigInt(0),
-          chain: scroll,
-          client: client,
-        });
-
-        const depositIntoVaultTx = prepareTransaction({
-          to: responseData[1].to,
-          data: responseData[1].data,
-          chain: scroll,
-          client: client,
-          // Ensure value is always a valid BigInt by defaulting to 0 if it's undefined
-          value: responseData[1].value
-            ? BigInt(responseData[1].value)
-            : BigInt(0),
-        });
+        // Prepare all transactions in the correct order
+        const transactions = orderedTxs.map((tx: any) =>
+          prepareTransaction({
+            to: tx.to,
+            data: tx.data,
+            chain: scroll,
+            client: client,
+            value: tx.value ? BigInt(tx.value) : BigInt(0),
+          })
+        );
 
         // Update progress
         setTxProgressPercent(75);
 
         // Send the transaction and wait for confirmation
         const result = await sendBatchTransaction({
-          transactions: [approvalTx, depositIntoVaultTx],
+          transactions,
           account,
         });
 

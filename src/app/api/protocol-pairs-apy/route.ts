@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiEndpoints } from "@/lib/config";
 
 interface Protocol {
   id: number;
@@ -14,12 +15,8 @@ interface Pair {
 export async function GET() {
   try {
     const [pairsResponse, protocolsResponse] = await Promise.all([
-      fetch(
-        "https://synthos-backend-production.up.railway.app/protocol/protocol-pairs-apy"
-      ),
-      fetch(
-        "https://synthos-backend-production.up.railway.app/protocol/protocols"
-      ),
+      fetch(apiEndpoints.protocolPairsApy()),
+      fetch(apiEndpoints.protocols()),
     ]);
 
     if (!pairsResponse.ok) {
