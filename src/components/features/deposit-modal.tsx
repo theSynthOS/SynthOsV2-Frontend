@@ -581,11 +581,48 @@ export default function DepositModal({
         // Update progress
         setTxProgressPercent(75);
 
-        // Send the transaction and wait for confirmation
-        const result = await sendBatchTransaction({
-          transactions,
-          account,
-        });
+        let result: { transactionHash: string };
+        
+        try {
+          // First try to use batch transaction (works for smart accounts)
+          result = await sendBatchTransaction({
+            transactions,
+            account,
+          });
+        } catch (error) {
+          // Check if the error is because account doesn't support batch transactions
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          if (errorMessage) {
+            
+            console.log("Falling back to sequential transactions for EOA");
+            
+            // For EOAs, send transactions sequentially
+            let lastTxResult;
+            
+            for (const tx of transactions) {
+              lastTxResult = await sendAndConfirmTransaction({
+                transaction: tx,
+                account,
+              });
+              
+              // Small delay between transactions to avoid nonce issues
+              if (transactions.indexOf(tx) < transactions.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+            }
+            
+            // Ensure we have a result
+            if (!lastTxResult) {
+              throw new Error("Transaction failed to execute");
+            }
+            
+            result = lastTxResult;
+          } else {
+            // If it's some other error, rethrow it
+            throw error;
+          }
+        }
 
         // Update progress to complete
         setTxProgressPercent(100);

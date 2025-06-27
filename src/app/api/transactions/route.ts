@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         } USDC`,
         timestamp: tx.createdAt.toISOString(),
         status: tx.status,
-        chain: "Scroll Sepolia",
+        chain: "Scroll",
         protocolLogo: "/aave-logo.png",
         walletAddress: tx.address,
       })),
@@ -50,9 +50,9 @@ export async function GET(request: Request) {
           .length,
         totalAmount: transactions.reduce((sum, tx) => sum + tx.amount, 0),
         lastUpdated: new Date().toISOString(),
-        chain: "Scroll Sepolia",
+        chain: "Scroll",
         symbol: "USDC",
-        explorer: "https://sepolia.scrollscan.com",
+        explorer: "https://scrollscan.com/",
       },
     });
   } catch (error) {

@@ -252,7 +252,7 @@ export default function HistoryPanel({
                           {tx.txType.charAt(0).toUpperCase() +
                             tx.txType.slice(1)}
                         </h3>
-                        <p className="text-sm text-gray-500">{tx.summary}</p>
+                        <p className="text-sm text-gray-500 underline">{tx.summary}</p>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
