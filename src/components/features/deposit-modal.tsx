@@ -595,7 +595,7 @@ export default function DepositModal({
           
           if (errorMessage) {
             
-            console.log("Falling back to sequential transactions for EOA");
+            console.log("Detected EOA wallet, falling back to sequential transactions");
             
             // For EOAs, send transactions sequentially
             let lastTxResult;

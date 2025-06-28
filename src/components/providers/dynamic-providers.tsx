@@ -26,10 +26,11 @@ export default function DynamicProviders({
         client={client}
         wallets={wallets}
         chain={scroll}
-        accountAbstraction={{
-          chain: scroll,
-          sponsorGas: true,
-        }}
+        // Remove accountAbstraction to make it optional
+        // accountAbstraction={{
+        //   chain: scroll,
+        //   sponsorGas: true,
+        // }}
       />
       <ClientProviders>
         {children}
