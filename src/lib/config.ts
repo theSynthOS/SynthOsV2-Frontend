@@ -18,6 +18,9 @@ export const apiEndpoints = {
   balance: (address: string) =>
     `${config.SYNTHOS_BACKEND_URL}/accounts/balance/${address}`,
 
+  holdings: (address: string) =>
+    `${config.SYNTHOS_BACKEND_URL}/accounts/holdings/${address}`,
+
   // Action endpoints
   deposit: () => `${config.SYNTHOS_BACKEND_URL}/action/deposit`,
 
