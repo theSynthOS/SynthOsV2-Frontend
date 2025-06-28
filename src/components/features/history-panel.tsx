@@ -136,7 +136,9 @@ export default function HistoryPanel({
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-xl uppercase tracking-widest ">Transaction History</h1>
+        <h1 className="text-xl uppercase tracking-widest ">
+          Transaction History
+        </h1>
         <div className="w-8 h-8"></div>
       </div>
 
@@ -162,15 +164,15 @@ export default function HistoryPanel({
                 }`}
               >
                 <div className="flex justify-between items-center mb-2">
-                  <Skeleton className="w-24 h-6 rounded bg-gray-300 dark:bg-gray-700" />
-                  <Skeleton className="w-16 h-5 rounded bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="w-24 h-6 xl:w-40 xl:h-10 rounded bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="w-16 h-5 xl:w-28 xl:h-8 rounded bg-gray-300 dark:bg-gray-700" />
                 </div>
                 <div className="mt-2 flex items-center gap-2">
-                  <Skeleton className="w-20 h-6 rounded bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="w-20 h-6 xl:w-32 xl:h-10 rounded bg-gray-300 dark:bg-gray-700" />
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <Skeleton className="w-28 h-4 rounded bg-gray-300 dark:bg-gray-700" />
-                  <Skeleton className="w-20 h-4 rounded bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="w-28 h-4 xl:w-40 xl:h-7 rounded bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="w-20 h-4 xl:w-32 xl:h-7 rounded bg-gray-300 dark:bg-gray-700" />
                 </div>
               </div>
             ))}
@@ -250,9 +252,7 @@ export default function HistoryPanel({
                           {tx.txType.charAt(0).toUpperCase() +
                             tx.txType.slice(1)}
                         </h3>
-                        <p className="text-sm text-gray-500">
-                          {tx.summary}
-                        </p>
+                        <p className="text-sm text-gray-500 underline">{tx.summary}</p>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
@@ -261,8 +261,7 @@ export default function HistoryPanel({
                             : "bg-red-500/20 text-red-500"
                         }`}
                       >
-                        {tx.status.charAt(0).toUpperCase() +
-                          tx.status.slice(1)}
+                        {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
@@ -275,9 +274,7 @@ export default function HistoryPanel({
                     <div className="mt-2 flex items-center justify-between">
                       <p
                         className={`text-xs ${
-                          theme === "dark"
-                            ? "text-gray-500"
-                            : "text-gray-400"
+                          theme === "dark" ? "text-gray-500" : "text-gray-400"
                         }`}
                       >
                         {new Date(tx.timestamp).toLocaleString()}
@@ -328,8 +325,9 @@ export default function HistoryPanel({
               ? "0 0 40px rgba(0, 0, 0, 0.3)"
               : "0 0 40px rgba(0, 0, 0, 0.1)",
           ...(theme === "dark" && {
-            background: "linear-gradient(to right, #3C229C66, #0B042466), #0B0424"
-          })
+            background:
+              "linear-gradient(to right, #3C229C66, #0B042466), #0B0424",
+          }),
         }}
       >
         {theme === "dark" ? (

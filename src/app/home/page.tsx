@@ -58,10 +58,10 @@ export default function Home() {
         throw new Error("Failed to fetch balance");
       }
       const data = await response.json();
-      setBalance(data.usdBalance || "0.00");
+      setBalance(data.totalUsdBalance || "0.00");
       // Refresh points after balance update
       refreshPoints();
-      return data.usdBalance || "0.00";
+      return data.totalUsdBalance || "0.00";
     } catch (error) {
       console.error("Error fetching balance:", error);
       setBalance("0.00");
@@ -133,7 +133,7 @@ export default function Home() {
         <div className="flex flex-col xl:w-4/6 xl:pl-5">
           {/* Balance */}
           <motion.div
-            className="w-full flex justify-center mt-[0px] px-4"
+            className="w-full justify-center mt-[0px] px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -141,18 +141,29 @@ export default function Home() {
             <div
               className={`${
                 theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
-              } rounded-t-2xl px-4 xl:px-6 pt-6 w-full text-center xl:text-left relative overflow-hidden xl:mt-[45px]`}
+              } rounded-t-2xl px-4 xl:px-6 pt-6 w-full text-center xl:text-left relative overflow-hidden xl:mt-[45px] min-h-[140px]`}
             >
-              <div className="xl:justify-between xl:flex xl:flex-row">
-                {theme === "dark" && (
-                  <div
-                    className="absolute -top-46 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
-                    style={{
-                      background: "#3C229C80",
-                      filter: "blur(40px)",
-                    }}
-                  />
-                )}
+              {/* Logo at the back, inside the card */}
+              <img
+                src="/half-sythos.png"
+                alt=""
+                className="hidden xl:block absolute right-0 top-7/10 -translate-y-3/5 -translate-x-[50%] w-[340px] pointer-events-none select-none z-0"
+                style={{ opacity: 0.7 }}
+              />
+
+              {/* Blurred circle, if needed */}
+              {theme === "dark" && (
+                <div
+                  className="absolute -top-46 -left-26 w-96 h-96 rounded-full opacity-[50%] z-0"
+                  style={{
+                    background: "#3C229C80",
+                    filter: "blur(40px)",
+                  }}
+                />
+              )}
+
+              {/* Main content */}
+              <div className="relative z-10 xl:flex xl:justify-between xl:flex-row">
                 <div className="relative z-10">
                   <div className="text-sm xl:text-lg tracking-widest text-[#727272] font-light xl:font-medium mb-2">
                     TOTAL BALANCE
@@ -168,7 +179,7 @@ export default function Home() {
                     }
                   >
                     {isLoadingBalance ? (
-                      <Skeleton className="w-32 h-7 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />
+                      <Skeleton className="w-32 h-7 xl:w-52 xl:h-12 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />
                     ) : (
                       `$${parseFloat(balance).toFixed(2)}`
                     )}
@@ -184,7 +195,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <MoveDown
                           size={15}
@@ -216,7 +235,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-[#8266E6]"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-[#8266E6]"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <MoveUp
                           size={15}
@@ -248,7 +275,15 @@ export default function Home() {
                           theme === "dark"
                             ? "bg-[#FFFFFF0D] border-[#402D86B2] group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] group-hover:border-transparent"
                             : "bg-[#FFFFFFA6] border-[#DDDDDD] group-hover:bg-[#8266E6] group-hover:border-transparent"
-                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent`}
+                        } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                          theme === "dark"
+                            ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                            : ""
+                        } ${
+                          theme === "dark"
+                            ? "xl:group-hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:group-hover:border-transparent"
+                            : ""
+                        }`}
                       >
                         <Plus
                           size={15}
@@ -273,22 +308,32 @@ export default function Home() {
 
                 <div className="xl:block hidden">
                   <button
-                    className={`px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`px-4 py-3 rounded-lg transition-all duration-200 group ${
                       theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
                     } flex items-center justify-center border gap-2 ${
                       theme === "dark" ? "border-gray-700" : "border-gray-200"
-                    } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] xl:shadow-[0px_0px_9px_1px_#402D86B2_inset] xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent`}
+                    } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
+                      theme === "dark"
+                        ? "xl:shadow-[0px_0px_9px_1px_#402D86B2_inset]"
+                        : ""
+                    } ${
+                      theme === "dark"
+                        ? "xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent"
+                        : "xl:hover:bg-[#8266E6] xl:hover:border-[#8266E6]"
+                    }`}
                     onClick={() => setIsHistoryOpen(true)}
                     aria-label="Transaction History"
                   >
                     <History
-                      className={`h-5 w-5 ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`h-5 w-5 transition-colors duration-200 ${
+                        theme === "dark" ? "text-gray-400" : "text-[#8266E6]"
+                      } group-hover:text-white`}
                     />
                     <span
-                      className={`text-[20px] font-medium ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      className={`text-[20px] font-medium transition-colors duration-200 ${
+                        theme === "dark"
+                          ? "text-gray-400 xl:text-white"
+                          : "text-black group-hover:text-white"
                       }`}
                     >
                       History
@@ -296,12 +341,13 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-              <div
-                className={`w-full h-px xl:pl-5 ${
-                  theme === "dark" ? "bg-[#444048]" : "bg-[#DDDDDD]"
-                }`}
-              />
             </div>
+            {/* Underline */}
+            <div
+              className={`w-full h-px xl:pl-5 ${
+                theme === "dark" ? "bg-[#444048]" : "bg-[#DDDDDD]"
+              }`}
+            />
           </motion.div>
 
           {/* Dynamic Features */}

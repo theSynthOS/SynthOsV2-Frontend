@@ -268,7 +268,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                         theme === "dark"
                           ? "bg-gray-800 border-gray-700 text-white"
                           : "bg-white border-gray-300 text-black"
-                      } rounded-lg`}
+                      } rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       disabled={isPending}

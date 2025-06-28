@@ -388,10 +388,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               wallets={wallets}
               theme={theme === "dark" ? "dark" : "light"}
               connectModal={{ size: "compact" }}
-              accountAbstraction={{
-                chain: scroll,
-                sponsorGas: true,
-              }}
+              // accountAbstraction={{
+              //   chain: scroll,
+              //   sponsorGas: true,
+              // }}
             />
           </div>
         )}

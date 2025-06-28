@@ -113,18 +113,20 @@ export default function HoldingPage() {
           <div className="flex flex-row items-center justify-between">
             <div className="flex flex-col items-start">
               <span
-                className={`text-sm tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                className={`text-sm xl:text-lg tracking-widest font-medium ${
+                  theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
                 }`}
               >
                 Total Holding Value
               </span>
               <span
-                className={`text-xl font-bold my-2 ${
-                  theme === "dark" ? "text-white" : "text-black"
+                className={`text-xl font-bold xl:font-medium my-2 xl:text-5xl ${
+                  theme === "dark"
+                    ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
+                    : "text-black"
                 }`}
               >
-                0.00
+                $0.00
               </span>
             </div>
           </div>
@@ -176,7 +178,7 @@ export default function HoldingPage() {
           } rounded-2xl p-5 mb-3`}
         >
           <div className="flex flex-col items-center">
-            <div className="flex justify-between items-center w-full text-sm mb-4">
+            <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
               <span
                 className={`tracking-widest font-medium ${
                   theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
