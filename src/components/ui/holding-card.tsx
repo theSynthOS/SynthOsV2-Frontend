@@ -6,7 +6,7 @@ import { ArrowUp } from 'lucide-react';
 interface HoldingCardProps {
   symbol: string;
   name: string;
-  tvl: string;
+  amount: string;
   apy: string;
   logoUrl: string;
   onClick?: () => void;
@@ -15,7 +15,7 @@ interface HoldingCardProps {
 const HoldingCard: React.FC<HoldingCardProps> = ({
   symbol,
   name,
-  tvl,
+  amount: amount,
   apy,
   logoUrl,
   onClick
@@ -62,7 +62,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
           </div>
         </div>
         <div className="text-center mb-4">
-          <h2 className={`text-3xl ${isDark ? 'text-white' : 'text-black'}`}>{tvl}</h2>
+          <h2 className={`text-3xl ${isDark ? 'text-white' : 'text-black'}`}>${amount}</h2>
         </div>
       </div>
       <button 

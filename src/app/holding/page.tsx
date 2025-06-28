@@ -120,7 +120,7 @@ export default function HoldingPage() {
                 Total Holding Value
               </span>
               <span
-                className={`text-xl font-bold xl:font-medium my-2 xl:text-5xl ${
+                className={`text-3xl font-bold xl:font-medium my-2 xl:text-5xl ${
                   theme === "dark"
                     ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
                     : "text-black"
@@ -199,7 +199,7 @@ export default function HoldingPage() {
             <HoldingCard
               symbol="USDT"
               name="AAVE"
-              tvl="$463M TVL"
+              amount="463M"
               apy="9,96%APY"
               logoUrl="/aave.png"
               onClick={() => {}}
