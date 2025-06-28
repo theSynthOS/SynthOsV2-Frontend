@@ -21,6 +21,10 @@ export const apiEndpoints = {
   // Action endpoints
   deposit: () => `${config.SYNTHOS_BACKEND_URL}/action/deposit`,
 
+  loopingDeposit: () => `${config.SYNTHOS_BACKEND_URL}/action/looping-deposit`,
+
+  withdraw: () => `${config.SYNTHOS_BACKEND_URL}/action/withdraw`,
+
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,
   protocolPairsApy: () =>
