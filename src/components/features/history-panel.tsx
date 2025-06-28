@@ -6,7 +6,6 @@ import { useTheme } from "next-themes";
 import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { scroll } from "thirdweb/chains";
 
 interface HistoryPanelProps {
@@ -155,7 +154,7 @@ export default function HistoryPanel({
             </p>
           </div>
         ) : isLoading ? (
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
@@ -232,7 +231,7 @@ export default function HistoryPanel({
             )}
 
             {/* Transaction List */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
               {transactions.map((tx) => {
                 // Find the first debit transfer (deposited/sent), fallback to first transfer
                 const deposit =
@@ -314,12 +313,14 @@ export default function HistoryPanel({
 
       {/* Sliding panel */}
       <div
-        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out`}
+        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-hidden ${
+          theme === "dark" ? "" : "bg-[#F0EEF9]"
+        }`}
         style={{
           animation: isExiting
             ? "slideOut 0.3s ease-out"
             : "slideIn 0.3s ease-out",
-          borderRadius: "0 16px 16px 0",
+          borderRadius: "16px 0 0 16px",
           boxShadow:
             theme === "dark"
               ? "0 0 40px rgba(0, 0, 0, 0.3)"
@@ -330,13 +331,33 @@ export default function HistoryPanel({
           }),
         }}
       >
-        {theme === "dark" ? (
-          panelContent
-        ) : (
-          <BackgroundGradientAnimation>
-            {panelContent}
-          </BackgroundGradientAnimation>
+        {/* Light theme background gradient (without overflow-hidden) */}
+        {theme !== "dark" && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ filter: 'blur(60px)' }}>
+            {/* Purple ball - bottom left */}
+            <div
+              className="absolute w-[100%] h-[100%] bottom-[-40%] right-[40%] animate-fourth"
+              style={{
+                background: "radial-gradient(circle at center, rgba(143, 99, 233, 0.8) 0%, rgba(143, 99, 233, 0) 70%)",
+                opacity: 0.6
+              }}
+            ></div>
+            
+            {/* Yellow ball - top right */}
+            <div
+              className="absolute w-[100%] h-[100%] top-[-50%] right-[-50%] animate-second"
+              style={{
+                background: "radial-gradient(circle at center, rgba(255, 185, 36, 0.8) 0%, rgba(255, 185, 36, 0) 70%)",
+                opacity: 0.6
+              }}
+            ></div>
+          </div>
         )}
+        
+        {/* Content with proper z-index */}
+        <div className="relative z-10 h-full">
+          {panelContent}
+        </div>
       </div>
     </div>
   );
@@ -377,6 +398,15 @@ const styles = `
     to {
       opacity: 0;
     }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
   }
 `;
 
