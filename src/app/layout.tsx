@@ -1,4 +1,5 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import type { Metadata } from "next";
 import "./globals.css";
 import DynamicProviders from "@/components/providers/dynamic-providers";
@@ -15,6 +16,20 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
+
+const ttTravels = localFont({
+  src: "../../public/font/TT_Travels_Next_Trial_Variable.ttf",
+  variable: "--font-tt-travels",
+  display: "swap",
+  weight: "100 900", // Variable font weight range
 });
 
 export const metadata: Metadata = {
@@ -81,7 +96,7 @@ export default function RootLayout({
         {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
+        className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${ttTravels.variable} antialiased h-full`}
         suppressHydrationWarning
       >
         <DynamicProviders>{children}</DynamicProviders>
