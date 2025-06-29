@@ -263,16 +263,9 @@ export default function WithdrawModal({
         className="max-h-[90vh] w-full max-w-md"
       >
         <div className="flex flex-col space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
-          {/* Amount Input Section */}
+                    {/* Amount Input Section */}
           <div>
-            <label
-              htmlFor="withdrawAmount"
-              className={`block text-sm font-medium mb-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Amount to withdraw
-            </label>
+            
             <input
               id="withdrawAmount"
               type="number"
@@ -283,19 +276,36 @@ export default function WithdrawModal({
                 theme === "dark"
                   ? "bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                   : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
-              } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
+              } focus:outline-none focus:ring-2 focus:ring-purple-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               disabled={isSubmitting}
             />
-            {balance && (
-              <p className={`text-sm mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                Available balance: ${balance}
-              </p>
-            )}
+            <div className="flex justify-end items-center my-2">
+              
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  Balance: ${balance}
+                </span>
+                <button 
+                  type="button"
+                  onClick={() => setAmount(balance)}
+                  disabled={isSubmitting || !balance}
+                  className={`text-xs px-2 py-1 rounded ${
+                    isSubmitting || !balance
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : theme === "dark" 
+                      ? "bg-gray-700 text-blue-400 hover:bg-gray-600" 
+                      : "bg-gray-100 text-blue-600 hover:bg-gray-200"
+                  }`}
+                >
+                  MAX
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Withdraw Button - Fixed at the bottom */}
-        <div className="mt-6 flex justify-center pt-2">
+        <div className=" flex justify-center pt-2">
           <button
             className={`w-full py-3 rounded-lg relative ${
               isSubmitting
