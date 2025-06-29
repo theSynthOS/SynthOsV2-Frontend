@@ -20,6 +20,9 @@ const userPointsSchema = new Schema({
   pointsFeedback: { type: Number, default: 0 },
   pointsShareX: { type: Number, default: 0 },
   pointsTestnetClaim: { type: Number, default: 0 },
+  pointsReferral: { type: Number, default: 0 },
+  referralCode: { type: String, unique: true, sparse: true },
+  referralBy: { type: String, sparse: true },
 });
 
 const UserPoints = models.UserPoints || model("UserPoints", userPointsSchema);
