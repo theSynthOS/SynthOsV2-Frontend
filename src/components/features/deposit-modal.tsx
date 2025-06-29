@@ -807,7 +807,7 @@ export default function DepositModal({
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <Card
-            title={`Deposit to ${pool?.pair_or_vault_name}`}
+            title={`Deposit to ${pool?.name} ${pool?.pair_or_vault_name}`}
             onClose={handleClose}
             className="max-h-[90vh] w-full max-w-md"
           >
