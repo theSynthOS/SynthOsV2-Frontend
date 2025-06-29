@@ -132,6 +132,9 @@ export default function HoldingPage() {
                       ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
                       : "text-black"
                   }`}
+                  style={{
+                    fontFamily: "var(--font-tt-travels), sans-serif",
+                  }}
                 >
                   $0.00
                 </span>
