@@ -41,6 +41,21 @@ const nextConfig = {
     return config;
   },
 
+  // Headers configuration
+  async headers() {
+    return [
+      {
+        source: '/favicon.ico',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+
   // Experimental features for better performance
   experimental: {
     // Optimize CSS loading
