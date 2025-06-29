@@ -135,7 +135,7 @@ export default function HoldingPage() {
                 >
                   $0.00
                 </span>
-                <span className="text-sm xl:text-lg tracking-widest font-medium">
+                <span className="text-sm xl:text-lg tracking-widest font-medium px-2">
                   +$0.00
                 </span>
               </div>
