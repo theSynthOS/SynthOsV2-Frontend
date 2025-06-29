@@ -259,7 +259,7 @@ export default function TrendingProtocols({
             <div ref={filterRef}>
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                className={`px-3 py-4 rounded-lg transition-all duration-200 group ${
+                className={`px-2 py-2 xl:px-3 xl:py-4 rounded-lg transition-all duration-200 group ${
                   theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
                 } flex items-center justify-center border ${
                   theme === "dark" ? "border-gray-700" : "border-gray-200"
@@ -279,7 +279,7 @@ export default function TrendingProtocols({
                   } group-hover:text-white`}
                 />
                 <span
-                  className={`text-[20px] font-medium transition-colors duration-200 ${
+                  className={` text-sm  xl:text-[20px] font-medium transition-colors duration-200 ${
                     theme === "dark"
                       ? "text-gray-400"
                       : "text-black group-hover:text-white"
