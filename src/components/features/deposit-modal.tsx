@@ -412,35 +412,37 @@ export default function DepositModal({
         navigator.vibrate([100, 50, 100]);
       }
 
-      // Add 25 points for deposit
-      console.log("Starting points deposit for address:", address);
-      fetch("/api/points/deposit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
-        .then((res) => {
-          console.log("Points deposit response status:", res.status);
-          return res.json();
+      // Add 25 points for deposit only if amount >= 10
+      if (parseFloat(amount) >= 10) {
+        console.log("Starting points deposit for address:", address);
+        fetch("/api/points/deposit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
         })
-        .then((data) => {
-          console.log("Points deposit response data:", data);
-          // Fetch updated points
-          console.log("Fetching updated points for address:", address);
-          return fetch(
-            `/api/points?address=${encodeURIComponent(address ?? "")}`
-          );
-        })
-        .then((res) => {
-          console.log("Get points response status:", res.status);
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Get points response data:", data);
-        })
-        .catch((err) => {
-          console.error("Points operation error:", err);
-        });
+          .then((res) => {
+            console.log("Points deposit response status:", res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("Points deposit response data:", data);
+            // Fetch updated points
+            console.log("Fetching updated points for address:", address);
+            return fetch(
+              `/api/points?address=${encodeURIComponent(address ?? "")}`
+            );
+          })
+          .then((res) => {
+            console.log("Get points response status:", res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("Get points response data:", data);
+          })
+          .catch((err) => {
+            console.error("Points operation error:", err);
+          });
+      }
 
       // Save transaction to database
       try {
@@ -604,9 +606,10 @@ export default function DepositModal({
             error instanceof Error ? error.message : String(error);
 
           if (errorMessage) {
-            
-            console.log("Detected EOA wallet, falling back to sequential transactions");
-            
+            console.log(
+              "Detected EOA wallet, falling back to sequential transactions"
+            );
+
             // For EOAs, send transactions sequentially
             let lastTxResult;
 
