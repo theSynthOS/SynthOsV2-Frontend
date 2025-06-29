@@ -15,6 +15,17 @@ import { useToast } from "@/hooks/use-toast";
 import HoldingCard from "@/components/ui/holding-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+type Holding = {
+  protocolName: string;
+  pairName: string;
+  currentAmount: number;
+  initialAmount: number;
+  pnl: number;
+  apy: number;
+  status: string;
+  protocolLogo: string;
+};
+
 export default function HoldingPage() {
   const account = useActiveAccount();
   const { theme } = useTheme();
@@ -24,6 +35,8 @@ export default function HoldingPage() {
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
 
   // Set mounted to true on initial load to enable theme rendering
@@ -39,6 +52,36 @@ export default function HoldingPage() {
       setDisplayAddress(null);
     }
   }, [account]);
+
+  // Fetch holdings data
+  useEffect(() => {
+    if (!account?.address) return;
+    setIsLoading(true);
+    fetch(`/accounts/holdings/${account.address}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setHoldings(Array.isArray(data) ? data : []);
+        console.log("Fetched holdings:", data);
+      })
+      .catch(() => setHoldings([]))
+      .finally(() => setIsLoading(false));
+  }, [account?.address]);
+
+  // Calculate total holding and pnl
+  const totalHolding = holdings.reduce(
+    (sum, h) => sum + (h.currentAmount || 0),
+    0
+  );
+  const totalPnl = holdings.reduce((sum, h) => sum + (h.pnl || 0), 0);
+
+  // Format PnL
+  const pnlColor =
+    totalPnl > 0
+      ? "text-green-500"
+      : totalPnl < 0
+      ? "text-red-500"
+      : "text-gray-500";
+  const pnlSign = totalPnl > 0 ? "+" : totalPnl < 0 ? "-" : "";
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -136,10 +179,13 @@ export default function HoldingPage() {
                     fontFamily: "var(--font-tt-travels), sans-serif",
                   }}
                 >
-                  $0.00
+                  ${totalHolding.toFixed(2)}
                 </span>
-                <span className="text-sm xl:text-lg tracking-widest font-medium px-2">
-                  +$0.00
+                {/* pnl */}
+                <span
+                  className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
+                >
+                  {pnlSign}${Math.abs(totalPnl).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -210,14 +256,21 @@ export default function HoldingPage() {
                 <ArrowRight size={16} />
               </div>
             </div>
-            <HoldingCard
-              symbol="USDT"
-              name="AAVE"
-              amount="463M"
-              apy="9,96%APY"
-              logoUrl="/aave.png"
-              onClick={() => {}}
-            />
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : (
+              holdings.map((h, idx) => (
+                <HoldingCard
+                  key={idx}
+                  symbol={h.pairName}
+                  name={h.protocolName}
+                  amount={h.currentAmount.toString()}
+                  apy={h.apy.toString()}
+                  logoUrl={h.protocolLogo}
+                  onClick={() => {}}
+                />
+              ))
+            )}
           </div>
         </div>
       </motion.div>

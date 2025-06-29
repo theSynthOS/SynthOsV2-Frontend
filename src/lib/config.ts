@@ -4,8 +4,7 @@ const config = {
     process.env.SYNTHOS_BACKEND_V2_URL ||
     "https://synthos-v2-backend-production-f721.up.railway.app",
   SYNTHOS_BACKEND_URL:
-    process.env.SYNTHOS_BACKEND_URL ||
-    "https://synthos-backend-production.up.railway.app",
+    process.env.SYNTHOS_BACKEND_URL || "https://backend.synthos.fun",
 } as const;
 
 // API endpoint builders
