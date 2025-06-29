@@ -258,6 +258,10 @@ export default function HoldingPage() {
             </div>
             {isLoading ? (
               <div>Loading...</div>
+            ) : holdings.length === 0 ? (
+              <div className="text-gray-400 text-center py-8">
+                No Holdings Available
+              </div>
             ) : (
               holdings.map((h, idx) => (
                 <HoldingCard
