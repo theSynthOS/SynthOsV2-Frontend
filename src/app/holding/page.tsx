@@ -13,6 +13,7 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import HoldingCard from "@/components/ui/holding-card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function HoldingPage() {
   const account = useActiveAccount();
@@ -23,6 +24,7 @@ export default function HoldingPage() {
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
@@ -87,13 +89,17 @@ export default function HoldingPage() {
 
   return (
     <motion.div
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
-      onDragEnd={handleDragEnd}
+      {...(isMobile
+        ? {
+            drag: "x",
+            dragConstraints: { left: 0, right: 0 },
+            dragElastic: 0.2,
+            onDragEnd: handleDragEnd,
+            whileDrag: { cursor: "grabbing" },
+          }
+        : {})}
       animate={controls}
       initial={{ x: 0 }}
-      whileDrag={{ cursor: "grabbing" }}
       className={`flex flex-col bg-transparent ${
         theme === "dark" ? "text-white" : "text-black"
       } p-4 xl:p-0`}
@@ -119,15 +125,20 @@ export default function HoldingPage() {
               >
                 Total Holding Value
               </span>
-              <span
-                className={`text-3xl font-bold xl:font-medium my-2 xl:text-5xl ${
-                  theme === "dark"
-                    ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
-                    : "text-black"
-                }`}
-              >
-                $0.00
-              </span>
+              <div className="my-2">
+                <span
+                  className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
+                    theme === "dark"
+                      ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
+                      : "text-black"
+                  }`}
+                >
+                  $0.00
+                </span>
+                <span className="text-sm xl:text-lg tracking-widest font-medium">
+                  +$0.00
+                </span>
+              </div>
             </div>
           </div>
 
