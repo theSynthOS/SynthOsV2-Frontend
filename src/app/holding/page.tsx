@@ -16,6 +16,7 @@ import HoldingCard from "@/components/ui/holding-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type Holding = {
+  protocolPairId: string;
   protocolName: string;
   pairName: string;
   currentAmount: number;
@@ -57,7 +58,7 @@ export default function HoldingPage() {
   useEffect(() => {
     if (!account?.address) return;
     setIsLoading(true);
-    fetch(`/accounts/holdings/${account.address}`)
+    fetch(`/api/holdings?address=${account.address}`)
       .then((res) => res.json())
       .then((data) => {
         setHoldings(Array.isArray(data) ? data : []);
@@ -263,17 +264,43 @@ export default function HoldingPage() {
                 No Holdings Available
               </div>
             ) : (
-              holdings.map((h, idx) => (
-                <HoldingCard
-                  key={idx}
-                  symbol={h.pairName}
-                  name={h.protocolName}
-                  amount={h.currentAmount.toString()}
-                  apy={h.apy.toString()}
-                  logoUrl={h.protocolLogo}
-                  onClick={() => {}}
-                />
-              ))
+              holdings.map((h, idx) => {
+                console.log("h", h);
+                return (
+                  <HoldingCard
+                    key={idx}
+                    symbol={h.pairName}
+                    name={h.protocolName}
+                    amount={h.currentAmount.toString()}
+                    apy={h.apy.toString()}
+                    logoUrl={h.protocolLogo}
+                    pool={{
+                      name: h.protocolName,
+                      apy: h.apy,
+                      risk: "Medium", // Default risk level
+                      pair_or_vault_name: h.pairName,
+                      protocol_id: h.protocolName.toLowerCase().replace(/\s+/g, '-'),
+                      protocol_pair_id: h.protocolPairId.toLowerCase().replace(/\s+/g, '-')
+                    }}
+                    balance={h.currentAmount.toString()}
+                    address={displayAddress || undefined}
+                    refreshBalance={() => {
+                      // Refetch holdings data
+                      if (account?.address) {
+                        setIsLoading(true);
+                        fetch(`/api/holdings/${account.address}`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            setHoldings(Array.isArray(data) ? data : []);
+                          })
+                          .catch(() => setHoldings([]))
+                          .finally(() => setIsLoading(false));
+                      }
+                    }}
+                    onClick={() => {}}
+                  />
+                );
+              })
             )}
           </div>
         </div>

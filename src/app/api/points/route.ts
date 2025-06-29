@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertUserPoints, getUserPoints } from "@/app/models/points";
+import { getAddress } from "viem";
 
 export async function POST(req: Request) {
   try {
@@ -7,7 +8,9 @@ export async function POST(req: Request) {
     if (!address) {
       return NextResponse.json({ error: "Missing address" }, { status: 400 });
     }
-    const user = await upsertUserPoints(address);
+    // Checksum the address to ensure it's properly formatted
+    const checksummedAddress = getAddress(address);
+    const user = await upsertUserPoints(checksummedAddress);
     return NextResponse.json({ user });
   } catch (error) {
     console.error("Error in points API:", error);
@@ -22,7 +25,9 @@ export async function GET(req: Request) {
     if (!address) {
       return NextResponse.json({ error: "Missing address" }, { status: 400 });
     }
-    const user = await getUserPoints(address);
+    // Checksum the address to ensure it's properly formatted
+    const checksummedAddress = getAddress(address);
+    const user = await getUserPoints(checksummedAddress);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

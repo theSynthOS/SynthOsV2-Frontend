@@ -85,6 +85,9 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
         </div>
         <button 
           onClick={() => {
+            console.log("pool", pool);
+            console.log("balance", balance);
+            console.log("address", address);
             if (pool && balance && address) {
               setShowWithdrawModal(true);
             } else if (onClick) {

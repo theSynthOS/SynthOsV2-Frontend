@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiEndpoints } from "@/lib/config";
+import { getAddress } from "viem";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +11,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(apiEndpoints.aiAnalyzer(address));
+    // Checksum the address to ensure it's properly formatted
+    const checksummedAddress = getAddress(address);
+    const response = await fetch(apiEndpoints.aiAnalyzer(checksummedAddress));
     const data = await response.json();
 
     return NextResponse.json(data);
