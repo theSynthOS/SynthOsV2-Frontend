@@ -48,7 +48,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
 
           {/* Only show navbar on non-landing pages */}
           {!isLandingPage && (
-            <div className="fixed bottom-0 left-0 right-0">
+            <div className="fixed bottom-0 left-0 right-0 z-50">
               <Navbar />
             </div>
           )}

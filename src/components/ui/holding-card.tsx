@@ -3,17 +3,20 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { ArrowUp } from 'lucide-react';
 import WithdrawModal from '@/components/features/withdraw-modal';
+import { useBalance } from '@/contexts/BalanceContext';
 
 interface HoldingCardProps {
   symbol: string;
   name: string;
   amount: string;
   apy: string;
-  logoUrl: string;
+  protocolLogo: string;
+  pnl: string;
+  initialAmount: string;
   onClick?: () => void;
   pool?: {
     name: string;
-    apy: number;
+    apy: string;
     risk: string;
     pair_or_vault_name: string;
     protocol_id?: string;
@@ -29,16 +32,19 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
   name,
   amount: amount,
   apy,
-  logoUrl,
+  protocolLogo,
   onClick,
   pool,
   balance,
   address,
+  pnl,
+  initialAmount,
   refreshBalance
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const { refreshBalance: refreshHomeBalance, refreshHoldings: refreshHoldingsContext } = useBalance();
 
   return (
     <>
@@ -63,9 +69,10 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 relative">
                 <Image
-                  src={logoUrl}
+                  src={protocolLogo}
                   alt={`${symbol} logo`}
-                  fill
+                  width={56}
+                  height={56}
                   className="object-contain"
                 />
               </div>
@@ -73,14 +80,26 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                 <p className={`text-lg md:text-xl ${isDark ? 'text-white' : 'text-black'}`}>{symbol}</p>
                 <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>({name})</p>
               </div>
+            </div >
+             <div className={`border border-[#C3C3C3] rounded-full px-2 py-2 flex items-center gap-1`}>
+              <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-black'}`}>APY:</span>
+              <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-black'}`}>{parseFloat(apy).toFixed(2)}%</span>
             </div>
-            <div className={`border border-[#C3C3C3] rounded-full px-2 py-2 flex items-center gap-1`}>
-              <ArrowUp className="h-4 w-4 text-green-500" />
-              <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-black'}`}>{apy}</span>
-            </div>
+            
           </div>
           <div className="text-center mb-4">
-            <h2 className={`text-3xl ${isDark ? 'text-white' : 'text-black'}`}>${amount}</h2>
+            <h2 className={`text-3xl ${
+              parseFloat(amount) > parseFloat(initialAmount) 
+                ? 'text-green-500' 
+                : parseFloat(amount) < parseFloat(initialAmount) 
+                ? 'text-red-500' 
+                : isDark ? 'text-white' : 'text-black'
+            }`}>
+              {parseFloat(amount) > parseFloat(initialAmount) ? '+' : parseFloat(amount) < parseFloat(initialAmount) ? '-' : ''}${pnl}
+            </h2>
+          </div>
+          <div className="text-center mb-4">
+            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Deposited Amount: ${initialAmount}</p>
           </div>
         </div>
         <button 
@@ -107,7 +126,18 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
           onClose={() => setShowWithdrawModal(false)}
           balance={balance}
           address={address}
-          refreshBalance={refreshBalance}
+          refreshBalance={() => {
+            // Refresh local holdings
+            if (refreshBalance) {
+              refreshBalance();
+            }
+            // Refresh home page balance
+            if (refreshHomeBalance) {
+              refreshHomeBalance();
+            }
+            // Trigger global holdings refresh
+            window.dispatchEvent(new CustomEvent('refreshHoldings'));
+          }}
         />
       )}
     </>

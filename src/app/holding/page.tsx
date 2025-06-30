@@ -13,6 +13,7 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import HoldingCard from "@/components/ui/holding-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -64,19 +65,40 @@ export default function HoldingPage() {
     }
   }, [account]);
 
-  // Fetch holdings data
-  useEffect(() => {
+  // Function to fetch holdings data
+  const fetchHoldings = async () => {
     if (!account?.address) return;
     setIsLoading(true);
-    fetch(`/api/holdings?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setHoldings(Array.isArray(data) ? data : []);
-        console.log("Fetched holdings:", data);
-      })
-      .catch(() => setHoldings([]))
-      .finally(() => setIsLoading(false));
+    try {
+      const res = await fetch(`/api/holdings?address=${account.address}`);
+      const data = await res.json();
+      setHoldings(Array.isArray(data) ? data : []);
+      console.log("Fetched holdings:", data);
+    } catch (error) {
+      console.error("Error fetching holdings:", error);
+      setHoldings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch holdings data on mount and address change
+  useEffect(() => {
+    fetchHoldings();
   }, [account?.address]);
+
+  // Listen for holdings refresh events
+  useEffect(() => {
+    const handleRefreshHoldings = () => {
+      fetchHoldings();
+    };
+
+    window.addEventListener("refreshHoldings", handleRefreshHoldings);
+
+    return () => {
+      window.removeEventListener("refreshHoldings", handleRefreshHoldings);
+    };
+  }, []);
 
   // Fetch referral data
   useEffect(() => {
@@ -189,7 +211,6 @@ export default function HoldingPage() {
 
     handleReferralCode();
   }, [account?.address]);
-
   // Calculate total holding and pnl
   const totalHolding = holdings.reduce(
     (sum, h) => sum + (h.currentAmount || 0),
@@ -376,24 +397,41 @@ export default function HoldingPage() {
                 Total Holding Value
               </span>
               <div className="my-2">
-                <span
-                  className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
-                    theme === "dark"
-                      ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
-                      : "text-black"
-                  }`}
-                  style={{
-                    fontFamily: "var(--font-tt-travels), sans-serif",
-                  }}
-                >
-                  ${totalHolding.toFixed(2)}
-                </span>
-                {/* pnl */}
-                <span
-                  className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
-                >
-                  {pnlSign}${Math.abs(totalPnl).toFixed(2)}
-                </span>
+                {isLoading && account?.address ? (
+                  <div className="flex items-center space-x-2">
+                    <Skeleton
+                      className={`h-8 xl:h-12 w-32 xl:w-48 ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                      }`}
+                    />
+                    <Skeleton
+                      className={`h-6 xl:h-8 w-16 ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                      }`}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <span
+                      className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
+                        theme === "dark"
+                          ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
+                          : "text-black"
+                      }`}
+                      style={{
+                        fontFamily: "var(--font-tt-travels), sans-serif",
+                      }}
+                    >
+                      ${totalHolding.toFixed(2)}
+                    </span>
+                    {/* pnl */}
+                    <span
+                      className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
+                    >
+                      {pnlSign}${Math.abs(totalPnl).toFixed(2)}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -455,7 +493,7 @@ export default function HoldingPage() {
               </span>
 
               <div
-                className={`flex items-center gap-1 underline ${
+                className={`flex items-center gap-1 ${
                   theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                 }`}
               >
@@ -464,14 +502,72 @@ export default function HoldingPage() {
               </div>
             </div>
             {isLoading ? (
-              <div>Loading...</div>
+              <div className="w-full space-y-4">
+                {/* Skeleton for HoldingCard */}
+                {[...Array(1)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-full max-w-md mx-auto rounded-2xl overflow-hidden border ${
+                      theme === "dark"
+                        ? "bg-[#0B0424] border-white/30"
+                        : "bg-[#F5F2FF] border-[#CECECE]"
+                    } shadow-md relative`}
+                    style={{
+                      boxShadow:
+                        theme === "dark"
+                          ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
+                          : "inset 0 0 20px rgba(143, 99, 233, 0.2)",
+                    }}
+                  >
+                    <div className="p-4 flex flex-col relative z-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <Skeleton
+                            className={`w-10 h-10 rounded-full ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                            }`}
+                          />
+                          <div>
+                            <Skeleton
+                              className={`h-5 w-16 mb-1 ${
+                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                              }`}
+                            />
+                            <Skeleton
+                              className={`h-3 w-20 ${
+                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        <Skeleton
+                          className={`h-8 w-16 rounded-full ${
+                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                          }`}
+                        />
+                      </div>
+                      <div className="text-center mb-4">
+                        <Skeleton
+                          className={`h-9 w-24 mx-auto ${
+                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    <Skeleton
+                      className={`w-full h-12 rounded-none ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
             ) : holdings.length === 0 ? (
               <div className="text-gray-400 text-center py-8">
                 No Holdings Available
               </div>
             ) : (
               holdings.map((h, idx) => {
-                console.log("h", h);
                 return (
                   <HoldingCard
                     key={idx}
@@ -479,10 +575,12 @@ export default function HoldingPage() {
                     name={h.protocolName}
                     amount={h.currentAmount.toString()}
                     apy={h.apy.toString()}
-                    logoUrl={h.protocolLogo}
+                    protocolLogo={h.protocolLogo}
+                    pnl={h.pnl.toFixed(3)}
+                    initialAmount={h.initialAmount.toFixed(3)}
                     pool={{
                       name: h.protocolName,
-                      apy: h.apy,
+                      apy: h.apy.toFixed(3),
                       risk: "Medium", // Default risk level
                       pair_or_vault_name: h.pairName,
                       protocol_id: h.protocolName
@@ -498,12 +596,16 @@ export default function HoldingPage() {
                       // Refetch holdings data
                       if (account?.address) {
                         setIsLoading(true);
-                        fetch(`/api/holdings/${account.address}`)
+                        fetch(`/api/holdings?address=${account.address}`)
                           .then((res) => res.json())
                           .then((data) => {
                             setHoldings(Array.isArray(data) ? data : []);
+                            console.log("Refreshed holdings:", data);
                           })
-                          .catch(() => setHoldings([]))
+                          .catch((error) => {
+                            console.error("Error refreshing holdings:", error);
+                            setHoldings([]);
+                          })
                           .finally(() => setIsLoading(false));
                       }
                     }}

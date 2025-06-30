@@ -661,6 +661,9 @@ export default function TrendingProtocols({
           if (refreshBalance) {
             refreshBalance();
           }
+          
+          // Trigger holdings refresh by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('refreshHoldings'));
         }}
       />
     </>

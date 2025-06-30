@@ -16,6 +16,7 @@ import BuyModal from "@/components/features/wallet-buy";
 import WalletDeposit from "@/components/features/wallet-deposit";
 import HoldingPage from "@/app/holding/page";
 import HistoryPanel from "@/components/features/history-panel";
+import { BalanceProvider } from "@/contexts/BalanceContext";
 
 export default function Home() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
+
 
   // Check URL parameters for modal to open
   useEffect(() => {
@@ -122,13 +124,24 @@ export default function Home() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
-      className="flex flex-col"
+    <BalanceProvider 
+      refreshBalance={() => {
+        if (account?.address) {
+          fetchBalance(account.address);
+        }
+      }}
+      refreshHoldings={() => {
+        // Holdings will be refreshed via individual components
+        console.log("Holdings refresh requested");
+      }}
     >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col"
+      >
       <div className="flex flex-col xl:flex-row">
         <div className="flex flex-col xl:w-4/6 xl:pl-5">
           {/* Balance */}
@@ -399,5 +412,6 @@ export default function Home() {
         onClose={() => setIsHistoryOpen(false)}
       />
     </motion.div>
+    </BalanceProvider>
   );
 }
