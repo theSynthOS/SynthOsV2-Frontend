@@ -389,10 +389,32 @@ export default function WithdrawModal({
         }
 
         // Update progress to complete
-        setTxProgressPercent(100);
+        setTxProgressPercent(95);
 
         // Handle success
         setTxHash(result.transactionHash);
+
+        const response = await fetch("/api/transactions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            address: address,
+            hash: result.transactionHash,
+            amount: amount,
+            type: "withdraw",
+            status: "completed",
+          }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          console.error("Failed to save transaction:", data.message);
+        } else {
+        }
+
+        setTxProgressPercent(100);
         // Handle success
         setShowSuccessModal(true);
 
