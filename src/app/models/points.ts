@@ -26,6 +26,7 @@ const userPointsSchema = new Schema({
   pointsReferral: { type: Number, default: 0 },
   referralCode: { type: String, unique: true, sparse: true },
   referralBy: { type: String, sparse: true },
+  referralStatus: { type: Number, default: 0 },
 });
 
 const UserPoints = models.UserPoints || model("UserPoints", userPointsSchema);
@@ -68,6 +69,7 @@ export async function upsertUserPoints(address: string, email?: string) {
       pointsReferral: 0,
       referralCode: referralCode,
       referralBy: "",
+      referralStatus: 0,
     });
   } else {
     // If user exists but doesn't have a referral code, create one

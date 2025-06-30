@@ -407,7 +407,7 @@ export default function DepositModal({
         navigator.vibrate([100, 50, 100]);
       }
 
-      // Add 25 points for deposit only if amount >= 10
+      // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {
         console.log("Starting points deposit for address:", address);
         fetch("/api/points/deposit", {
@@ -436,6 +436,30 @@ export default function DepositModal({
           })
           .catch((err) => {
             console.error("Points operation error:", err);
+          });
+
+        // Add referral points logic
+        console.log("Starting referral points check for address:", address);
+        fetch("/api/referral-points", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: address,
+            amount: amount,
+          }),
+        })
+          .then((res) => {
+            console.log("Referral points response status:", res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("Referral points response data:", data);
+            if (data.success && data.pointsAdded > 0) {
+              toast.success(`Referral bonus: +${data.pointsAdded} points!`);
+            }
+          })
+          .catch((err) => {
+            console.error("Referral points operation error:", err);
           });
       }
 
@@ -812,7 +836,6 @@ export default function DepositModal({
         return `ERC20: ${match[1].trim()}`;
       }
     }
-
     // If it contains "UserOp failed", simplify it
     if (errorMsg.includes("UserOp failed")) {
       const match = errorMsg.match(/UserOp failed with reason:\s*([^']+)/);
@@ -820,7 +843,6 @@ export default function DepositModal({
         return match[1].trim();
       }
     }
-
     // For general errors, limit to reasonable length
     if (errorMsg.length > 100) {
       return errorMsg.substring(0, 97) + "...";
