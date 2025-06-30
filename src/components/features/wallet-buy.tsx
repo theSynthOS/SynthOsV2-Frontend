@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { PayEmbed, useActiveAccount } from "thirdweb/react";
+import { ToastContainer, toast } from "react-toastify";
 import Card from "@/components/ui/card";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { client } from "@/client";
 import { arbitrum, scroll } from "thirdweb/chains";
+import { useBalance } from "@/contexts/BalanceContext";
 
 interface BuyModalProps {
   isOpen: boolean;
@@ -35,6 +37,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedToken, setSelectedToken] = useState<StablecoinType>("USDC");
+  const { refreshBalance, refreshHoldings } = useBalance();
 
   // Set mounted state once hydration is complete
   useEffect(() => {
@@ -95,7 +98,17 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
                         icon: "/usdc.png",
                       },
                     },
-
+                    onPurchaseSuccess: () => {
+                      // ONLY refresh after purchase completes - no polling
+                      setTimeout(() => {
+                        if (refreshBalance) {
+                          refreshBalance();
+                        }
+                        if (refreshHoldings) {
+                          refreshHoldings();
+                        }
+                      }, 2000); // Small delay for transaction to propagate
+                    },
                     metadata: {
                       name: `Buy Crypto with Fiat`,
                     },

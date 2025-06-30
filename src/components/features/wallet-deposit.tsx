@@ -6,6 +6,7 @@ import QRCode from 'react-qr-code';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import Card from '@/components/ui/card';
+import { useBalance } from '@/contexts/BalanceContext';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [selectedCoin, setSelectedCoin] = useState<StablecoinType>('USDC');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { refreshBalance } = useBalance();
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -64,6 +66,16 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [dropdownOpen]);
+
+  // One-time refresh when modal opens (not periodic)
+  useEffect(() => {
+    if (isOpen && account?.address) {
+      console.log("Deposit modal opened - checking for any new funds");
+      if (refreshBalance) {
+        refreshBalance();
+      }
+    }
+  }, [isOpen, account?.address, refreshBalance]);
 
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal close

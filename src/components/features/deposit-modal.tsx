@@ -1035,7 +1035,7 @@ export default function DepositModal({
                 <div className="flex justify-between">
                   <span className="opacity-70">Estimated Yearly Yield</span>
                   <span className="font-semibold">
-                    ${submittedYearlyYieldRef.current.toFixed(2)}
+                    ${submittedYearlyYieldRef.current.toFixed(3)}
                   </span>
                 </div>
               </div>
