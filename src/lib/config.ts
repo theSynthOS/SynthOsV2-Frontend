@@ -27,6 +27,9 @@ export const apiEndpoints = {
 
   withdraw: () => `${config.SYNTHOS_BACKEND_URL}/action/withdraw`,
 
+  updateDepositTx: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/update-deposit-transaction`,
+
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,
   protocolPairsApy: () =>

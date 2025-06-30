@@ -361,8 +361,12 @@ export default function HoldingPage() {
                       apy: h.apy.toFixed(3),
                       risk: "Medium", // Default risk level
                       pair_or_vault_name: h.pairName,
-                      protocol_id: h.protocolName.toLowerCase().replace(/\s+/g, '-'),
-                      protocol_pair_id: h.protocolPairId.toLowerCase().replace(/\s+/g, '-')
+                      protocol_id: h.protocolName
+                        .toLowerCase()
+                        .replace(/\s+/g, "-"),
+                      protocol_pair_id: h.protocolPairId
+                        .toLowerCase()
+                        .replace(/\s+/g, "-"),
                     }}
                     balance={h.currentAmount.toString()}
                     address={displayAddress || undefined}
