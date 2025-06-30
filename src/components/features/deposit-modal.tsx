@@ -140,8 +140,7 @@ export default function DepositModal({
             // Fallback to the APY provided in the pool prop
             setCurrentApy(pool.apy || 0);
           }
-        } catch (error) {
-          console.error("Error fetching APY:", error);
+        } catch {
           // Fallback to the APY provided in the pool prop
           setCurrentApy(pool.apy || 0);
         } finally {
@@ -241,8 +240,7 @@ export default function DepositModal({
       }
 
       return newBalance;
-    } catch (error) {
-      console.error("Error fetching balance directly:", error);
+    } catch {
       return "0.00";
     } finally {
       setLocalIsLoadingBalance(false);
@@ -256,9 +254,7 @@ export default function DepositModal({
       await fetchBalance();
 
       // The parent's refreshBalance will be called inside fetchBalanceDirectly
-    } catch (error) {
-      console.error("Error refreshing balance in deposit modal:", error);
-
+    } catch {
       // Fallback to parent's refreshBalance if direct fetch fails
       if (refreshBalance) {
         refreshBalance();
@@ -369,7 +365,6 @@ export default function DepositModal({
     account: any
   ) => {
     try {
-      console.log("🔍 Starting Tenderly RPC bundled simulation...");
       setSimulationStatus(
         `Simulating ${transactionData.length} transactions...`
       );
@@ -390,11 +385,6 @@ export default function DepositModal({
         return call;
       });
 
-      console.log(
-        `📦 Simulating bundle of ${transactionCalls.length} transactions`
-      );
-
-      // Log the exact request format for debugging
       const requestBody = {
         method: "tenderly_simulateBundle",
         params: [
@@ -402,7 +392,6 @@ export default function DepositModal({
           "latest", // Block parameter - use latest block
         ],
       };
-      console.log("📋 Request body:", JSON.stringify(requestBody, null, 2));
 
       // Call Tenderly RPC tenderly_simulateBundle method
       const response = await fetch("/api/tenderly-rpc", {
@@ -429,29 +418,13 @@ export default function DepositModal({
         throw new Error("Invalid simulation results format");
       }
 
-      console.log(
-        "📊 Simulation results:",
-        simulationResults.length,
-        "transactions"
-      );
-
       // Check if ALL transactions have status: true
       const failedTransactions = simulationResults.filter(
         (result: any, index: number) => {
           const success = result.status === true;
-          console.log(
-            `Transaction ${index + 1}: ${success ? "✅" : "❌"} Status: ${
-              result.status
-            }`
-          );
 
           // Log failure details for debugging
           if (!success) {
-            console.log(`   ❌ Transaction ${index + 1} failed:`, {
-              error: result.error,
-              revertReason: result.revertReason,
-              gasUsed: result.gasUsed,
-            });
           }
 
           return !success;
@@ -481,9 +454,6 @@ export default function DepositModal({
         0
       );
 
-      console.log("✅ All transactions passed simulation");
-      console.log(`💰 Total gas used: ${totalGasUsed}`);
-
       // Update status for success
       setSimulationStatus("✅ All transactions validated successfully");
       setTimeout(() => setSimulationStatus(null), 1500);
@@ -494,7 +464,6 @@ export default function DepositModal({
         results: simulationResults,
       };
     } catch (error) {
-      console.error("❌ Tenderly RPC simulation error:", error);
       setSimulationStatus("❌ Simulation failed");
       setTimeout(() => setSimulationStatus(null), 2000);
       throw error;
@@ -548,37 +517,27 @@ export default function DepositModal({
 
       // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {
-        console.log("Starting points deposit for address:", address);
         fetch("/api/points/deposit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address }),
         })
           .then((res) => {
-            console.log("Points deposit response status:", res.status);
             return res.json();
           })
           .then((data) => {
-            console.log("Points deposit response data:", data);
             // Fetch updated points
-            console.log("Fetching updated points for address:", address);
             return fetch(
               `/api/points?address=${encodeURIComponent(address ?? "")}`
             );
           })
           .then((res) => {
-            console.log("Get points response status:", res.status);
             return res.json();
           })
-          .then((data) => {
-            console.log("Get points response data:", data);
-          })
-          .catch((err) => {
-            console.error("Points operation error:", err);
-          });
+          .then((data) => {})
+          .catch(() => {});
 
         // Add referral points logic
-        console.log("Starting referral points check for address:", address);
         fetch("/api/referral-points", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -588,18 +547,14 @@ export default function DepositModal({
           }),
         })
           .then((res) => {
-            console.log("Referral points response status:", res.status);
             return res.json();
           })
           .then((data) => {
-            console.log("Referral points response data:", data);
             if (data.success && data.pointsAdded > 0) {
               toast.success(`Referral bonus: +${data.pointsAdded} points!`);
             }
           })
-          .catch((err) => {
-            console.error("Referral points operation error:", err);
-          });
+          .catch(() => {});
       }
 
       // Save transaction to database
@@ -620,14 +575,10 @@ export default function DepositModal({
 
         const data = await response.json();
         if (!data.success) {
-          console.error("Failed to save transaction:", data.message);
         } else {
         }
-      } catch (error) {
-        console.error("Error saving transaction:", error);
-      }
+      } catch (error) {}
     } catch (error) {
-      console.error("Error handling transaction success:", error);
       toast.error("Deposit failed");
     }
   };
@@ -704,7 +655,6 @@ export default function DepositModal({
         }
 
         // Extract transactions from callData
-        console.log("Response data:", responseData);
 
         if (!responseData || !Array.isArray(responseData.callData)) {
           throw new Error("Invalid response format: expected callData array");
@@ -741,15 +691,12 @@ export default function DepositModal({
         setTxProgressPercent(60);
 
         // Simulate the transaction bundle with Tenderly RPC
-        console.log("🔍 Running Tenderly RPC bundled simulation...");
         try {
           const simulationResult = await simulateTransactionBundle(
             orderedTxs,
             account
           );
-          console.log("✅ Tenderly RPC simulation passed:", simulationResult);
         } catch (simulationError) {
-          console.error("❌ Tenderly RPC simulation failed:", simulationError);
           const errorMessage =
             simulationError instanceof Error
               ? simulationError.message
@@ -782,16 +729,12 @@ export default function DepositModal({
             transactions,
             account,
           });
-          console.log("result", result);
         } catch (error) {
-          console.log("error", error);
           // Check if the error is because account doesn't support batch transactions
           const errorMessage =
             error instanceof Error ? error.message : String(error);
 
           if (errorMessage) {
-            console.log("errorMessage", errorMessage);
-
             // For EOAs, send transactions sequentially
             let lastTxResult;
 
@@ -835,16 +778,11 @@ export default function DepositModal({
             blockNumber = Number(receipt.blockNumber);
           }
         } catch (receiptError) {
-          console.error("Error getting transaction receipt:", receiptError);
           // Continue without block number
         }
 
         // Update deposit record in database with transaction details
         try {
-          console.log("depositId", depositId);
-          console.log("txHash", result.transactionHash);
-          console.log("blockNumber", blockNumber);
-
           const updateResponse = await fetch("/api/update-deposit-tx", {
             method: "POST",
             headers: {
@@ -858,10 +796,8 @@ export default function DepositModal({
           });
 
           if (!updateResponse.ok) {
-            console.error("Failed to update deposit transaction details");
           }
         } catch (updateError) {
-          console.error("Error updating deposit transaction:", updateError);
           // Continue with success flow even if update fails
         }
 
@@ -870,8 +806,6 @@ export default function DepositModal({
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
-        console.error("Deposit execution error:", error);
-
         // Show user-friendly error message
         let errorMessage = "Transaction failed";
         if (error instanceof Error) {
@@ -919,8 +853,6 @@ export default function DepositModal({
         }
       }
     } catch (error) {
-      console.error("Deposit API error:", error);
-
       // Set the error message for the banner
       setDepositError("Failed to prepare transaction");
       setTxProgressPercent(0);

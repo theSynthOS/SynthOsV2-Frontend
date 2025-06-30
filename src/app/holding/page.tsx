@@ -560,11 +560,7 @@ export default function HoldingPage() {
                             .then((data) => {
                               setHoldings(Array.isArray(data) ? data : []);
                             })
-                            .catch((error) => {
-                              console.error(
-                                "Error refreshing holdings:",
-                                error
-                              );
+                            .catch(() => {
                               setHoldings([]);
                             })
                             .finally(() => setIsLoading(false));
@@ -919,11 +915,7 @@ export default function HoldingPage() {
                                 .then((data) => {
                                   setHoldings(Array.isArray(data) ? data : []);
                                 })
-                                .catch((error) => {
-                                  console.error(
-                                    "Error refreshing holdings:",
-                                    error
-                                  );
+                                .catch(() => {
                                   setHoldings([]);
                                 })
                                 .finally(() => setIsLoading(false));

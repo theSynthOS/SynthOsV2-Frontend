@@ -88,8 +88,7 @@ export default function HistoryPanel({
           setError(data.message || "Failed to fetch transactions");
           setTransactions([]);
         }
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
+      } catch {
         setError("Failed to fetch transactions. Please try again.");
         setTransactions([]);
       } finally {
@@ -251,7 +250,9 @@ export default function HistoryPanel({
                           {tx.txType.charAt(0).toUpperCase() +
                             tx.txType.slice(1)}
                         </h3>
-                        <p className="text-sm text-gray-500 underline">{tx.summary}</p>
+                        <p className="text-sm text-gray-500 underline">
+                          {tx.summary}
+                        </p>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
@@ -333,31 +334,34 @@ export default function HistoryPanel({
       >
         {/* Light theme background gradient (without overflow-hidden) */}
         {theme !== "dark" && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ filter: 'blur(60px)' }}>
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none"
+            style={{ filter: "blur(60px)" }}
+          >
             {/* Purple ball - bottom left */}
             <div
               className="absolute w-[100%] h-[100%] bottom-[-40%] right-[40%] animate-fourth"
               style={{
-                background: "radial-gradient(circle at center, rgba(143, 99, 233, 0.8) 0%, rgba(143, 99, 233, 0) 70%)",
-                opacity: 0.6
+                background:
+                  "radial-gradient(circle at center, rgba(143, 99, 233, 0.8) 0%, rgba(143, 99, 233, 0) 70%)",
+                opacity: 0.6,
               }}
             ></div>
-            
+
             {/* Yellow ball - top right */}
             <div
               className="absolute w-[100%] h-[100%] top-[-50%] right-[-50%] animate-second"
               style={{
-                background: "radial-gradient(circle at center, rgba(255, 185, 36, 0.8) 0%, rgba(255, 185, 36, 0) 70%)",
-                opacity: 0.6
+                background:
+                  "radial-gradient(circle at center, rgba(255, 185, 36, 0.8) 0%, rgba(255, 185, 36, 0) 70%)",
+                opacity: 0.6,
               }}
             ></div>
           </div>
         )}
-        
+
         {/* Content with proper z-index */}
-        <div className="relative z-10 h-full">
-          {panelContent}
-        </div>
+        <div className="relative z-10 h-full">{panelContent}</div>
       </div>
     </div>
   );

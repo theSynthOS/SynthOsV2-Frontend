@@ -87,8 +87,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       } else {
         setBalance("0.00");
       }
-    } catch (error) {
-      console.error(`Error fetching ${tokenType} balance:`, error);
+    } catch {
       setBalance("0.00");
       toast.error(`Failed to fetch your ${tokenType} balance`);
     } finally {
@@ -147,9 +146,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
           refreshHoldings();
         }
       },
-      onError: (error) => {
-        console.error("Transaction error:", error);
-
+      onError: (error: any) => {
         // Clear any previous success
         setTxHash(null);
 

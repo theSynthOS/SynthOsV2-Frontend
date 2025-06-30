@@ -25,21 +25,12 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error("Update Deposit Tx API Error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error,
-      });
       return NextResponse.json(error, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
-    console.error("Error processing update deposit tx:", error);
-    if (error instanceof Error && error.message.includes("address")) {
-      return createErrorResponse(error, 400);
-    }
+  } catch {
     return createErrorResponse("Failed to process update deposit tx", 500);
   }
 }
