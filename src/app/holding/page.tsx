@@ -15,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import HoldingCard from "@/components/ui/holding-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type Holding = {
   protocolPairId: string;
