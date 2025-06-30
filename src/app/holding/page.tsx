@@ -647,7 +647,13 @@ export default function HoldingPage() {
                 <div className="w-full space-y-4">
                   {/* Skeleton for Your Referral Code */}
                   <div className="space-y-2">
-                    <Skeleton className="w-32 h-4 bg-gray-300 dark:bg-gray-700" />
+                    <label
+                      className={`text-sm font-medium ${
+                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                      }`}
+                    >
+                      Your Referral Code
+                    </label>
                     <div className="flex items-center space-x-2">
                       <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
                       <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
@@ -656,7 +662,13 @@ export default function HoldingPage() {
 
                   {/* Skeleton for Apply Referral Code */}
                   <div className="space-y-2">
-                    <Skeleton className="w-36 h-4 bg-gray-300 dark:bg-gray-700" />
+                    <label
+                      className={`text-sm font-medium ${
+                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                      }`}
+                    >
+                      Referred By
+                    </label>
                     <div className="flex items-center space-x-2">
                       <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
                       <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
@@ -664,7 +676,10 @@ export default function HoldingPage() {
                   </div>
 
                   {/* Skeleton for info text */}
-                  <Skeleton className="w-full h-3 bg-gray-300 dark:bg-gray-700" />
+                  <div className="text-xs text-center">
+                    Share your referral code with friends to earn points when
+                    they join!
+                  </div>
                 </div>
               ) : (
                 <div className="w-full space-y-4">
@@ -921,7 +936,7 @@ export default function HoldingPage() {
                           pool={{
                             name: h.protocolName,
                             apy: h.apy.toFixed(3),
-                            risk: h.risk, 
+                            risk: h.risk,
                             pair_or_vault_name: h.pairName,
                             protocol_id: h.protocolName
                               .toLowerCase()

@@ -203,7 +203,7 @@ export default function TrendingProtocols({
         return "text-gray-500";
     }
   };
-  
+
   const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
     // Set only the selected filter to true, all others to false
     setRiskFilters({
@@ -218,15 +218,14 @@ export default function TrendingProtocols({
   };
 
   // Update the filtered protocols to use the API data and proper risk filtering
-  const filteredProtocols = protocolPairs
-    .filter((pair) => {
-      if (riskFilters.all) return true;
-      const riskCategory = getRiskCategory(pair.risk);
-      if (riskFilters.low && riskCategory === "low") return true;
-      if (riskFilters.medium && riskCategory === "medium") return true;
-      if (riskFilters.high && riskCategory === "high") return true;
-      return false;
-    });
+  const filteredProtocols = protocolPairs.filter((pair) => {
+    if (riskFilters.all) return true;
+    const riskCategory = getRiskCategory(pair.risk);
+    if (riskFilters.low && riskCategory === "low") return true;
+    if (riskFilters.medium && riskCategory === "medium") return true;
+    if (riskFilters.high && riskCategory === "high") return true;
+    return false;
+  });
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
@@ -254,7 +253,7 @@ export default function TrendingProtocols({
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
             {isLoadingProfile ? (
-              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-700" />
             ) : investorProfile ? (
               <div
                 className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
@@ -486,10 +485,46 @@ export default function TrendingProtocols({
         </div>
         <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
           {isLoading ? (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 py-8">
-              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
-            </div>
+            <>
+              <div
+                className={`flex flex-col ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40"
+                    : "bg-[#FDFDFF] shadow-sm"
+                } p-5 rounded-xl`}
+              >
+                <div className="flex items-center mb-4">
+                  <Skeleton className="w-14 h-14 rounded-full mr-4 bg-gray-300 dark:bg-gray-700" />
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2 bg-gray-300 dark:bg-gray-700" />
+                    <Skeleton className="h-4 w-20 bg-gray-300 dark:bg-gray-700" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <Skeleton className="h-8 w-16 bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-20 bg-gray-300 dark:bg-gray-700" />
+                </div>
+              </div>
+              <div
+                className={`flex flex-col ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40"
+                    : "bg-[#FDFDFF] shadow-sm"
+                } p-5 rounded-xl`}
+              >
+                <div className="flex items-center mb-4">
+                  <Skeleton className="w-14 h-14 rounded-full mr-4 bg-gray-300 dark:bg-gray-700" />
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2 bg-gray-300 dark:bg-gray-700" />
+                    <Skeleton className="h-4 w-20 bg-gray-300 dark:bg-gray-700" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <Skeleton className="h-8 w-16 bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-20 bg-gray-300 dark:bg-gray-700" />
+                </div>
+              </div>
+            </>
           ) : protocolPairs.length === 0 ? (
             <div
               className={`py-8 text-center ${
