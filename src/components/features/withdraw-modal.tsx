@@ -277,17 +277,27 @@ export default function WithdrawModal({
     try {
       // Update progress - start progress animation
       setTxProgressPercent(10);
+
+      // Check if withdrawal amount is within 2% tolerance of maximum balance
+      const maxBalance = parseFloat(balance);
+      const withdrawAmount = parseFloat(amount);
+      const tolerance = maxBalance * 0.02; // 2% tolerance
+      const isMaxWithdraw = maxBalance - withdrawAmount <= tolerance;
+
+      const requestBody = {
+        user_address: address,
+        protocol_pair_id: pool?.protocol_pair_id,
+        amount: amount,
+        withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
+        ...(isMaxWithdraw && { maxWithdraw: true }), // Add maxWithdraw flag if within tolerance
+      };
+
       const response = await fetch("/api/withdraw-tracking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          user_address: address,
-          protocol_pair_id: pool?.protocol_pair_id,
-          amount: amount,
-          withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       // Update progress
