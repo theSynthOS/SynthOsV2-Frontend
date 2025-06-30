@@ -151,7 +151,9 @@ export default function TrendingProtocols({
         }
 
         // If no cached data, make the API request
-        const response = await fetch(`/api/ai-analyser/${account.address}`);
+        const response = await fetch(
+          `/api/ai-analyser?address=${account.address}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch investor profile");
         }

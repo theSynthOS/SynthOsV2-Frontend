@@ -16,6 +16,7 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const account = useActiveAccount();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
@@ -62,9 +63,24 @@ export default function Header() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  // Handle scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div
-      className={`flex justify-between items-center px-4 py-3 relative z-10`}
+      className={`flex justify-between items-center px-4 py-3 relative z-10 transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/95 dark:bg-[#1E1E1E]/95 backdrop-blur-md shadow-sm"
+          : "bg-transparent"
+      }`}
     >
       {/* Logo */}
       <div className="flex items-center">

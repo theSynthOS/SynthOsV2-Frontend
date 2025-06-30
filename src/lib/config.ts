@@ -1,9 +1,7 @@
 const config = {
   // Backend URLs
-  SYNTHOS_AI_ANALYZER_URL:
-    process.env.SYNTHOS_AI_ANALYZER_URL || "https://ai.synthos.fun",
-  SYNTHOS_BACKEND_URL:
-    process.env.SYNTHOS_BACKEND_URL || "https://backend.synthos.fun",
+  SYNTHOS_AI_ANALYZER_URL: "https://ai.synthos.fun",
+  SYNTHOS_BACKEND_URL: "https://backend.synthos.fun",
 } as const;
 
 // API endpoint builders
