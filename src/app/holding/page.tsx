@@ -484,7 +484,7 @@ export default function HoldingPage() {
                 <div
                   className={`flex items-center gap-1 ${
                     theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                  } cursor-pointer hover:opacity-80 transition-opacity`}
+                  } cursor-pointer hover:underline hover:opacity-80 transition-opacity`}
                   onClick={() => setShowViewAllModal(true)}
                 >
                   <span className="tracking-widest font-medium">View All</span>
