@@ -61,6 +61,145 @@ export default function WithdrawModal({
   const wallet = useActiveWallet();
   const account = useActiveAccount();
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
+
+  // Tenderly RPC bundled simulation function
+  const simulateTransactionBundle = async (
+    transactionData: any[],
+    account: any
+  ) => {
+    try {
+      console.log("🔍 Starting Tenderly RPC bundled simulation...");
+      setSimulationStatus(
+        `Simulating ${transactionData.length} transactions...`
+      );
+
+      // Convert transaction data to Tenderly RPC format
+      const transactionCalls = transactionData.map((tx) => {
+        const call: any = {
+          from: account.address,
+          to: tx.to,
+          data: tx.data,
+        };
+
+        // Only include value if it's not zero (to match Tenderly's expected format)
+        if (tx.value && tx.value !== "0x0" && tx.value !== "0") {
+          call.value = tx.value;
+        }
+
+        return call;
+      });
+
+      console.log(
+        `📦 Simulating bundle of ${transactionCalls.length} transactions`
+      );
+
+      // Log the exact request format for debugging
+      const requestBody = {
+        method: "tenderly_simulateBundle",
+        params: [
+          transactionCalls,
+          "latest", // Block parameter - use latest block
+        ],
+      };
+      console.log("📋 Request body:", JSON.stringify(requestBody, null, 2));
+
+      // Call Tenderly RPC tenderly_simulateBundle method
+      const response = await fetch("/api/tenderly-rpc", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Tenderly RPC failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.error) {
+        throw new Error(`Tenderly RPC error: ${result.error.message}`);
+      }
+
+      const simulationResults = result.result;
+
+      if (!simulationResults || !Array.isArray(simulationResults)) {
+        throw new Error("Invalid simulation results format");
+      }
+
+      console.log(
+        "📊 Simulation results:",
+        simulationResults.length,
+        "transactions"
+      );
+
+      // Check if ALL transactions have status: true
+      const failedTransactions = simulationResults.filter(
+        (result: any, index: number) => {
+          const success = result.status === true;
+          console.log(
+            `Transaction ${index + 1}: ${success ? "✅" : "❌"} Status: ${
+              result.status
+            }`
+          );
+
+          // Log failure details for debugging
+          if (!success) {
+            console.log(`   ❌ Transaction ${index + 1} failed:`, {
+              error: result.error,
+              revertReason: result.revertReason,
+              gasUsed: result.gasUsed,
+            });
+          }
+
+          return !success;
+        }
+      );
+
+      if (failedTransactions.length > 0) {
+        const errorMessages = failedTransactions
+          .map((failed: any, index: number) => {
+            const actualIndex =
+              simulationResults.findIndex((r) => r === failed) + 1;
+            const reason =
+              failed.revertReason || failed.error || `status: ${failed.status}`;
+            return `Transaction ${actualIndex}: ${reason}`;
+          })
+          .join("; ");
+
+        throw new Error(`Bundle simulation failed: ${errorMessages}`);
+      }
+
+      // Calculate total gas used
+      const totalGasUsed = simulationResults.reduce(
+        (total: number, result: any) => {
+          const gasUsed = parseInt(result.gasUsed || "0x0", 16);
+          return total + gasUsed;
+        },
+        0
+      );
+
+      console.log("✅ All transactions passed simulation");
+      console.log(`💰 Total gas used: ${totalGasUsed}`);
+
+      // Update status for success
+      setSimulationStatus("✅ All transactions validated successfully");
+      setTimeout(() => setSimulationStatus(null), 1500);
+
+      return {
+        success: true,
+        totalGasUsed,
+        results: simulationResults,
+      };
+    } catch (error) {
+      console.error("❌ Tenderly RPC simulation error:", error);
+      setSimulationStatus("❌ Simulation failed");
+      setTimeout(() => setSimulationStatus(null), 2000);
+      throw error;
+    }
+  };
 
   // Set mounted state
   useEffect(() => {
@@ -76,6 +215,7 @@ export default function WithdrawModal({
       setShowSuccessModal(false);
       setTxHash("");
       setTxProgressPercent(0);
+      setSimulationStatus(null);
     }
   }, [pool]);
 
@@ -87,6 +227,7 @@ export default function WithdrawModal({
       setWithdrawError(null);
       setTxHash("");
       setTxProgressPercent(0);
+      setSimulationStatus(null);
     }
     onClose();
   };
@@ -99,6 +240,7 @@ export default function WithdrawModal({
     setWithdrawError(null);
     setTxHash("");
     setTxProgressPercent(0);
+    setSimulationStatus(null);
 
     // Refresh balance only when user closes the success modal
     // Add a small delay to ensure backend has processed the withdrawal
@@ -116,6 +258,7 @@ export default function WithdrawModal({
     // Reset any previous errors
     setWithdrawError(null);
     setTxProgressPercent(0);
+    setSimulationStatus(null);
 
     // Check if the amount is valid
     if (!amount || parseFloat(amount) <= 0) {
@@ -165,7 +308,27 @@ export default function WithdrawModal({
           throw new Error("Wallet not connected");
         }
 
-        // Prepare all transactions
+        // Simulate the transaction bundle with Tenderly RPC
+        console.log("🔍 Running Tenderly RPC bundled simulation...");
+        try {
+          const simulationResult = await simulateTransactionBundle(
+            responseData.callData,
+            account
+          );
+          console.log("✅ Tenderly RPC simulation passed:", simulationResult);
+        } catch (simulationError) {
+          console.error("❌ Tenderly RPC simulation failed:", simulationError);
+          const errorMessage =
+            simulationError instanceof Error
+              ? simulationError.message
+              : String(simulationError);
+          throw new Error(`Pre-execution simulation failed: ${errorMessage}`);
+        }
+
+        // Update progress after successful simulation
+        setTxProgressPercent(55);
+
+        // Prepare all transactions (only after simulation passes)
         const transactions = responseData.callData.map((tx: any) =>
           prepareTransaction({
             to: tx.to,
@@ -269,6 +432,7 @@ export default function WithdrawModal({
 
         setWithdrawError(errorMessage);
         setTxProgressPercent(0);
+        setSimulationStatus(null); // Clear simulation status on error
 
         toast.error(errorMessage);
       }
@@ -291,6 +455,7 @@ export default function WithdrawModal({
 
       setWithdrawError(errorMessage);
       setTxProgressPercent(0);
+      setSimulationStatus(null); // Clear simulation status on error
 
       toast.error(errorMessage);
     } finally {
@@ -497,9 +662,19 @@ export default function WithdrawModal({
                   ></div>
                 </div>
                 <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
-                  {txProgressPercent < 100
-                    ? "Processing withdrawal..."
-                    : "Withdrawal complete!"}
+                  {simulationStatus ||
+                    (txProgressPercent < 100
+                      ? "Processing withdrawal..."
+                      : "Withdrawal complete!")}
+                </div>
+              </div>
+            )}
+
+            {/* Simulation Status (when not submitting) */}
+            {!isSubmitting && simulationStatus && (
+              <div className="mt-4">
+                <div className="text-xs text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg py-2 px-3">
+                  {simulationStatus}
                 </div>
               </div>
             )}
