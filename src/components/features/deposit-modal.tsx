@@ -978,7 +978,7 @@ export default function DepositModal({
               <div className="mb-6">
                 <p className="text-lg mb-1">You've deposited</p>
                 <p className="text-3xl font-bold text-purple-500">
-                  ${submittedAmountRef.current} USDC
+                  ${submittedAmountRef.current} USD
                 </p>
                 <p className="text-sm mt-2 opacity-80">
                   into {pool.pair_or_vault_name}

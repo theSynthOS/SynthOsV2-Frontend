@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { ArrowUp } from 'lucide-react';
 import WithdrawModal from '@/components/features/withdraw-modal';
+import { useBalance } from '@/contexts/BalanceContext';
 
 interface HoldingCardProps {
   symbol: string;
@@ -43,6 +44,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const { refreshBalance: refreshHomeBalance } = useBalance();
 
   return (
     <>
@@ -124,7 +126,16 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
           onClose={() => setShowWithdrawModal(false)}
           balance={balance}
           address={address}
-          refreshBalance={refreshBalance}
+          refreshBalance={() => {
+            // Refresh local holdings
+            if (refreshBalance) {
+              refreshBalance();
+            }
+            // Refresh home page balance
+            if (refreshHomeBalance) {
+              refreshHomeBalance();
+            }
+          }}
         />
       )}
     </>

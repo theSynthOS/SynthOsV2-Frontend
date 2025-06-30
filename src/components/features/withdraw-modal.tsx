@@ -137,6 +137,17 @@ export default function WithdrawModal({
       return;
     }
 
+    // If withdrawing close to max amount, reduce by small buffer to avoid rounding issues
+    let withdrawAmount = amount;
+    const balanceNum = parseFloat(balance);
+    const amountNum = parseFloat(amount);
+    
+    // If trying to withdraw more than 99.5% of balance, reduce by 0.5% to avoid protocol issues
+    if (amountNum >= balanceNum * 0.995) {
+      withdrawAmount = (balanceNum * 0.995).toFixed(6);
+      console.log(`Adjusting withdrawal from ${amount} to ${withdrawAmount} to avoid protocol rounding issues`);
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -150,7 +161,7 @@ export default function WithdrawModal({
         body: JSON.stringify({
           user_address: address,
           protocol_pair_id: pool?.protocol_pair_id,
-          amount: amount,
+          amount: withdrawAmount,
           withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
         }),
       });
@@ -239,6 +250,8 @@ export default function WithdrawModal({
 
         // Handle success
         setTxHash(result.transactionHash);
+        // Update amount to show actual withdrawn amount
+        setAmount(withdrawAmount);
         setShowSuccessModal(true);
 
         // Haptic feedback
@@ -260,6 +273,8 @@ export default function WithdrawModal({
             errorMessage = "You rejected the transaction";
           } else if (errorString.includes("insufficient funds")) {
             errorMessage = "Insufficient funds for transaction";
+          } else if (errorString.includes("0xe273b446") || errorString.includes("AbiErrorSignatureNotFoundError")) {
+            errorMessage = "Withdrawal amount too high. Try withdrawing a slightly smaller amount";
           } else if (
             errorString.includes("network") ||
             errorString.includes("connect")
@@ -282,7 +297,20 @@ export default function WithdrawModal({
     } catch (error) {
       console.error("Withdrawal API error:", error);
       
-      const errorMessage = error instanceof Error ? error.message : "Failed to process withdrawal";
+      let errorMessage = "Failed to process withdrawal";
+      if (error instanceof Error) {
+        const errorString = error.message;
+        if (errorString.includes("404")) {
+          errorMessage = "Withdrawal service unavailable";
+        } else if (errorString.includes("400")) {
+          errorMessage = "Invalid withdrawal request";
+        } else if (errorString.includes("500")) {
+          errorMessage = "Server error occurred";
+        } else {
+          errorMessage = errorString;
+        }
+      }
+      
       setWithdrawError(errorMessage);
       setTxProgressPercent(0);
       
@@ -298,6 +326,16 @@ export default function WithdrawModal({
 
   // If not mounted or no pool selected, return nothing
   if (!mounted || !pool) return null;
+
+  // Function to format error messages for display
+  const formatErrorMessage = (errorMsg: string): string => {
+    // For general errors, limit to reasonable length
+    if (errorMsg.length > 100) {
+      return errorMsg.substring(0, 97) + "...";
+    }
+
+    return errorMsg;
+  };
 
   return (
     <>
@@ -467,7 +505,7 @@ export default function WithdrawModal({
           </div>
         )}
 
-        {/* Error Banner */}
+        {/* Error Banner - Super simple design with formatted message */}
         {withdrawError && (
           <div
             className={`mt-4 rounded-lg p-3 ${
@@ -480,7 +518,8 @@ export default function WithdrawModal({
                   theme === "dark" ? "text-red-100" : "text-red-800"
                 } break-words`}
               >
-                <span className="font-bold">Error:</span> {withdrawError}
+                <span className="font-bold">Error:</span>{" "}
+                {formatErrorMessage(withdrawError)}
               </p>
             </div>
             <button
@@ -489,7 +528,18 @@ export default function WithdrawModal({
                 theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
               }`}
             >
-              <X className="h-4 w-4 text-red-500" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-red-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </button>
           </div>
         )}
