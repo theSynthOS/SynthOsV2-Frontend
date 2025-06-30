@@ -13,6 +13,7 @@ import {
   prepareTransaction,
   sendAndConfirmTransaction,
   sendBatchTransaction,
+  waitForReceipt,
 } from "thirdweb";
 import Card from "@/components/ui/card";
 
@@ -509,6 +510,8 @@ export default function DepositModal({
       setProcessingPoolId(pool.protocol_pair_id);
     }
 
+    let depositId: string | null = null;
+
     try {
       // Update progress - start progress animation
       setTxProgressPercent(10);
@@ -529,6 +532,12 @@ export default function DepositModal({
       setTxProgressPercent(30);
 
       const responseData = await response.json();
+
+      // Store depositId for later database update
+      depositId = responseData.depositId;
+      if (!depositId) {
+        throw new Error("No depositId received from server");
+      }
 
       // Update progress
       setTxProgressPercent(50);
@@ -637,6 +646,49 @@ export default function DepositModal({
 
         // Update progress to complete
         setTxProgressPercent(100);
+
+        // Get transaction receipt to obtain block number
+        let blockNumber: number | null = null;
+        try {
+          const receipt = await waitForReceipt({
+            client: client,
+            chain: scroll,
+            transactionHash: result.transactionHash as `0x${string}`,
+          });
+
+          if (receipt && receipt.blockNumber) {
+            blockNumber = Number(receipt.blockNumber);
+          }
+        } catch (receiptError) {
+          console.error("Error getting transaction receipt:", receiptError);
+          // Continue without block number
+        }
+
+        // Update deposit record in database with transaction details
+        try {
+          console.log("depositId", depositId);
+          console.log("txHash", result.transactionHash);
+          console.log("blockNumber", blockNumber);
+
+          const updateResponse = await fetch("/api/update-deposit-tx", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              depositId: depositId,
+              transactionHash: result.transactionHash as `0x${string}`,
+              blockNumber: blockNumber,
+            }),
+          });
+
+          if (!updateResponse.ok) {
+            console.error("Failed to update deposit transaction details");
+          }
+        } catch (updateError) {
+          console.error("Error updating deposit transaction:", updateError);
+          // Continue with success flow even if update fails
+        }
 
         await handleTransactionSuccess(result.transactionHash, depositAmount);
 
