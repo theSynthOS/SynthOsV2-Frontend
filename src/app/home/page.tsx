@@ -148,7 +148,7 @@ export default function Home() {
             <div className="flex flex-col xl:w-4/6 xl:pl-5">
               {/* Balance */}
               <motion.div
-                className="w-full justify-center mt-[0px] px-4"
+                className="w-full justify-center mt-[10px] px-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
