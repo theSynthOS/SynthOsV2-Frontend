@@ -27,6 +27,9 @@ export const apiEndpoints = {
 
   withdraw: () => `${config.SYNTHOS_BACKEND_URL}/action/withdraw`,
 
+  withdrawTracking: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/withdraw-with-tracking`,
+
   updateDepositTx: () =>
     `${config.SYNTHOS_BACKEND_URL}/action/update-deposit-transaction`,
 
