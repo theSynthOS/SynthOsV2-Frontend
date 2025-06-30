@@ -957,7 +957,6 @@ export default function HoldingPage() {
                     </div>
                   )}
                 </div>
-
                 {/* Footer */}
                 <div
                   className={`mt-6 pt-4 border-t ${
