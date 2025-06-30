@@ -13,6 +13,20 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import HoldingCard from "@/components/ui/holding-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+type Holding = {
+  protocolPairId: string;
+  protocolName: string;
+  pairName: string;
+  currentAmount: number;
+  initialAmount: number;
+  pnl: number;
+  apy: number;
+  status: string;
+  protocolLogo: string;
+};
 
 export default function HoldingPage() {
   const account = useActiveAccount();
@@ -23,6 +37,9 @@ export default function HoldingPage() {
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
@@ -37,6 +54,36 @@ export default function HoldingPage() {
       setDisplayAddress(null);
     }
   }, [account]);
+
+  // Fetch holdings data
+  useEffect(() => {
+    if (!account?.address) return;
+    setIsLoading(true);
+    fetch(`/api/holdings?address=${account.address}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setHoldings(Array.isArray(data) ? data : []);
+        console.log("Fetched holdings:", data);
+      })
+      .catch(() => setHoldings([]))
+      .finally(() => setIsLoading(false));
+  }, [account?.address]);
+
+  // Calculate total holding and pnl
+  const totalHolding = holdings.reduce(
+    (sum, h) => sum + (h.currentAmount || 0),
+    0
+  );
+  const totalPnl = holdings.reduce((sum, h) => sum + (h.pnl || 0), 0);
+
+  // Format PnL
+  const pnlColor =
+    totalPnl > 0
+      ? "text-green-500"
+      : totalPnl < 0
+      ? "text-red-500"
+      : "text-gray-500";
+  const pnlSign = totalPnl > 0 ? "+" : totalPnl < 0 ? "-" : "";
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -87,13 +134,17 @@ export default function HoldingPage() {
 
   return (
     <motion.div
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
-      onDragEnd={handleDragEnd}
+      {...(isMobile
+        ? {
+            drag: "x",
+            dragConstraints: { left: 0, right: 0 },
+            dragElastic: 0.2,
+            onDragEnd: handleDragEnd,
+            whileDrag: { cursor: "grabbing" },
+          }
+        : {})}
       animate={controls}
       initial={{ x: 0 }}
-      whileDrag={{ cursor: "grabbing" }}
       className={`flex flex-col bg-transparent ${
         theme === "dark" ? "text-white" : "text-black"
       } p-4 xl:p-0`}
@@ -119,15 +170,39 @@ export default function HoldingPage() {
               >
                 Total Holding Value
               </span>
-              <span
-                className={`text-xl font-bold xl:font-medium my-2 xl:text-5xl ${
-                  theme === "dark"
-                    ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
-                    : "text-black"
-                }`}
-              >
-                $0.00
-              </span>
+              <div className="my-2">
+                {isLoading && account?.address ? (
+                  <div className="flex items-center space-x-2">
+                    <Skeleton className={`h-8 xl:h-12 w-32 xl:w-48 ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                    }`} />
+                    <Skeleton className={`h-6 xl:h-8 w-16 ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                    }`} />
+                  </div>
+                ) : (
+                  <>
+                    <span
+                      className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
+                        theme === "dark"
+                          ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
+                          : "text-black"
+                      }`}
+                      style={{
+                        fontFamily: "var(--font-tt-travels), sans-serif",
+                      }}
+                    >
+                      ${totalHolding.toFixed(2)}
+                    </span>
+                    {/* pnl */}
+                    <span
+                      className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
+                    >
+                      {pnlSign}${Math.abs(totalPnl).toFixed(2)}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -188,7 +263,7 @@ export default function HoldingPage() {
               </span>
 
               <div
-                className={`flex items-center gap-1 underline ${
+                className={`flex items-center gap-1 ${
                   theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                 }`}
               >
@@ -196,14 +271,102 @@ export default function HoldingPage() {
                 <ArrowRight size={16} />
               </div>
             </div>
-            <HoldingCard
-              symbol="USDT"
-              name="AAVE"
-              tvl="$463M TVL"
-              apy="9,96%APY"
-              logoUrl="/aave.png"
-              onClick={() => {}}
-            />
+            {isLoading ? (
+              <div className="w-full space-y-4">
+                {/* Skeleton for HoldingCard */}
+                {[...Array(1)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-full max-w-md mx-auto rounded-2xl overflow-hidden border ${
+                      theme === "dark" 
+                        ? "bg-[#0B0424] border-white/30" 
+                        : "bg-[#F5F2FF] border-[#CECECE]"
+                    } shadow-md relative`}
+                    style={{
+                      boxShadow: theme === "dark"
+                        ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
+                        : "inset 0 0 20px rgba(143, 99, 233, 0.2)"
+                    }}
+                  >
+                    <div className="p-4 flex flex-col relative z-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className={`w-10 h-10 rounded-full ${
+                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                          }`} />
+                          <div>
+                            <Skeleton className={`h-5 w-16 mb-1 ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                            }`} />
+                            <Skeleton className={`h-3 w-20 ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                            }`} />
+                          </div>
+                        </div>
+                        <Skeleton className={`h-8 w-16 rounded-full ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                        }`} />
+                      </div>
+                      <div className="text-center mb-4">
+                        <Skeleton className={`h-9 w-24 mx-auto ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                        }`} />
+                      </div>
+                    </div>
+                    <Skeleton className={`w-full h-12 rounded-none ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                    }`} />
+                  </div>
+                ))}
+              </div>
+            ) : holdings.length === 0 ? (
+              <div className="text-gray-400 text-center py-8">
+                No Holdings Available
+              </div>
+            ) : (
+              holdings.map((h, idx) => {
+                return (
+                  <HoldingCard
+                    key={idx}
+                    symbol={h.pairName}
+                    name={h.protocolName}
+                    amount={h.currentAmount.toString()}
+                    apy={h.apy.toString()}
+                    protocolLogo={h.protocolLogo}
+                    pnl={h.pnl.toFixed(3)}
+                    initialAmount={h.initialAmount.toFixed(3)}
+                    pool={{
+                      name: h.protocolName,
+                      apy: h.apy.toFixed(3),
+                      risk: "Medium", // Default risk level
+                      pair_or_vault_name: h.pairName,
+                      protocol_id: h.protocolName.toLowerCase().replace(/\s+/g, '-'),
+                      protocol_pair_id: h.protocolPairId.toLowerCase().replace(/\s+/g, '-')
+                    }}
+                    balance={h.currentAmount.toString()}
+                    address={displayAddress || undefined}
+                    refreshBalance={() => {
+                      // Refetch holdings data
+                      if (account?.address) {
+                        setIsLoading(true);
+                        fetch(`/api/holdings?address=${account.address}`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            setHoldings(Array.isArray(data) ? data : []);
+                            console.log("Refreshed holdings:", data);
+                          })
+                          .catch((error) => {
+                            console.error("Error refreshing holdings:", error);
+                            setHoldings([]);
+                          })
+                          .finally(() => setIsLoading(false));
+                      }
+                    }}
+                    onClick={() => {}}
+                  />
+                );
+              })
+            )}
           </div>
         </div>
       </motion.div>

@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
 import { apiEndpoints } from "@/lib/config";
+import { validateAndParseRequestBody, createErrorResponse } from "@/lib/api-utils";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { user_address, protocol_pair_id, amount } = body;
+    const processedBody = await validateAndParseRequestBody(
+      request,
+      ['user_address', 'protocol_pair_id', 'amount'],
+      ['user_address']
+    );
+
+    console.log("processedBody", processedBody);
 
     const response = await fetch(apiEndpoints.withdraw(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        user_address,
-        protocol_pair_id,
-        amount,
-      }),
+      body: JSON.stringify(processedBody),
     });
 
     if (!response.ok) {
@@ -31,17 +33,10 @@ export async function POST(request: Request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error processing withdraw:", {
-      error,
-      message: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json(
-      {
-        error: "Failed to process withdraw",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    console.error("Error processing withdraw:", error);
+    if (error instanceof Error && error.message.includes('address')) {
+      return createErrorResponse(error, 400);
+    }
+    return createErrorResponse("Failed to process withdraw", 500);
   }
 }

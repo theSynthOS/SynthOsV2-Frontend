@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/lib/mongodb";
 import { Transaction } from "@/app/models/transactions";
+import { getAddress } from "viem";
 
 export async function GET(request: Request) {
   try {
@@ -16,8 +17,11 @@ export async function GET(request: Request) {
       );
     }
 
+    // Checksum the address to ensure it's properly formatted
+    const checksummedAddress = getAddress(address);
+
     const transactions = await Transaction.find({
-      address: { $regex: `^${address}$`, $options: "i" },
+      address: { $regex: `^${checksummedAddress}$`, $options: "i" },
     })
       .sort({ createdAt: -1 })
       .limit(100);
@@ -79,9 +83,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // Checksum the address to ensure it's properly formatted
+    const checksummedAddress = getAddress(address);
+
     // Save transaction
     const transaction = await Transaction.create({
-      address,
+      address: checksummedAddress,
       hash,
       amount,
       type,

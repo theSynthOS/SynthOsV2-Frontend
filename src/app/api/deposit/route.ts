@@ -1,48 +1,48 @@
 import { NextResponse } from "next/server";
 import { apiEndpoints } from "@/lib/config";
+import { validateAndParseRequestBody, createErrorResponse, withAddressValidation } from "@/lib/api-utils";
 
-export async function POST(request: Request) {
+async function depositHandler(request: Request) {
   try {
-    const body = await request.json();
-    const { user_address, protocol_id, protocol_pair_id, amount } = body;
+    const processedBody = await validateAndParseRequestBody(
+      request,
+      ['user_address', 'protocol_pair_id', 'amount'],
+      ['user_address']
+    );
 
-    const response = await fetch(apiEndpoints.deposit(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_address,
-        protocol_id,
-        protocol_pair_id,
-        amount,
-      }),
+    console.log("processedBody", processedBody);
+
+  const response = await fetch(apiEndpoints.deposit(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(processedBody),
+  });
+
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error("Deposit API Error:", {
+      status: response.status,
+      statusText: response.statusText,
+      error,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("Deposit API Error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error,
-      });
-      return NextResponse.json(error, { status: response.status });
-    }
+    return NextResponse.json(error, { status: response.status });
+  }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error processing deposit:", {
-      error,
-      message: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json(
-      {
-        error: "Failed to process deposit",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    throw error;
   }
 }
+
+export const POST = withAddressValidation(async (request: Request) => {
+  try {
+    return await depositHandler(request);
+  } catch (error) {
+    console.error("Error processing deposit:", error);
+    return createErrorResponse("Failed to process deposit", 500);
+  }
+});

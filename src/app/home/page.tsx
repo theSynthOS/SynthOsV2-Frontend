@@ -172,11 +172,12 @@ export default function Home() {
                     className={`py-6 xl:py-0 font-medium text-4xl xl:text-5xl leading-[100%] tracking-[-0.03em] uppercase ${
                       theme === "dark" ? "text-[#FFCA59]" : "text-gray-900"
                     }`}
-                    style={
-                      theme === "dark"
+                    style={{
+                      fontFamily: "var(--font-tt-travels), sans-serif",
+                      ...(theme === "dark"
                         ? { textShadow: "0px 0px 12px #FFCA5980" }
-                        : {}
-                    }
+                        : {})
+                    }}
                   >
                     {isLoadingBalance ? (
                       <Skeleton className="w-32 h-7 xl:w-52 xl:h-12 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />

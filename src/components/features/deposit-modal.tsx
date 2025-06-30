@@ -412,35 +412,37 @@ export default function DepositModal({
         navigator.vibrate([100, 50, 100]);
       }
 
-      // Add 25 points for deposit
-      console.log("Starting points deposit for address:", address);
-      fetch("/api/points/deposit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
-        .then((res) => {
-          console.log("Points deposit response status:", res.status);
-          return res.json();
+      // Add 25 points for deposit only if amount >= 10
+      if (parseFloat(amount) >= 10) {
+        console.log("Starting points deposit for address:", address);
+        fetch("/api/points/deposit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
         })
-        .then((data) => {
-          console.log("Points deposit response data:", data);
-          // Fetch updated points
-          console.log("Fetching updated points for address:", address);
-          return fetch(
-            `/api/points?address=${encodeURIComponent(address ?? "")}`
-          );
-        })
-        .then((res) => {
-          console.log("Get points response status:", res.status);
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Get points response data:", data);
-        })
-        .catch((err) => {
-          console.error("Points operation error:", err);
-        });
+          .then((res) => {
+            console.log("Points deposit response status:", res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("Points deposit response data:", data);
+            // Fetch updated points
+            console.log("Fetching updated points for address:", address);
+            return fetch(
+              `/api/points?address=${encodeURIComponent(address ?? "")}`
+            );
+          })
+          .then((res) => {
+            console.log("Get points response status:", res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("Get points response data:", data);
+          })
+          .catch((err) => {
+            console.error("Points operation error:", err);
+          });
+      }
 
       // Save transaction to database
       try {
@@ -504,8 +506,7 @@ export default function DepositModal({
     // Start the loading state and track which pool is being processed
     setIsSubmitting(true);
     if (pool?.protocol_pair_id) {
-      // setProcessingPoolId(pool.protocol_pair_id);
-      setProcessingPoolId("1");
+      setProcessingPoolId(pool.protocol_pair_id);
     }
 
     try {
@@ -519,8 +520,7 @@ export default function DepositModal({
         },
         body: JSON.stringify({
           user_address: address,
-          // protocol_pair_id: pool?.protocol_pair_id,
-          protocol_pair_id: "1",
+          protocol_pair_id: pool?.protocol_pair_id,
           amount: depositAmount,
         }),
       });
@@ -539,6 +539,15 @@ export default function DepositModal({
           throw new Error("Wallet not connected");
         }
 
+        // Extract transactions from callData
+        console.log("Response data:", responseData);
+
+        if (!responseData || !Array.isArray(responseData.callData)) {
+          throw new Error("Invalid response format: expected callData array");
+        }
+
+        const transactionData = responseData.callData;
+
         // Function to check if a transaction is an approval
         const isApprovalTransaction = (data: string): boolean => {
           if (!data || data.length < 10) return false;
@@ -556,10 +565,10 @@ export default function DepositModal({
         };
 
         // Reorder transactions to put approvals first
-        const approvalTxs = responseData.filter((tx: any) =>
+        const approvalTxs = transactionData.filter((tx: any) =>
           isApprovalTransaction(tx.data)
         );
-        const nonApprovalTxs = responseData.filter(
+        const nonApprovalTxs = transactionData.filter(
           (tx: any) => !isApprovalTransaction(tx.data)
         );
         const orderedTxs = [...approvalTxs, ...nonApprovalTxs];
@@ -582,41 +591,43 @@ export default function DepositModal({
         setTxProgressPercent(75);
 
         let result: { transactionHash: string };
-        
+
         try {
           // First try to use batch transaction (works for smart accounts)
           result = await sendBatchTransaction({
             transactions,
             account,
           });
+          console.log("result", result);
         } catch (error) {
+          console.log("error", error);
           // Check if the error is because account doesn't support batch transactions
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
           if (errorMessage) {
-            
-            console.log("Detected EOA wallet, falling back to sequential transactions");
-            
+            console.log("errorMessage", errorMessage);
+
             // For EOAs, send transactions sequentially
             let lastTxResult;
-            
+
             for (const tx of transactions) {
               lastTxResult = await sendAndConfirmTransaction({
                 transaction: tx,
                 account,
               });
-              
+
               // Small delay between transactions to avoid nonce issues
               if (transactions.indexOf(tx) < transactions.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise((resolve) => setTimeout(resolve, 500));
               }
             }
-            
+
             // Ensure we have a result
             if (!lastTxResult) {
               throw new Error("Transaction failed to execute");
             }
-            
+
             result = lastTxResult;
           } else {
             // If it's some other error, rethrow it
@@ -794,7 +805,7 @@ export default function DepositModal({
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <Card
-            title={`Deposit to ${pool?.pair_or_vault_name}`}
+            title={`Deposit to ${pool?.name} ${pool?.pair_or_vault_name}`}
             onClose={handleClose}
             className="max-h-[90vh] w-full max-w-md"
           >
@@ -845,7 +856,7 @@ export default function DepositModal({
                   <span
                     className={theme === "dark" ? "text-white" : "text-black"}
                   >
-                    ${yearlyYield.toFixed(2)}
+                    ${yearlyYield.toFixed(3)}
                   </span>
                 </div>
               </div>
