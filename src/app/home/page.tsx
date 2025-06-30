@@ -34,6 +34,7 @@ export default function Home() {
     null
   );
 
+
   // Check URL parameters for modal to open
   useEffect(() => {
     const modalParam = searchParams.get("modal");
@@ -128,6 +129,10 @@ export default function Home() {
         if (account?.address) {
           fetchBalance(account.address);
         }
+      }}
+      refreshHoldings={() => {
+        // Holdings will be refreshed via individual components
+        console.log("Holdings refresh requested");
       }}
     >
       <motion.div

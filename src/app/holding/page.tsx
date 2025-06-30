@@ -55,19 +55,40 @@ export default function HoldingPage() {
     }
   }, [account]);
 
-  // Fetch holdings data
-  useEffect(() => {
+  // Function to fetch holdings data
+  const fetchHoldings = async () => {
     if (!account?.address) return;
     setIsLoading(true);
-    fetch(`/api/holdings?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setHoldings(Array.isArray(data) ? data : []);
-        console.log("Fetched holdings:", data);
-      })
-      .catch(() => setHoldings([]))
-      .finally(() => setIsLoading(false));
+    try {
+      const res = await fetch(`/api/holdings?address=${account.address}`);
+      const data = await res.json();
+      setHoldings(Array.isArray(data) ? data : []);
+      console.log("Fetched holdings:", data);
+    } catch (error) {
+      console.error("Error fetching holdings:", error);
+      setHoldings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch holdings data on mount and address change
+  useEffect(() => {
+    fetchHoldings();
   }, [account?.address]);
+
+  // Listen for holdings refresh events
+  useEffect(() => {
+    const handleRefreshHoldings = () => {
+      fetchHoldings();
+    };
+
+    window.addEventListener('refreshHoldings', handleRefreshHoldings);
+    
+    return () => {
+      window.removeEventListener('refreshHoldings', handleRefreshHoldings);
+    };
+  }, []);
 
   // Calculate total holding and pnl
   const totalHolding = holdings.reduce(

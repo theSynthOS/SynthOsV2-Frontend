@@ -44,7 +44,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const { refreshBalance: refreshHomeBalance } = useBalance();
+  const { refreshBalance: refreshHomeBalance, refreshHoldings: refreshHoldingsContext } = useBalance();
 
   return (
     <>
@@ -135,6 +135,8 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
             if (refreshHomeBalance) {
               refreshHomeBalance();
             }
+            // Trigger global holdings refresh
+            window.dispatchEvent(new CustomEvent('refreshHoldings'));
           }}
         />
       )}

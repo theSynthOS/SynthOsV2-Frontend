@@ -142,9 +142,9 @@ export default function WithdrawModal({
     const balanceNum = parseFloat(balance);
     const amountNum = parseFloat(amount);
     
-    // If trying to withdraw more than 99.5% of balance, reduce by 0.5% to avoid protocol issues
-    if (amountNum >= balanceNum * 0.995) {
-      withdrawAmount = (balanceNum * 0.995).toFixed(6);
+    // If trying to withdraw more than 99.95% of balance, reduce by 0.5% to avoid protocol issues
+    if (amountNum >= balanceNum * 0.9995) {
+      withdrawAmount = (balanceNum * 0.9995).toFixed(6);
       console.log(`Adjusting withdrawal from ${amount} to ${withdrawAmount} to avoid protocol rounding issues`);
     }
 
