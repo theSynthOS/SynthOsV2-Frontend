@@ -606,7 +606,11 @@ export default function TrendingProtocols({
                         theme === "dark" ? "text-white" : "text-black"
                       }`}
                     >
-                      {`${Number(pair.apy).toFixed(3)}%`}
+                      {`${
+                        Number(pair.apy) % 1 === 0
+                          ? Number(pair.apy).toFixed(0)
+                          : Number(pair.apy).toFixed(2)
+                      }%`}
                       <div
                         className={`text-sm items-center flex font-medium ml-2 ${
                           theme === "dark" ? "text-gray-400" : "text-gray-500"
