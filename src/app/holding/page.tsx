@@ -560,7 +560,7 @@ export default function HoldingPage() {
                   No Holdings Available
                 </div>
               ) : (
-                holdings.map((h, idx) => {
+                holdings.slice(0, 1).map((h, idx) => {
                   return (
                     <HoldingCard
                       key={idx}
