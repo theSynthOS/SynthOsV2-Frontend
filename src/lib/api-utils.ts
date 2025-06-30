@@ -86,6 +86,16 @@ export async function validateAndParseRequestBody(
  */
 export function validateAndChecksumURLParam(
   searchParams: URLSearchParams,
+  paramName?: string,
+  required?: true
+): string;
+export function validateAndChecksumURLParam(
+  searchParams: URLSearchParams,
+  paramName: string,
+  required: false
+): string | null;
+export function validateAndChecksumURLParam(
+  searchParams: URLSearchParams,
   paramName: string = "address",
   required: boolean = true
 ): string | null {

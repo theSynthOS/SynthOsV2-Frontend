@@ -29,6 +29,7 @@ interface ProtocolPair {
   apy?: number;
   protocol_id: string;
   logo_url: string;
+  risk: string;
 }
 
 interface TrendingProtocolsProps {
@@ -171,7 +172,7 @@ export default function TrendingProtocols({
     setSelectedPool({
       name: pair.name,
       apy: pair.apy || 0,
-      risk: "Medium",
+      risk: pair.risk,
       pair_or_vault_name: pair.pair_or_vault_name,
       protocol_id: pair.protocol_id.toString(),
       protocol_pair_id: pair.id,
@@ -179,19 +180,28 @@ export default function TrendingProtocols({
     });
   };
 
-  const getRiskCategory = (type: string) => {
-    // Placeholder risk level for now
-    return "medium";
+  const getRiskCategory = (risk: string) => {
+    return risk.toLowerCase();
   };
 
-  const getRiskLabel = (type: string) => {
-    return "Medium";
+  const getRiskLabel = (risk: string) => {
+    return risk;
   };
 
-  const getRiskColor = (type: string) => {
-    return "text-yellow-500";
+  const getRiskColor = (risk: string) => {
+    const riskLower = risk.toLowerCase();
+    switch (riskLower) {
+      case "low":
+        return "text-green-500";
+      case "medium":
+        return "text-yellow-500";
+      case "high":
+        return "text-red-500";
+      default:
+        return "text-gray-500";
+    }
   };
-
+  
   const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
     // Set only the selected filter to true, all others to false
     setRiskFilters({
@@ -205,13 +215,16 @@ export default function TrendingProtocols({
     setShowFilter(false);
   };
 
-  // Update the filtered protocols to use the API data
+  // Update the filtered protocols to use the API data and proper risk filtering
   const filteredProtocols = protocolPairs
     .filter((pair) => {
       if (riskFilters.all) return true;
-      return false; // No risk filtering for parent protocols
-    })
-    .slice(0, riskFilters.all ? undefined : 4);
+      const riskCategory = getRiskCategory(pair.risk);
+      if (riskFilters.low && riskCategory === "low") return true;
+      if (riskFilters.medium && riskCategory === "medium") return true;
+      if (riskFilters.high && riskCategory === "high") return true;
+      return false;
+    });
 
   const getActiveFiltersLabel = () => {
     if (riskFilters.all)
@@ -484,7 +497,7 @@ export default function TrendingProtocols({
               No investment options available
             </div>
           ) : (
-            protocolPairs
+            filteredProtocols
               .filter(
                 (pair) =>
                   pair.apy !== undefined && pair.apy !== null && pair.apy > 0
@@ -571,10 +584,10 @@ export default function TrendingProtocols({
                     </div>
                     <div
                       className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
-                        pair.type
+                        pair.risk
                       )}`}
                     >
-                      Risk: {getRiskLabel(pair.type)}
+                      Risk: {getRiskLabel(pair.risk)}
                     </div>
                   </div>
                 </div>

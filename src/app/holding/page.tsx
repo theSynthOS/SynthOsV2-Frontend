@@ -28,6 +28,7 @@ type Holding = {
   apy: number;
   status: string;
   protocolLogo: string;
+  risk: string;
 };
 
 export default function HoldingPage() {
@@ -575,7 +576,7 @@ export default function HoldingPage() {
                       pool={{
                         name: h.protocolName,
                         apy: h.apy.toFixed(3),
-                        risk: "Medium", // Default risk level
+                        risk: h.risk, // Default risk level
                         pair_or_vault_name: h.pairName,
                         protocol_id: h.protocolName
                           .toLowerCase()
@@ -920,7 +921,7 @@ export default function HoldingPage() {
                           pool={{
                             name: h.protocolName,
                             apy: h.apy.toFixed(3),
-                            risk: "Medium", // Default risk level
+                            risk: h.risk, 
                             pair_or_vault_name: h.pairName,
                             protocol_id: h.protocolName
                               .toLowerCase()
