@@ -367,11 +367,12 @@ export default function HoldingPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="mt-[10px]"
         >
           <div
             className={`${
               theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-            } rounded-2xl p-5 mb-3`}
+            } rounded-2xl p-5 mb-3 `}
           >
             {/* Total holding value */}
             <div className="flex flex-row items-center justify-between">

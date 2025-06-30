@@ -64,7 +64,7 @@ export default function Header() {
 
   return (
     <div
-      className={`flex justify-between items-center px-4 py-3 bg-transparent `}
+      className={`flex justify-between items-center px-4 py-3 bg-white/10 dark:bg-black/10 backdrop-blur-md `}
     >
       {/* Logo */}
       <div className="flex items-center">
