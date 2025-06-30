@@ -17,8 +17,6 @@ import { useState, useEffect, useRef } from "react";
 import DepositModal from "./deposit-modal";
 import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 interface ProtocolPair {
   id: string;
