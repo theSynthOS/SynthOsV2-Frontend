@@ -142,6 +142,16 @@ export default function TrendingProtocols({
       }
       setIsLoadingProfile(true);
       try {
+        // First, try to get data from localStorage
+        const storedProfile = localStorage.getItem("investor_profile");
+        if (storedProfile) {
+          const parsedProfile = JSON.parse(storedProfile);
+          setInvestorProfile(parsedProfile.profile?.type || "Degen Learner");
+          setIsLoadingProfile(false);
+          return;
+        }
+
+        // If no cached data, make the API request
         const response = await fetch(
           `/api/ai-analyser?address=${account.address}`
         );
@@ -150,21 +160,10 @@ export default function TrendingProtocols({
         }
         const data = await response.json();
         localStorage.setItem("investor_profile", JSON.stringify(data));
-        setInvestorProfile(data.profile.profileType || "Degen Learner");
+        setInvestorProfile(data.profile?.type || "Degen Learner");
       } catch (error) {
         console.error("Error fetching investor profile:", error);
-        try {
-          const storedProfile = localStorage.getItem("investor_profile");
-          if (storedProfile) {
-            const parsedProfile = JSON.parse(storedProfile);
-            setInvestorProfile(parsedProfile.profile.profileType);
-          } else {
-            setInvestorProfile("Degen Learner");
-          }
-        } catch (localStorageError) {
-          console.error("Error reading from localStorage:", localStorageError);
-          setInvestorProfile("Degen Learner");
-        }
+        setInvestorProfile("Degen Learner");
       } finally {
         setIsLoadingProfile(false);
       }
@@ -616,9 +615,9 @@ export default function TrendingProtocols({
           if (refreshBalance) {
             refreshBalance();
           }
-          
+
           // Trigger holdings refresh by dispatching a custom event
-          window.dispatchEvent(new CustomEvent('refreshHoldings'));
+          window.dispatchEvent(new CustomEvent("refreshHoldings"));
         }}
       />
     </>

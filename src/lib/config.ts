@@ -1,8 +1,7 @@
 const config = {
   // Backend URLs
-  SYNTHOS_BACKEND_V2_URL:
-    process.env.SYNTHOS_BACKEND_V2_URL ||
-    "https://synthos-v2-backend-production-f721.up.railway.app",
+  SYNTHOS_AI_ANALYZER_URL:
+    process.env.SYNTHOS_AI_ANALYZER_URL || "https://ai.synthos.fun",
   SYNTHOS_BACKEND_URL:
     process.env.SYNTHOS_BACKEND_URL || "https://backend.synthos.fun",
 } as const;
@@ -11,7 +10,7 @@ const config = {
 export const apiEndpoints = {
   // AI Analyzer endpoints
   aiAnalyzer: (address: string) =>
-    `${config.SYNTHOS_BACKEND_V2_URL}/api/analyze/${address}`,
+    `${config.SYNTHOS_AI_ANALYZER_URL}/api/analyze/${address}`,
 
   // Account endpoints
   balance: (address: string) =>
