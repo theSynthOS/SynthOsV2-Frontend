@@ -2,8 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { X, CheckCircle, ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { client } from "@/client";
@@ -15,6 +13,9 @@ import {
 } from "thirdweb";
 import Card from "@/components/ui/card";
 import Image from "next/image";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { X, CheckCircle, ExternalLink } from "lucide-react";
 
 // Add Ethereum window type
 declare global {
@@ -55,7 +56,6 @@ export default function WithdrawModal({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [txHash, setTxHash] = useState<string>("");
   const [txProgressPercent, setTxProgressPercent] = useState(0);
-  const { toast } = useToast();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const wallet = useActiveWallet();
@@ -99,7 +99,7 @@ export default function WithdrawModal({
     setWithdrawError(null);
     setTxHash("");
     setTxProgressPercent(0);
-    
+
     // Refresh balance only when user closes the success modal
     // Add a small delay to ensure backend has processed the withdrawal
     if (refreshBalance) {
@@ -107,7 +107,7 @@ export default function WithdrawModal({
         refreshBalance();
       }, 1000);
     }
-    
+
     handleClose();
   };
 
@@ -119,21 +119,13 @@ export default function WithdrawModal({
 
     // Check if the amount is valid
     if (!amount || parseFloat(amount) <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Please enter a valid withdrawal amount",
-      });
+      toast.error("Invalid Amount");
       return;
     }
 
     // Check if amount exceeds balance
     if (parseFloat(amount) > parseFloat(balance)) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Balance",
-        description: "Withdrawal amount exceeds available balance",
-      });
+      toast.error("Insufficient Balance");
       return;
     }
 
@@ -141,11 +133,13 @@ export default function WithdrawModal({
     let withdrawAmount = amount;
     const balanceNum = parseFloat(balance);
     const amountNum = parseFloat(amount);
-    
+
     // If trying to withdraw more than 99.95% of balance, reduce by 0.5% to avoid protocol issues
     if (amountNum >= balanceNum * 0.9995) {
       withdrawAmount = (balanceNum * 0.9995).toFixed(6);
-      console.log(`Adjusting withdrawal from ${amount} to ${withdrawAmount} to avoid protocol rounding issues`);
+      console.log(
+        `Adjusting withdrawal from ${amount} to ${withdrawAmount} to avoid protocol rounding issues`
+      );
     }
 
     setIsSubmitting(true);
@@ -199,7 +193,7 @@ export default function WithdrawModal({
         setTxProgressPercent(60);
 
         let result: { transactionHash: string };
-        
+
         // Update progress
         setTxProgressPercent(75);
 
@@ -213,31 +207,34 @@ export default function WithdrawModal({
         } catch (error) {
           console.log("error", error);
           // Check if the error is because account doesn't support batch transactions
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
           if (errorMessage) {
-            console.log("Detected EOA wallet, falling back to sequential transactions");
-            
+            console.log(
+              "Detected EOA wallet, falling back to sequential transactions"
+            );
+
             // For EOAs, send transactions sequentially
             let lastTxResult;
-            
+
             for (const tx of transactions) {
               lastTxResult = await sendAndConfirmTransaction({
                 transaction: tx,
                 account,
               });
-              
+
               // Small delay between transactions to avoid nonce issues
               if (transactions.indexOf(tx) < transactions.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise((resolve) => setTimeout(resolve, 500));
               }
             }
-            
+
             // Ensure we have a result
             if (!lastTxResult) {
               throw new Error("Transaction failed to execute");
             }
-            
+
             result = lastTxResult;
           } else {
             // If it's some other error, rethrow it
@@ -261,7 +258,6 @@ export default function WithdrawModal({
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
-
       } catch (error) {
         console.error("Withdrawal execution error:", error);
 
@@ -273,8 +269,12 @@ export default function WithdrawModal({
             errorMessage = "You rejected the transaction";
           } else if (errorString.includes("insufficient funds")) {
             errorMessage = "Insufficient funds for transaction";
-          } else if (errorString.includes("0xe273b446") || errorString.includes("AbiErrorSignatureNotFoundError")) {
-            errorMessage = "Withdrawal amount too high. Try withdrawing a slightly smaller amount";
+          } else if (
+            errorString.includes("0xe273b446") ||
+            errorString.includes("AbiErrorSignatureNotFoundError")
+          ) {
+            errorMessage =
+              "Withdrawal amount too high. Try withdrawing a slightly smaller amount";
           } else if (
             errorString.includes("network") ||
             errorString.includes("connect")
@@ -288,15 +288,11 @@ export default function WithdrawModal({
         setWithdrawError(errorMessage);
         setTxProgressPercent(0);
 
-        toast({
-          variant: "destructive",
-          title: "Withdrawal Failed",
-          description: errorMessage,
-        });
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Withdrawal API error:", error);
-      
+
       let errorMessage = "Failed to process withdrawal";
       if (error instanceof Error) {
         const errorString = error.message;
@@ -310,15 +306,11 @@ export default function WithdrawModal({
           errorMessage = errorString;
         }
       }
-      
+
       setWithdrawError(errorMessage);
       setTxProgressPercent(0);
-      
-      toast({
-        variant: "destructive",
-        title: "Withdrawal Failed",
-        description: errorMessage,
-      });
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -345,206 +337,231 @@ export default function WithdrawModal({
           className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-      <Card
-        title={`Withdraw ${pool?.name} ${pool?.pair_or_vault_name}`}
-        onClose={handleClose}
-        className="max-h-[90vh] w-full max-w-md"
-      >
-        <div className="flex flex-col space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
-          {/* Token Selection Section */}
-          <div>
-            <label className={`block text-sm font-medium mb-3 ${
-              theme === "dark" ? "text-gray-200" : "text-gray-700"
-            }`}>
-              Withdraw as:
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedToken("USDC")}
-                disabled={isSubmitting}
-                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                  selectedToken === "USDC"
-                    ? theme === "dark"
-                      ? "border-purple-500 bg-purple-500/20 text-white"
-                      : "border-purple-500 bg-purple-50 text-purple-700"
-                    : theme === "dark"
-                      ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                } ${isSubmitting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Image src="/usdc.png" alt="USDC" width={24} height={24} />
-                  <span className="font-medium">USDC</span>
-                </div>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setSelectedToken("USDT")}
-                disabled={isSubmitting}
-                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                  selectedToken === "USDT"
-                    ? theme === "dark"
-                      ? "border-purple-500 bg-purple-500/20 text-white"
-                      : "border-purple-500 bg-purple-50 text-purple-700"
-                    : theme === "dark"
-                      ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                } ${isSubmitting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Image src="/usdt.png" alt="USDT" width={24} height={24} />
-                  <span className="font-medium">USDT</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Amount Input Section */}
-          <div>
-            <label className={`block text-sm font-medium mb-3 ${
-              theme === "dark" ? "text-gray-200" : "text-gray-700"
-            }`}>
-              Amount to withdraw:
-            </label>
-            <input
-              id="withdrawAmount"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className={`w-full px-4 py-3 rounded-lg border text-lg ${
-                theme === "dark"
-                  ? "bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
-              } focus:outline-none focus:ring-2 focus:ring-purple-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-              disabled={isSubmitting}
-            />
-            <div className="flex justify-end items-center my-2">
-              
-              <div className="flex items-center space-x-2">
-                <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                  Balance: ${balance}
-                </span>
-                <button 
-                  type="button"
-                  onClick={() => setAmount(balance)}
-                  disabled={isSubmitting || !balance}
-                  className={`text-xs px-2 py-1 rounded ${
-                    isSubmitting || !balance
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : theme === "dark" 
-                      ? "bg-gray-700 text-blue-400 hover:bg-gray-600" 
-                      : "bg-gray-100 text-blue-600 hover:bg-gray-200"
+          <Card
+            title={`Withdraw ${pool?.name} ${pool?.pair_or_vault_name}`}
+            onClose={handleClose}
+            className="max-h-[90vh] w-full max-w-md"
+          >
+            <div className="flex flex-col space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
+              {/* Token Selection Section */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-3 ${
+                    theme === "dark" ? "text-gray-200" : "text-gray-700"
                   }`}
                 >
-                  MAX
-                </button>
+                  Withdraw as:
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToken("USDC")}
+                    disabled={isSubmitting}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      selectedToken === "USDC"
+                        ? theme === "dark"
+                          ? "border-purple-500 bg-purple-500/20 text-white"
+                          : "border-purple-500 bg-purple-50 text-purple-700"
+                        : theme === "dark"
+                        ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                    } ${
+                      isSubmitting
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Image
+                        src="/usdc.png"
+                        alt="USDC"
+                        width={24}
+                        height={24}
+                      />
+                      <span className="font-medium">USDC</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToken("USDT")}
+                    disabled={isSubmitting}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      selectedToken === "USDT"
+                        ? theme === "dark"
+                          ? "border-purple-500 bg-purple-500/20 text-white"
+                          : "border-purple-500 bg-purple-50 text-purple-700"
+                        : theme === "dark"
+                        ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                    } ${
+                      isSubmitting
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Image
+                        src="/usdt.png"
+                        alt="USDT"
+                        width={24}
+                        height={24}
+                      />
+                      <span className="font-medium">USDT</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount Input Section */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-3 ${
+                    theme === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Amount to withdraw:
+                </label>
+                <input
+                  id="withdrawAmount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className={`w-full px-4 py-3 rounded-lg border text-lg ${
+                    theme === "dark"
+                      ? "bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  disabled={isSubmitting}
+                />
+                <div className="flex justify-end items-center my-2">
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Balance: ${balance}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAmount(balance)}
+                      disabled={isSubmitting || !balance}
+                      className={`text-xs px-2 py-1 rounded ${
+                        isSubmitting || !balance
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : theme === "dark"
+                          ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                          : "bg-gray-100 text-blue-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      MAX
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Withdraw Button - Fixed at the bottom */}
-        <div className=" flex justify-center pt-2">
-          <button
-            className={`w-full py-3 rounded-lg relative ${
-              isSubmitting
-                ? "bg-gray-300 text-gray-500"
-                : parseFloat(amount || "0") > 0
-                ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
-                : "bg-gray-300 text-gray-500"
-            } transition-colors duration-200`}
-            disabled={!amount || parseFloat(amount) <= 0 || isSubmitting}
-            onClick={handleConfirmWithdraw}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="opacity-0">Withdraw</span>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-5 w-5 border-2 border-gray-500 border-t-gray-700 rounded-full animate-spin mr-2"></div>
-                  <span className="text-gray-700">Processing...</span>
+            {/* Withdraw Button - Fixed at the bottom */}
+            <div className=" flex justify-center pt-2">
+              <button
+                className={`w-full py-3 rounded-lg relative ${
+                  isSubmitting
+                    ? "bg-gray-300 text-gray-500"
+                    : parseFloat(amount || "0") > 0
+                    ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
+                    : "bg-gray-300 text-gray-500"
+                } transition-colors duration-200`}
+                disabled={!amount || parseFloat(amount) <= 0 || isSubmitting}
+                onClick={handleConfirmWithdraw}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="opacity-0">Withdraw</span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-5 w-5 border-2 border-gray-500 border-t-gray-700 rounded-full animate-spin mr-2"></div>
+                      <span className="text-gray-700">Processing...</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    Withdraw
+                    <svg
+                      className="inline-block ml-2 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Transaction Progress */}
+            {isSubmitting && (
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${txProgressPercent}%` }}
+                  ></div>
                 </div>
-              </>
-            ) : (
-              <>
-                Withdraw
-                <svg 
-                  className="inline-block ml-2 w-4 h-4" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M14 5l7 7m0 0l-7 7m7-7H3" 
-                  />
-                </svg>
-              </>
+                <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
+                  {txProgressPercent < 100
+                    ? "Processing withdrawal..."
+                    : "Withdrawal complete!"}
+                </div>
+              </div>
             )}
-          </button>
-        </div>
 
-        {/* Transaction Progress */}
-        {isSubmitting && (
-          <div className="mt-4">
-            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+            {/* Error Banner - Super simple design with formatted message */}
+            {withdrawError && (
               <div
-                className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${txProgressPercent}%` }}
-              ></div>
-            </div>
-            <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
-              {txProgressPercent < 100
-                ? "Processing withdrawal..."
-                : "Withdrawal complete!"}
-            </div>
-          </div>
-        )}
-
-        {/* Error Banner - Super simple design with formatted message */}
-        {withdrawError && (
-          <div
-            className={`mt-4 rounded-lg p-3 ${
-              theme === "dark" ? "bg-red-900/40" : "bg-red-100"
-            } relative`}
-          >
-            <div className="pr-6">
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-red-100" : "text-red-800"
-                } break-words`}
+                className={`mt-4 rounded-lg p-3 ${
+                  theme === "dark" ? "bg-red-900/40" : "bg-red-100"
+                } relative`}
               >
-                <span className="font-bold">Error:</span>{" "}
-                {formatErrorMessage(withdrawError)}
-              </p>
-            </div>
-            <button
-              onClick={() => setWithdrawError(null)}
-              className={`absolute top-2 right-2 rounded-full p-1 ${
-                theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
-              }`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-red-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
-      </Card>
-    </div>
+                <div className="pr-6">
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-red-100" : "text-red-800"
+                    } break-words`}
+                  >
+                    <span className="font-bold">Error:</span>{" "}
+                    {formatErrorMessage(withdrawError)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setWithdrawError(null)}
+                  className={`absolute top-2 right-2 rounded-full p-1 ${
+                    theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-red-500"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </Card>
+        </div>
       ) : (
         /* Success Modal */
         <div
@@ -581,11 +598,11 @@ export default function WithdrawModal({
                 <div className="flex justify-between items-center">
                   <span className="opacity-70">Withdrawn as</span>
                   <div className="flex items-center space-x-2">
-                    <Image 
-                      src={selectedToken === "USDC" ? "/usdc.png" : "/usdt.png"} 
-                      alt={selectedToken} 
-                      width={20} 
-                      height={20} 
+                    <Image
+                      src={selectedToken === "USDC" ? "/usdc.png" : "/usdt.png"}
+                      alt={selectedToken}
+                      width={20}
+                      height={20}
                     />
                     <span className="font-semibold">{selectedToken}</span>
                   </div>

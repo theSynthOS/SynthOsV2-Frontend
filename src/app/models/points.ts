@@ -107,6 +107,11 @@ export async function applyReferralCode(
   const referrer = await UserPoints.findOne({ referralCode });
   if (!referrer) throw new Error("Invalid referral code");
 
+  // Prevent self-referral
+  if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
+    throw new Error("You cannot refer yourself.");
+  }
+
   // Check if user already has a referral
   const user = await UserPoints.findOne({ address: userAddress });
   if (user?.referralBy) throw new Error("User already has a referral");

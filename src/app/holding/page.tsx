@@ -11,9 +11,9 @@ import { client } from "@/client";
 import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import HoldingCard from "@/components/ui/holding-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,7 +38,6 @@ export default function HoldingPage() {
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
-  const { toast } = useToast();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -243,10 +242,7 @@ export default function HoldingPage() {
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
-          toast({
-            title: "Address copied",
-            description: "Wallet address copied to clipboard",
-          });
+          toast.info("Wallet address copied to clipboard");
         })
         .catch((err) => {
           console.error("Failed to copy address: ", err);
@@ -257,11 +253,7 @@ export default function HoldingPage() {
   // Handle applying referral code
   const handleApplyReferralCode = async () => {
     if (!account?.address || !inputReferralCode.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a referral code",
-        variant: "destructive",
-      });
+      toast.error("Please enter a referral code");
       return;
     }
 
@@ -284,10 +276,7 @@ export default function HoldingPage() {
 
       if (data.success) {
         console.log("✅ Referral code applied successfully");
-        toast({
-          title: "Success",
-          description: "Referral code applied successfully!",
-        });
+        toast.success("Referral code applied successfully!");
         setInputReferralCode("");
         // Refresh referral data
         console.log("🔄 Refreshing referral data...");
@@ -300,20 +289,17 @@ export default function HoldingPage() {
           setReferralBy(refreshData.user.referralBy || "");
         }
       } else {
+        // Special case for self-referral
+        if (data.error === "You cannot refer yourself.") {
+          toast.error("You cannot enter your own referral code.");
+        } else {
+          toast.error(data.error || "Failed to apply referral code");
+        }
         console.error("❌ Failed to apply referral code:", data.error);
-        toast({
-          title: "Error",
-          description: data.error || "Failed to apply referral code",
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error("🚨 Error applying referral code:", error);
-      toast({
-        title: "Error",
-        description: "Failed to apply referral code",
-        variant: "destructive",
-      });
+      toast.error("Failed to apply referral code");
     } finally {
       setIsApplyingReferral(false);
     }
@@ -327,10 +313,7 @@ export default function HoldingPage() {
         .then(() => {
           setReferralCopied(true);
           setTimeout(() => setReferralCopied(false), 2000);
-          toast({
-            title: "Referral code copied",
-            description: "Your referral code has been copied to clipboard",
-          });
+          toast.info("Your referral code has been copied to clipboard");
         })
         .catch((err) => {
           console.error("Failed to copy referral code: ", err);
@@ -359,443 +342,454 @@ export default function HoldingPage() {
   if (!mounted) return null;
 
   return (
-    <motion.div
-      {...(isMobile
-        ? {
-            drag: "x",
-            dragConstraints: { left: 0, right: 0 },
-            dragElastic: 0.2,
-            onDragEnd: handleDragEnd,
-            whileDrag: { cursor: "grabbing" },
-          }
-        : {})}
-      animate={controls}
-      initial={{ x: 0 }}
-      className={`flex flex-col bg-transparent ${
-        theme === "dark" ? "text-white" : "text-black"
-      } p-4 xl:p-0`}
-    >
-      {/* Section 1: User Profile */}
+    <>
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        {...(isMobile
+          ? {
+              drag: "x",
+              dragConstraints: { left: 0, right: 0 },
+              dragElastic: 0.2,
+              onDragEnd: handleDragEnd,
+              whileDrag: { cursor: "grabbing" },
+            }
+          : {})}
+        animate={controls}
+        initial={{ x: 0 }}
+        className={`flex flex-col bg-transparent ${
+          theme === "dark" ? "text-white" : "text-black"
+        } p-4 xl:p-0`}
       >
-        <div
-          className={`${
-            theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-          } rounded-2xl p-5 mb-3`}
+        {/* Section 1: User Profile */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {/* Total holding value */}
-          <div className="flex flex-row items-center justify-between">
+          <div
+            className={`${
+              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
+            } rounded-2xl p-5 mb-3`}
+          >
+            {/* Total holding value */}
+            <div className="flex flex-row items-center justify-between">
+              <div className="flex flex-col items-start">
+                <span
+                  className={`text-sm xl:text-lg tracking-widest font-medium ${
+                    theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
+                  }`}
+                >
+                  Total Holding Value
+                </span>
+                <div className="my-2">
+                  {isLoading && account?.address ? (
+                    <div className="flex items-center space-x-2">
+                      <Skeleton
+                        className={`h-8 xl:h-12 w-32 xl:w-48 ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                        }`}
+                      />
+                      <Skeleton
+                        className={`h-6 xl:h-8 w-16 ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                        }`}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <span
+                        className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
+                          theme === "dark"
+                            ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
+                            : "text-black"
+                        }`}
+                        style={{
+                          fontFamily: "var(--font-tt-travels), sans-serif",
+                        }}
+                      >
+                        ${totalHolding.toFixed(2)}
+                      </span>
+                      {/* pnl */}
+                      <span
+                        className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
+                      >
+                        {pnlSign}${Math.abs(totalPnl).toFixed(2)}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col items-start">
-              <span
-                className={`text-sm xl:text-lg tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
-                }`}
+              {/* Wallet Address */}
+              <div
+                className={`text-sm ${
+                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                } flex items-center`}
               >
-                Total Holding Value
-              </span>
-              <div className="my-2">
-                {isLoading && account?.address ? (
-                  <div className="flex items-center space-x-2">
-                    <Skeleton
-                      className={`h-8 xl:h-12 w-32 xl:w-48 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                      }`}
-                    />
-                    <Skeleton
-                      className={`h-6 xl:h-8 w-16 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                      }`}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <span
-                      className={`text-3xl font-bold xl:font-medium xl:text-5xl ${
-                        theme === "dark"
-                          ? "text-white xl:text-[#FFCA59] xl:drop-shadow-[0_0_12px_rgba(255,202,89,0.5)]"
-                          : "text-black"
-                      }`}
-                      style={{
-                        fontFamily: "var(--font-tt-travels), sans-serif",
-                      }}
-                    >
-                      ${totalHolding.toFixed(2)}
-                    </span>
-                    {/* pnl */}
-                    <span
-                      className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
-                    >
-                      {pnlSign}${Math.abs(totalPnl).toFixed(2)}
-                    </span>
-                  </>
+                <span>
+                  {displayAddress
+                    ? formatAddress(displayAddress)
+                    : "Wallet not connected"}
+                </span>
+
+                {displayAddress && (
+                  <button
+                    onClick={handleCopyAddress}
+                    className={`ml-2 p-1 rounded-full transition-colors ${
+                      theme === "dark"
+                        ? "hover:bg-gray-700/70"
+                        : "hover:bg-gray-100"
+                    }`}
+                    aria-label="Copy address to clipboard"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
                 )}
               </div>
             </div>
           </div>
+        </motion.div>
 
-          <div className="flex flex-col items-start">
-            {/* Wallet Address */}
-            <div
-              className={`text-sm ${
-                theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-              } flex items-center`}
-            >
-              <span>
-                {displayAddress
-                  ? formatAddress(displayAddress)
-                  : "Wallet not connected"}
-              </span>
-
-              {displayAddress && (
-                <button
-                  onClick={handleCopyAddress}
-                  className={`ml-2 p-1 rounded-full transition-colors ${
-                    theme === "dark"
-                      ? "hover:bg-gray-700/70"
-                      : "hover:bg-gray-100"
-                  }`}
-                  aria-label="Copy address to clipboard"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Section 2: Holdings */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div
-          className={`${
-            theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-          } rounded-2xl p-5 mb-3`}
+        {/* Section 2: Holdings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="flex flex-col items-center">
-            <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
-              <span
-                className={`tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}
-              >
-                YOUR HOLDINGS
-              </span>
+          <div
+            className={`${
+              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
+            } rounded-2xl p-5 mb-3`}
+          >
+            <div className="flex flex-col items-center">
+              <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
+                <span
+                  className={`tracking-widest font-medium ${
+                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                  }`}
+                >
+                  YOUR HOLDINGS
+                </span>
 
-              <div
-                className={`flex items-center gap-1 ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}
-              >
-                <span className="tracking-widest font-medium">View All</span>
-                <ArrowRight size={16} />
+                <div
+                  className={`flex items-center gap-1 ${
+                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                  }`}
+                >
+                  <span className="tracking-widest font-medium">View All</span>
+                  <ArrowRight size={16} />
+                </div>
               </div>
-            </div>
-            {isLoading ? (
-              <div className="w-full space-y-4">
-                {/* Skeleton for HoldingCard */}
-                {[...Array(1)].map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`w-full max-w-md mx-auto rounded-2xl overflow-hidden border ${
-                      theme === "dark"
-                        ? "bg-[#0B0424] border-white/30"
-                        : "bg-[#F5F2FF] border-[#CECECE]"
-                    } shadow-md relative`}
-                    style={{
-                      boxShadow:
+              {isLoading ? (
+                <div className="w-full space-y-4">
+                  {/* Skeleton for HoldingCard */}
+                  {[...Array(1)].map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-full max-w-md mx-auto rounded-2xl overflow-hidden border ${
                         theme === "dark"
-                          ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
-                          : "inset 0 0 20px rgba(143, 99, 233, 0.2)",
-                    }}
-                  >
-                    <div className="p-4 flex flex-col relative z-10">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2">
+                          ? "bg-[#0B0424] border-white/30"
+                          : "bg-[#F5F2FF] border-[#CECECE]"
+                      } shadow-md relative`}
+                      style={{
+                        boxShadow:
+                          theme === "dark"
+                            ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
+                            : "inset 0 0 20px rgba(143, 99, 233, 0.2)",
+                      }}
+                    >
+                      <div className="p-4 flex flex-col relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2">
+                            <Skeleton
+                              className={`w-10 h-10 rounded-full ${
+                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                              }`}
+                            />
+                            <div>
+                              <Skeleton
+                                className={`h-5 w-16 mb-1 ${
+                                  theme === "dark"
+                                    ? "bg-gray-700"
+                                    : "bg-gray-300"
+                                }`}
+                              />
+                              <Skeleton
+                                className={`h-3 w-20 ${
+                                  theme === "dark"
+                                    ? "bg-gray-700"
+                                    : "bg-gray-300"
+                                }`}
+                              />
+                            </div>
+                          </div>
                           <Skeleton
-                            className={`w-10 h-10 rounded-full ${
+                            className={`h-8 w-16 rounded-full ${
                               theme === "dark" ? "bg-gray-700" : "bg-gray-300"
                             }`}
                           />
-                          <div>
-                            <Skeleton
-                              className={`h-5 w-16 mb-1 ${
-                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                              }`}
-                            />
-                            <Skeleton
-                              className={`h-3 w-20 ${
-                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                              }`}
-                            />
-                          </div>
                         </div>
-                        <Skeleton
-                          className={`h-8 w-16 rounded-full ${
-                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                          }`}
-                        />
+                        <div className="text-center mb-4">
+                          <Skeleton
+                            className={`h-9 w-24 mx-auto ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                            }`}
+                          />
+                        </div>
                       </div>
-                      <div className="text-center mb-4">
-                        <Skeleton
-                          className={`h-9 w-24 mx-auto ${
-                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                          }`}
-                        />
-                      </div>
+                      <Skeleton
+                        className={`w-full h-12 rounded-none ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                        }`}
+                      />
                     </div>
-                    <Skeleton
-                      className={`w-full h-12 rounded-none ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                      }`}
+                  ))}
+                </div>
+              ) : holdings.length === 0 ? (
+                <div className="text-gray-400 text-center py-8">
+                  No Holdings Available
+                </div>
+              ) : (
+                holdings.map((h, idx) => {
+                  return (
+                    <HoldingCard
+                      key={idx}
+                      symbol={h.pairName}
+                      name={h.protocolName}
+                      amount={h.currentAmount.toString()}
+                      apy={h.apy.toString()}
+                      protocolLogo={h.protocolLogo}
+                      pnl={h.pnl.toFixed(3)}
+                      initialAmount={h.initialAmount.toFixed(3)}
+                      pool={{
+                        name: h.protocolName,
+                        apy: h.apy.toFixed(3),
+                        risk: "Medium", // Default risk level
+                        pair_or_vault_name: h.pairName,
+                        protocol_id: h.protocolName
+                          .toLowerCase()
+                          .replace(/\s+/g, "-"),
+                        protocol_pair_id: h.protocolPairId
+                          .toLowerCase()
+                          .replace(/\s+/g, "-"),
+                      }}
+                      balance={h.currentAmount.toString()}
+                      address={displayAddress || undefined}
+                      refreshBalance={() => {
+                        // Refetch holdings data
+                        if (account?.address) {
+                          setIsLoading(true);
+                          fetch(`/api/holdings?address=${account.address}`)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              setHoldings(Array.isArray(data) ? data : []);
+                              console.log("Refreshed holdings:", data);
+                            })
+                            .catch((error) => {
+                              console.error(
+                                "Error refreshing holdings:",
+                                error
+                              );
+                              setHoldings([]);
+                            })
+                            .finally(() => setIsLoading(false));
+                        }
+                      }}
+                      onClick={() => {}}
                     />
-                  </div>
-                ))}
-              </div>
-            ) : holdings.length === 0 ? (
-              <div className="text-gray-400 text-center py-8">
-                No Holdings Available
-              </div>
-            ) : (
-              holdings.map((h, idx) => {
-                return (
-                  <HoldingCard
-                    key={idx}
-                    symbol={h.pairName}
-                    name={h.protocolName}
-                    amount={h.currentAmount.toString()}
-                    apy={h.apy.toString()}
-                    protocolLogo={h.protocolLogo}
-                    pnl={h.pnl.toFixed(3)}
-                    initialAmount={h.initialAmount.toFixed(3)}
-                    pool={{
-                      name: h.protocolName,
-                      apy: h.apy.toFixed(3),
-                      risk: "Medium", // Default risk level
-                      pair_or_vault_name: h.pairName,
-                      protocol_id: h.protocolName
-                        .toLowerCase()
-                        .replace(/\s+/g, "-"),
-                      protocol_pair_id: h.protocolPairId
-                        .toLowerCase()
-                        .replace(/\s+/g, "-"),
-                    }}
-                    balance={h.currentAmount.toString()}
-                    address={displayAddress || undefined}
-                    refreshBalance={() => {
-                      // Refetch holdings data
-                      if (account?.address) {
-                        setIsLoading(true);
-                        fetch(`/api/holdings?address=${account.address}`)
-                          .then((res) => res.json())
-                          .then((data) => {
-                            setHoldings(Array.isArray(data) ? data : []);
-                            console.log("Refreshed holdings:", data);
-                          })
-                          .catch((error) => {
-                            console.error("Error refreshing holdings:", error);
-                            setHoldings([]);
-                          })
-                          .finally(() => setIsLoading(false));
-                      }
-                    }}
-                    onClick={() => {}}
-                  />
-                );
-              })
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Section 3: Referral */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div
-          className={`${
-            theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-          } rounded-2xl p-5 mb-3`}
-        >
-          <div className="flex flex-col items-center">
-            <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
-              <span
-                className={`tracking-widest font-medium ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}
-              >
-                REFERRAL PROGRAM
-              </span>
-              <Gift
-                className={`h-5 w-5 ${
-                  theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                }`}
-              />
+                  );
+                })
+              )}
             </div>
+          </div>
+        </motion.div>
 
-            {isLoadingReferral ? (
-              <div className="w-full space-y-4">
-                {/* Skeleton for Your Referral Code */}
-                <div className="space-y-2">
-                  <Skeleton className="w-32 h-4 bg-gray-300 dark:bg-gray-700" />
-                  <div className="flex items-center space-x-2">
-                    <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
-                    <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
-                  </div>
-                </div>
-
-                {/* Skeleton for Apply Referral Code */}
-                <div className="space-y-2">
-                  <Skeleton className="w-36 h-4 bg-gray-300 dark:bg-gray-700" />
-                  <div className="flex items-center space-x-2">
-                    <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
-                    <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
-                  </div>
-                </div>
-
-                {/* Skeleton for info text */}
-                <Skeleton className="w-full h-3 bg-gray-300 dark:bg-gray-700" />
+        {/* Section 3: Referral */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div
+            className={`${
+              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
+            } rounded-2xl p-5 mb-3`}
+          >
+            <div className="flex flex-col items-center">
+              <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
+                <span
+                  className={`tracking-widest font-medium ${
+                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                  }`}
+                >
+                  REFERRAL PROGRAM
+                </span>
+                <Gift
+                  className={`h-5 w-5 ${
+                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                  }`}
+                />
               </div>
-            ) : (
-              <div className="w-full space-y-4">
-                {/* Your Referral Code */}
-                <div className="space-y-2">
-                  <label
-                    className={`text-sm font-medium ${
-                      theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                    }`}
-                  >
-                    Your Referral Code
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`flex-1 p-3 rounded-lg border ${
-                        theme === "dark"
-                          ? "bg-[#2A2A2A] border-gray-700 text-white"
-                          : "bg-white border-gray-200 text-black"
-                      } font-mono text-sm`}
-                    >
-                      {userReferralCode || (
-                        <Skeleton className="w-20 h-8 bg-gray-300 dark:bg-gray-700" />
-                      )}
+
+              {isLoadingReferral ? (
+                <div className="w-full space-y-4">
+                  {/* Skeleton for Your Referral Code */}
+                  <div className="space-y-2">
+                    <Skeleton className="w-32 h-4 bg-gray-300 dark:bg-gray-700" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
+                      <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
                     </div>
-                    <button
-                      onClick={handleCopyReferralCode}
-                      disabled={!userReferralCode}
-                      className={`p-3 rounded-lg border transition-colors ${
-                        theme === "dark"
-                          ? "border-gray-700 hover:bg-gray-700/70"
-                          : "border-gray-200 hover:bg-gray-100"
-                      } ${
-                        !userReferralCode ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      aria-label="Copy referral code"
-                    >
-                      {referralCopied ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </button>
                   </div>
+
+                  {/* Skeleton for Apply Referral Code */}
+                  <div className="space-y-2">
+                    <Skeleton className="w-36 h-4 bg-gray-300 dark:bg-gray-700" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
+                      <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
+                    </div>
+                  </div>
+
+                  {/* Skeleton for info text */}
+                  <Skeleton className="w-full h-3 bg-gray-300 dark:bg-gray-700" />
                 </div>
-
-                {/* Referred By */}
-                {referralBy && (
+              ) : (
+                <div className="w-full space-y-4">
+                  {/* Your Referral Code */}
                   <div className="space-y-2">
                     <label
                       className={`text-sm font-medium ${
                         theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                       }`}
                     >
-                      Referred By
-                    </label>
-                    <div
-                      className={`p-3 rounded-lg border ${
-                        theme === "dark"
-                          ? "bg-[#2A2A2A] border-gray-700 text-white"
-                          : "bg-white border-gray-200 text-black"
-                      } font-mono text-sm`}
-                    >
-                      {referralBy}
-                    </div>
-                  </div>
-                )}
-
-                {/* Apply Referral Code */}
-                {!referralBy && (
-                  <div className="space-y-2">
-                    <label
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                      }`}
-                    >
-                      Apply Referral Code
+                      Your Referral Code
                     </label>
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={inputReferralCode}
-                        onChange={(e) => setInputReferralCode(e.target.value)}
-                        placeholder="Enter referral code"
+                      <div
                         className={`flex-1 p-3 rounded-lg border ${
                           theme === "dark"
-                            ? "bg-[#2A2A2A] border-gray-700 text-white placeholder-gray-400"
-                            : "bg-white border-gray-200 text-black placeholder-gray-500"
-                        } font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#8266E6]`}
-                        maxLength={8}
-                      />
+                            ? "bg-[#2A2A2A] border-gray-700 text-white"
+                            : "bg-white border-gray-200 text-black"
+                        } font-mono text-sm`}
+                      >
+                        {userReferralCode || (
+                          <Skeleton className="w-20 h-8 bg-gray-300 dark:bg-gray-700" />
+                        )}
+                      </div>
                       <button
-                        onClick={handleApplyReferralCode}
-                        disabled={
-                          !inputReferralCode.trim() || isApplyingReferral
-                        }
-                        className={`px-4 py-3 rounded-lg border transition-colors ${
+                        onClick={handleCopyReferralCode}
+                        disabled={!userReferralCode}
+                        className={`p-3 rounded-lg border transition-colors ${
                           theme === "dark"
                             ? "border-gray-700 hover:bg-gray-700/70"
                             : "border-gray-200 hover:bg-gray-100"
                         } ${
-                          !inputReferralCode.trim() || isApplyingReferral
+                          !userReferralCode
                             ? "opacity-50 cursor-not-allowed"
                             : ""
                         }`}
+                        aria-label="Copy referral code"
                       >
-                        {isApplyingReferral ? (
-                          <div className="w-4 h-4 border-2 border-gray-300 border-t-[#8266E6] rounded-full animate-spin" />
+                        {referralCopied ? (
+                          <Check className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Users className="h-4 w-4" />
+                          <Copy className="h-4 w-4" />
                         )}
                       </button>
                     </div>
                   </div>
-                )}
 
-                {/* Referral Info */}
-                <div
-                  className={`text-xs ${
-                    theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
-                  } text-center`}
-                >
-                  Share your referral code with friends to earn points when they
-                  join!
+                  {/* Referred By */}
+                  {referralBy && (
+                    <div className="space-y-2">
+                      <label
+                        className={`text-sm font-medium ${
+                          theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                        }`}
+                      >
+                        Referred By
+                      </label>
+                      <div
+                        className={`p-3 rounded-lg border ${
+                          theme === "dark"
+                            ? "bg-[#2A2A2A] border-gray-700 text-white"
+                            : "bg-white border-gray-200 text-black"
+                        } font-mono text-sm`}
+                      >
+                        {referralBy}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Apply Referral Code */}
+                  {!referralBy && (
+                    <div className="space-y-2">
+                      <label
+                        className={`text-sm font-medium ${
+                          theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
+                        }`}
+                      >
+                        Apply Referral Code
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={inputReferralCode}
+                          onChange={(e) => setInputReferralCode(e.target.value)}
+                          placeholder="Enter referral code"
+                          className={`flex-1 p-3 rounded-lg border ${
+                            theme === "dark"
+                              ? "bg-[#2A2A2A] border-gray-700 text-white placeholder-gray-400"
+                              : "bg-white border-gray-200 text-black placeholder-gray-500"
+                          } font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#8266E6]`}
+                          maxLength={8}
+                        />
+                        <button
+                          onClick={handleApplyReferralCode}
+                          disabled={
+                            !inputReferralCode.trim() || isApplyingReferral
+                          }
+                          className={`px-4 py-3 rounded-lg border transition-colors ${
+                            theme === "dark"
+                              ? "border-gray-700 hover:bg-gray-700/70"
+                              : "border-gray-200 hover:bg-gray-100"
+                          } ${
+                            !inputReferralCode.trim() || isApplyingReferral
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                        >
+                          {isApplyingReferral ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-[#8266E6] rounded-full animate-spin" />
+                          ) : (
+                            <Users className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Referral Info */}
+                  <div
+                    className={`text-xs ${
+                      theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
+                    } text-center`}
+                  >
+                    Share your referral code with friends to earn points when
+                    they join!
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }

@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, ExternalLink, X, Copy } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
@@ -16,6 +15,8 @@ import {
   waitForReceipt,
 } from "thirdweb";
 import Card from "@/components/ui/card";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Add Ethereum window type
 declare global {
@@ -63,7 +64,6 @@ export default function DepositModal({
   const [isLoadingApy, setIsLoadingApy] = useState(false);
   const [txHash, setTxHash] = useState<string>("");
   const [processingPoolId, setProcessingPoolId] = useState<string | null>(null);
-  const { toast } = useToast();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const wallet = useActiveWallet();
@@ -199,10 +199,8 @@ export default function DepositModal({
       modalClosedDuringProcessingRef.current = true;
 
       // Show a toast notification that transaction is still processing
-      toast({
-        title: "Transaction in progress",
-        description: "Your deposit is still processing in the background.",
-        duration: 5000,
+      toast.success("Your deposit is still processing in the background.", {
+        autoClose: 5000,
       });
     } else if (!showSuccessModal) {
       // Only reset values if not showing success modal and not submitting
@@ -401,11 +399,7 @@ export default function DepositModal({
       if (!modalClosedDuringProcessingRef.current) {
         setShowSuccessModal(true);
       } else {
-        toast({
-          variant: "success",
-          title: "Deposit Successful",
-          description: `$${amount} deposited into ${pool?.name}`,
-        });
+        toast.success(`$${amount} deposited into ${pool?.name}`);
       }
 
       // Haptic feedback
@@ -471,6 +465,7 @@ export default function DepositModal({
       }
     } catch (error) {
       console.error("Error handling transaction success:", error);
+      toast.error("Deposit failed");
     }
   };
 
@@ -493,11 +488,7 @@ export default function DepositModal({
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Please enter a valid deposit amount",
-      });
+      toast.error("Please enter a valid deposit amount");
       return;
     }
 
@@ -739,11 +730,7 @@ export default function DepositModal({
 
         // Only show error toast if the modal is still open
         if (!modalClosedDuringProcessingRef.current) {
-          toast({
-            variant: "destructive",
-            title: "Deposit Failed",
-            description: errorMessage,
-          });
+          toast.error(errorMessage);
         }
       }
     } catch (error) {
@@ -797,12 +784,7 @@ export default function DepositModal({
         setShowSuccessModal(true);
       } else {
         // For failed deposits, show an error toast
-        toast({
-          variant: "destructive",
-          title: "Previous Deposit Failed",
-          description:
-            "Your last deposit attempt for this pool failed. Please try again.",
-        });
+        toast.error("Previous Deposit Failed");
 
         // Clear the failed deposit status
         setCompletedDeposits((prev) => {

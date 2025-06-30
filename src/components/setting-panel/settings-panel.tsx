@@ -33,12 +33,13 @@ import {
 } from "thirdweb/react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useToast } from "@/hooks/use-toast";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { client, wallets } from "@/client";
 import { scroll } from "thirdweb/chains";
 import { getWalletBalance } from "thirdweb/wallets";
 import Image from "next/image";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Token details for Scroll Mainnet
 const TOKENS = {
@@ -55,7 +56,7 @@ const TOKENS = {
     decimals: 6,
     address: "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df", // Scroll Mainnet USDT address
     logoUrl: "/usdt.png",
-  }
+  },
 };
 
 interface SettingsPanelProps {
@@ -69,12 +70,13 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { disconnect } = useDisconnect();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(null);
+  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
+    null
+  );
   const [showFundsDropdown, setShowFundsDropdown] = useState(false);
   const [tokenBalances, setTokenBalances] = useState<{
     USDC: string;
@@ -110,7 +112,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Fetch token balances using ThirdWeb's getWalletBalance
   const fetchTokenBalances = async (address: string) => {
     if (!address) return;
-    
+
     setIsLoadingBalances(true);
     try {
       // Fetch USDC balance
@@ -120,7 +122,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         chain: scroll,
         tokenAddress: TOKENS.USDC.address,
       });
-      
+
       // Fetch USDT balance
       const usdtBalance = await getWalletBalance({
         address,
@@ -128,18 +130,18 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         chain: scroll,
         tokenAddress: TOKENS.USDT.address,
       });
-      
+
       setTokenBalances({
-        USDC: usdcBalance ? parseFloat(usdcBalance.displayValue).toFixed(2) : "0.00",
-        USDT: usdtBalance ? parseFloat(usdtBalance.displayValue).toFixed(2) : "0.00",
+        USDC: usdcBalance
+          ? parseFloat(usdcBalance.displayValue).toFixed(2)
+          : "0.00",
+        USDT: usdtBalance
+          ? parseFloat(usdtBalance.displayValue).toFixed(2)
+          : "0.00",
       });
     } catch (error) {
       console.error("Error fetching token balances:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch token balances",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch token balances");
     } finally {
       setIsLoadingBalances(false);
     }
@@ -172,10 +174,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
-          toast({
-            title: "Address copied",
-            description: "Wallet address copied to clipboard",
-          });
+          toast.info("Wallet address copied to clipboard");
         })
         .catch((err) => {
           console.error("Failed to copy address: ", err);
@@ -307,7 +306,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         <div className="w-full">
           <button
             onClick={toggleFundsDropdown}
-            className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-black dark:text-white ${showFundsDropdown ? 'bg-white/5' : ''}`}
+            className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-black dark:text-white ${
+              showFundsDropdown ? "bg-white/5" : ""
+            }`}
           >
             <div className="flex items-center">
               <CreditCard
@@ -319,23 +320,29 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             </div>
             <ChevronRight
               className={`h-5 w-5 text-[#202020] dark:text-white transition-transform ${
-                showFundsDropdown ? 'transform rotate-90' : ''
-              }`} 
+                showFundsDropdown ? "transform rotate-90" : ""
+              }`}
             />
           </button>
-          
+
           {/* Dropdown Content */}
           {showFundsDropdown && (
-            <div className={`mt-2 p-3 rounded-lg ${theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"}`}>
+            <div
+              className={`mt-2 p-3 rounded-lg ${
+                theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
+              }`}
+            >
               {isLoadingBalances ? (
-                <div className="py-2 text-center text-sm">Loading balances...</div>
+                <div className="py-2 text-center text-sm">
+                  Loading balances...
+                </div>
               ) : (
                 <div className="space-y-3">
                   {/* USDC Balance */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-6 h-6 relative mr-2">
-                        <Image 
+                        <Image
                           src={TOKENS.USDC.logoUrl}
                           alt="USDC"
                           width={24}
@@ -345,14 +352,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       </div>
                       <span className="text-sm font-medium">USDC</span>
                     </div>
-                    <span className="text-sm font-medium">{tokenBalances.USDC}</span>
+                    <span className="text-sm font-medium">
+                      {tokenBalances.USDC}
+                    </span>
                   </div>
-                  
+
                   {/* USDT Balance */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-6 h-6 relative mr-2">
-                        <Image 
+                        <Image
                           src={TOKENS.USDT.logoUrl}
                           alt="USDT"
                           width={24}
@@ -362,7 +371,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       </div>
                       <span className="text-sm font-medium">USDT</span>
                     </div>
-                    <span className="text-sm font-medium">{tokenBalances.USDT}</span>
+                    <span className="text-sm font-medium">
+                      {tokenBalances.USDT}
+                    </span>
                   </div>
                 </div>
               )}
@@ -409,48 +420,50 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   );
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Semi-transparent backdrop */}
-      <div
-        className={`fixed inset-0 ${
-          theme === "dark" ? "bg-black/20" : "bg-gray-900/10"
-        } backdrop-blur-[2px]`}
-        style={{
-          animation: isExiting
-            ? "fadeOut 0.3s ease-out"
-            : "fadeIn 0.3s ease-out",
-        }}
-        onClick={handleGoBack}
-      />
+    <>
+      <div className="fixed inset-0 z-50">
+        {/* Semi-transparent backdrop */}
+        <div
+          className={`fixed inset-0 ${
+            theme === "dark" ? "bg-black/20" : "bg-gray-900/10"
+          } backdrop-blur-[2px]`}
+          style={{
+            animation: isExiting
+              ? "fadeOut 0.3s ease-out"
+              : "fadeIn 0.3s ease-out",
+          }}
+          onClick={handleGoBack}
+        />
 
-      {/* Sliding panel */}
-      <div
-        className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-hidden`}
-        style={{
-          animation: isExiting
-            ? "slideOut 0.3s ease-out"
-            : "slideIn 0.3s ease-out",
-          borderRadius: "16px 0 0 16px",
-          boxShadow:
-            theme === "dark"
-              ? "0 0 40px rgba(0, 0, 0, 0.3)"
-              : "0 0 40px rgba(0, 0, 0, 0.1)",
-          ...(theme === "dark" && {
-            background:
-              "linear-gradient(311.14deg, rgba(11, 4, 36, 0.4) 16.15%, rgba(60, 34, 156, 0.4) 94.41%)",
-            backdropFilter: "blur(90px)",
-          }),
-        }}
-      >
-        {theme === "dark" ? (
-          panelContent
-        ) : (
-          <BackgroundGradientAnimation>
-            {panelContent}
-          </BackgroundGradientAnimation>
-        )}
+        {/* Sliding panel */}
+        <div
+          className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-hidden`}
+          style={{
+            animation: isExiting
+              ? "slideOut 0.3s ease-out"
+              : "slideIn 0.3s ease-out",
+            borderRadius: "16px 0 0 16px",
+            boxShadow:
+              theme === "dark"
+                ? "0 0 40px rgba(0, 0, 0, 0.3)"
+                : "0 0 40px rgba(0, 0, 0, 0.1)",
+            ...(theme === "dark" && {
+              background:
+                "linear-gradient(311.14deg, rgba(11, 4, 36, 0.4) 16.15%, rgba(60, 34, 156, 0.4) 94.41%)",
+              backdropFilter: "blur(90px)",
+            }),
+          }}
+        >
+          {theme === "dark" ? (
+            panelContent
+          ) : (
+            <BackgroundGradientAnimation>
+              {panelContent}
+            </BackgroundGradientAnimation>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

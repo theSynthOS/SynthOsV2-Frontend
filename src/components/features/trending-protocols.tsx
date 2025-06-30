@@ -17,7 +17,8 @@ import { useState, useEffect, useRef } from "react";
 import DepositModal from "./deposit-modal";
 import { useActiveAccount } from "thirdweb/react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface ProtocolPair {
   id: string;
@@ -58,7 +59,6 @@ export default function TrendingProtocols({
   const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([]);
   const filterRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const [showApyInfo, setShowApyInfo] = useState(false);
   const apyInfoRef = useRef<HTMLDivElement>(null);
 
@@ -661,9 +661,9 @@ export default function TrendingProtocols({
           if (refreshBalance) {
             refreshBalance();
           }
-          
+
           // Trigger holdings refresh by dispatching a custom event
-          window.dispatchEvent(new CustomEvent('refreshHoldings'));
+          window.dispatchEvent(new CustomEvent("refreshHoldings"));
         }}
       />
     </>
