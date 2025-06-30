@@ -798,7 +798,7 @@ export default function HoldingPage() {
               >
                 <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
                   {isLoading ? (
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       {[...Array(6)].map((_, idx) => (
                         <div
                           key={idx}
@@ -885,7 +885,7 @@ export default function HoldingPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       {holdings.map((h, idx) => (
                         <HoldingCard
                           key={idx}
