@@ -64,7 +64,12 @@ export default function Header() {
 
   return (
     <div
-      className={`flex justify-between items-center px-4 py-3 bg-white/10 dark:bg-black/10 backdrop-blur-md relative z-10`}
+      className={`flex justify-between items-center px-4 py-3 relative z-10`}
+      style={{
+        background: theme === "dark" 
+          ? "linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(30,30,30,0.6) 100%)"
+          : "linear-gradient(0deg, rgba(255,255,255,0.2) 0%)",
+      }}
     >
       {/* Logo */}
       <div className="flex items-center">
