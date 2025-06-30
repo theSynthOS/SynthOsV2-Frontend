@@ -472,51 +472,6 @@ export default function TrendingProtocols({
             >
               Suggested Investments
             </h2>
-            <button
-              onClick={() => setShowApyInfo(!showApyInfo)}
-              className={`ml-2 p-1 rounded-full hover:bg-opacity-20 ${
-                theme === "dark" ? "hover:bg-gray-600" : "hover:bg-gray-200"
-              }`}
-              aria-label="APY Information"
-            >
-              <Info
-                className={`w-4 h-4 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-            </button>
-
-            {showApyInfo && (
-              <div
-                ref={apyInfoRef}
-                className={`absolute left-0 top-12 z-20 p-4 rounded-lg shadow-lg w-72 ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-800"
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-md">Testnet APY Information</h3>
-                  <button
-                    onClick={() => setShowApyInfo(false)}
-                    className={`p-1 rounded-full ${
-                      theme === "dark"
-                        ? "hover:bg-gray-700"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-sm">
-                  The APY values shown are on testnet and may differ from
-                  mainnet rates.
-                </p>
-                <div className="mt-3 text-xs opacity-70">
-                  All investments are simulated on Scroll Mainnet.
-                </div>
-              </div>
-            )}
           </div>
         </div>
         <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
