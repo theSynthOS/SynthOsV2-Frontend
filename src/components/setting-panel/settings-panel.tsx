@@ -140,7 +140,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           : "0.00",
       });
     } catch (error) {
-      console.error("Error fetching token balances:", error);
       toast.error("Failed to fetch token balances");
     } finally {
       setIsLoadingBalances(false);
@@ -176,9 +175,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           setTimeout(() => setCopied(false), 2000);
           toast.info("Wallet address copied to clipboard");
         })
-        .catch((err) => {
-          console.error("Failed to copy address: ", err);
-        });
+        .catch(() => {});
     }
   };
 

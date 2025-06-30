@@ -69,7 +69,6 @@ export default function WithdrawModal({
     account: any
   ) => {
     try {
-      console.log("🔍 Starting Tenderly RPC bundled simulation...");
       setSimulationStatus(
         `Simulating ${transactionData.length} transactions...`
       );
@@ -90,10 +89,6 @@ export default function WithdrawModal({
         return call;
       });
 
-      console.log(
-        `📦 Simulating bundle of ${transactionCalls.length} transactions`
-      );
-
       // Log the exact request format for debugging
       const requestBody = {
         method: "tenderly_simulateBundle",
@@ -102,7 +97,6 @@ export default function WithdrawModal({
           "latest", // Block parameter - use latest block
         ],
       };
-      console.log("📋 Request body:", JSON.stringify(requestBody, null, 2));
 
       // Call Tenderly RPC tenderly_simulateBundle method
       const response = await fetch("/api/tenderly-rpc", {
@@ -129,29 +123,13 @@ export default function WithdrawModal({
         throw new Error("Invalid simulation results format");
       }
 
-      console.log(
-        "📊 Simulation results:",
-        simulationResults.length,
-        "transactions"
-      );
-
       // Check if ALL transactions have status: true
       const failedTransactions = simulationResults.filter(
         (result: any, index: number) => {
           const success = result.status === true;
-          console.log(
-            `Transaction ${index + 1}: ${success ? "✅" : "❌"} Status: ${
-              result.status
-            }`
-          );
 
           // Log failure details for debugging
           if (!success) {
-            console.log(`   ❌ Transaction ${index + 1} failed:`, {
-              error: result.error,
-              revertReason: result.revertReason,
-              gasUsed: result.gasUsed,
-            });
           }
 
           return !success;
@@ -181,9 +159,6 @@ export default function WithdrawModal({
         0
       );
 
-      console.log("✅ All transactions passed simulation");
-      console.log(`💰 Total gas used: ${totalGasUsed}`);
-
       // Update status for success
       setSimulationStatus("✅ All transactions validated successfully");
       setTimeout(() => setSimulationStatus(null), 1500);
@@ -194,7 +169,6 @@ export default function WithdrawModal({
         results: simulationResults,
       };
     } catch (error) {
-      console.error("❌ Tenderly RPC simulation error:", error);
       setSimulationStatus("❌ Simulation failed");
       setTimeout(() => setSimulationStatus(null), 2000);
       throw error;
@@ -319,15 +293,12 @@ export default function WithdrawModal({
         }
 
         // Simulate the transaction bundle with Tenderly RPC
-        console.log("🔍 Running Tenderly RPC bundled simulation...");
         try {
           const simulationResult = await simulateTransactionBundle(
             responseData.callData,
             account
           );
-          console.log("✅ Tenderly RPC simulation passed:", simulationResult);
         } catch (simulationError) {
-          console.error("❌ Tenderly RPC simulation failed:", simulationError);
           const errorMessage =
             simulationError instanceof Error
               ? simulationError.message
@@ -363,9 +334,7 @@ export default function WithdrawModal({
             transactions,
             account,
           });
-          console.log("result", result);
         } catch (error) {
-          console.log("error", error);
           // Check if the error is because account doesn't support batch transactions
           const errorMessage =
             error instanceof Error ? error.message : String(error);
@@ -420,7 +389,6 @@ export default function WithdrawModal({
 
         const data = await response.json();
         if (!data.success) {
-          console.error("Failed to save transaction:", data.message);
         } else {
         }
 
@@ -436,8 +404,6 @@ export default function WithdrawModal({
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
-        console.error("Withdrawal execution error:", error);
-
         // Show user-friendly error message
         let errorMessage = "Transaction failed";
         if (error instanceof Error) {
@@ -469,8 +435,6 @@ export default function WithdrawModal({
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Withdrawal API error:", error);
-
       let errorMessage = "Failed to process withdrawal";
       if (error instanceof Error) {
         const errorString = error.message;

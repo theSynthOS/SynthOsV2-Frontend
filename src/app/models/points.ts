@@ -72,9 +72,7 @@ export async function upsertUserPoints(address: string, email?: string) {
       referralStatus: 0,
     });
   } else {
-    // If user exists but doesn't have a referral code, create one
     if (!user.referralCode) {
-      console.log("🔄 Existing user has no referral code, creating one...");
       let referralCode;
       let isUnique = false;
       while (!isUnique) {
@@ -90,7 +88,6 @@ export async function upsertUserPoints(address: string, email?: string) {
         { referralCode: referralCode },
         { new: true }
       );
-      console.log("✅ Referral code created for existing user:", referralCode);
     }
   }
   return user;

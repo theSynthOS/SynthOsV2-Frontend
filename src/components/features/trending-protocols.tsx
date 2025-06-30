@@ -97,7 +97,6 @@ export default function TrendingProtocols({
         );
         setProtocolPairs(filteredPairs);
       } catch (error) {
-        console.error("Error fetching protocol pairs:", error);
         setProtocolPairs([]);
       } finally {
         setIsLoading(false);
@@ -123,8 +122,7 @@ export default function TrendingProtocols({
         const data = await response.json();
         setBalance(data.usdBalance || "0");
       } catch (error) {
-        console.error("Error fetching balance:", error);
-        setBalance("0");
+        setBalance("0.00");
       } finally {
         setIsLoadingBalance(false);
       }
@@ -161,7 +159,6 @@ export default function TrendingProtocols({
         localStorage.setItem("investor_profile", JSON.stringify(data));
         setInvestorProfile(data.profile?.type || "Degen Learner");
       } catch (error) {
-        console.error("Error fetching investor profile:", error);
         setInvestorProfile("Degen Learner");
       } finally {
         setIsLoadingProfile(false);
@@ -651,8 +648,8 @@ export default function TrendingProtocols({
               .then((data) => {
                 setBalance(data.usdBalance || "0");
               })
-              .catch((error) => {
-                console.error("Error refreshing balance:", error);
+              .catch(() => {
+                // Error handling
               })
               .finally(() => {
                 setIsLoadingBalance(false);

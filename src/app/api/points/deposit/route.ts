@@ -10,7 +10,9 @@ export async function POST(req: Request) {
     const user = await addDepositPoints(address);
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error in deposit points API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to process deposit points" },
+      { status: 500 }
+    );
   }
-} 
+}

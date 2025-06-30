@@ -13,8 +13,10 @@ export async function POST(req: Request) {
     const user = await upsertUserPoints(checksummedAddress);
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error in points API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to process points" },
+      { status: 500 }
+    );
   }
 }
 
@@ -33,7 +35,9 @@ export async function GET(req: Request) {
     }
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error in points GET API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to process points" },
+      { status: 500 }
+    );
   }
-} 
+}

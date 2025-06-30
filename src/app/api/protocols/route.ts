@@ -10,9 +10,8 @@ export async function GET() {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching protocols:", error);
     return NextResponse.json(
-      { error: "Failed to fetch protocols" },
+      { success: false, error: "Failed to fetch protocols" },
       { status: 500 }
     );
   }

@@ -77,9 +77,7 @@ export default function HoldingPage() {
       const res = await fetch(`/api/holdings?address=${account.address}`);
       const data = await res.json();
       setHoldings(Array.isArray(data) ? data : []);
-      console.log("Fetched holdings:", data);
     } catch (error) {
-      console.error("Error fetching holdings:", error);
       setHoldings([]);
     } finally {
       setIsLoading(false);
@@ -107,28 +105,19 @@ export default function HoldingPage() {
   // Fetch referral data
   useEffect(() => {
     if (!account?.address) return;
-    console.log("🔍 Fetching referral data for address:", account.address);
     setIsLoadingReferral(true);
     fetch(`/api/referral?address=${account.address}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("📊 Referral API response:", data);
         if (data.success && data.user) {
-          console.log("✅ Referral data loaded:", {
-            referralCode: data.user.referralCode,
-            referralBy: data.user.referralBy,
-          });
           setUserReferralCode(data.user.referralCode || "");
           setReferralBy(data.user.referralBy || "");
-        } else {
-          console.error("❌ Failed to fetch referral data:", data.error);
         }
       })
       .catch((error) => {
-        console.error("🚨 Error fetching referral data:", error);
+        // Error handling
       })
       .finally(() => {
-        console.log("🏁 Finished loading referral data");
         setIsLoadingReferral(false);
       });
   }, [account?.address]);
@@ -143,7 +132,6 @@ export default function HoldingPage() {
       const referralCode = urlParams.get("ref");
 
       if (referralCode) {
-        console.log("🔗 Found referral code in URL:", referralCode);
         try {
           const response = await fetch("/api/referral", {
             method: "POST",
@@ -157,34 +145,24 @@ export default function HoldingPage() {
           });
 
           const data = await response.json();
-          console.log("📊 URL referral API response:", data);
 
           if (data.success) {
-            console.log("✅ URL referral code applied successfully");
-            // Remove referral code from URL
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.delete("ref");
             window.history.replaceState({}, "", newUrl.toString());
 
-            // Refresh referral data
-            console.log("🔄 Refreshing referral data after URL referral...");
             const refreshResponse = await fetch(
               `/api/referral?address=${account.address}`
             );
             const refreshData = await refreshResponse.json();
-            console.log("📊 URL refresh referral data response:", refreshData);
             if (refreshData.success && refreshData.user) {
               setReferralBy(refreshData.user.referralBy || "");
             }
           }
         } catch (error) {
-          console.error("🚨 Error handling URL referral code:", error);
+          // Error handling
         }
       } else {
-        console.log(
-          "🔍 No referral code found in URL, ensuring user has referral code..."
-        );
-        // If no referral code in URL, ensure user has a referral code
         try {
           const response = await fetch("/api/referral", {
             method: "POST",
@@ -197,18 +175,13 @@ export default function HoldingPage() {
           });
 
           const data = await response.json();
-          console.log("📊 Ensure referral code API response:", data);
 
           if (data.success && data.user) {
-            console.log(
-              "✅ User referral code ensured:",
-              data.user.referralCode
-            );
             setUserReferralCode(data.user.referralCode || "");
             setReferralBy(data.user.referralBy || "");
           }
         } catch (error) {
-          console.error("🚨 Error ensuring referral code:", error);
+          // Error handling
         }
       }
     };
@@ -250,7 +223,7 @@ export default function HoldingPage() {
           toast.info("Wallet address copied to clipboard");
         })
         .catch((err) => {
-          console.error("Failed to copy address: ", err);
+          // Error handling
         });
     }
   };
@@ -262,7 +235,6 @@ export default function HoldingPage() {
       return;
     }
 
-    console.log("🎯 Applying referral code:", inputReferralCode.trim());
     setIsApplyingReferral(true);
     try {
       const response = await fetch("/api/referral", {
@@ -277,33 +249,25 @@ export default function HoldingPage() {
       });
 
       const data = await response.json();
-      console.log("📊 Apply referral API response:", data);
 
       if (data.success) {
-        console.log("✅ Referral code applied successfully");
         toast.success("Referral code applied successfully!");
         setInputReferralCode("");
-        // Refresh referral data
-        console.log("🔄 Refreshing referral data...");
         const refreshResponse = await fetch(
           `/api/referral?address=${account.address}`
         );
         const refreshData = await refreshResponse.json();
-        console.log("📊 Refresh referral data response:", refreshData);
         if (refreshData.success && refreshData.user) {
           setReferralBy(refreshData.user.referralBy || "");
         }
       } else {
-        // Special case for self-referral
         if (data.error === "You cannot refer yourself.") {
           toast.error("You cannot enter your own referral code.");
         } else {
           toast.error(data.error || "Failed to apply referral code");
         }
-        console.error("❌ Failed to apply referral code:", data.error);
       }
     } catch (error) {
-      console.error("🚨 Error applying referral code:", error);
       toast.error("Failed to apply referral code");
     } finally {
       setIsApplyingReferral(false);
@@ -321,7 +285,7 @@ export default function HoldingPage() {
           toast.info("Your referral code has been copied to clipboard");
         })
         .catch((err) => {
-          console.error("Failed to copy referral code: ", err);
+          // Error handling
         });
     }
   };
@@ -595,13 +559,8 @@ export default function HoldingPage() {
                             .then((res) => res.json())
                             .then((data) => {
                               setHoldings(Array.isArray(data) ? data : []);
-                              console.log("Refreshed holdings:", data);
                             })
-                            .catch((error) => {
-                              console.error(
-                                "Error refreshing holdings:",
-                                error
-                              );
+                            .catch(() => {
                               setHoldings([]);
                             })
                             .finally(() => setIsLoading(false));
@@ -955,13 +914,8 @@ export default function HoldingPage() {
                                 .then((res) => res.json())
                                 .then((data) => {
                                   setHoldings(Array.isArray(data) ? data : []);
-                                  console.log("Refreshed holdings:", data);
                                 })
-                                .catch((error) => {
-                                  console.error(
-                                    "Error refreshing holdings:",
-                                    error
-                                  );
+                                .catch(() => {
                                   setHoldings([]);
                                 })
                                 .finally(() => setIsLoading(false));
