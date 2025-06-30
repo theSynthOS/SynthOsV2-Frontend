@@ -137,17 +137,6 @@ export default function WithdrawModal({
       return;
     }
 
-    // If withdrawing close to max amount, reduce by small buffer to avoid rounding issues
-    let withdrawAmount = amount;
-    const balanceNum = parseFloat(balance);
-    const amountNum = parseFloat(amount);
-    
-    // If trying to withdraw more than 99.95% of balance, reduce by 0.5% to avoid protocol issues
-    if (amountNum >= balanceNum * 0.9995) {
-      withdrawAmount = (balanceNum * 0.9995).toFixed(6);
-      console.log(`Adjusting withdrawal from ${amount} to ${withdrawAmount} to avoid protocol rounding issues`);
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -161,7 +150,7 @@ export default function WithdrawModal({
         body: JSON.stringify({
           user_address: address,
           protocol_pair_id: pool?.protocol_pair_id,
-          amount: withdrawAmount,
+          amount: amount,
           withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
         }),
       });
@@ -216,7 +205,6 @@ export default function WithdrawModal({
           const errorMessage = error instanceof Error ? error.message : String(error);
           
           if (errorMessage) {
-            console.log("Detected EOA wallet, falling back to sequential transactions");
             
             // For EOAs, send transactions sequentially
             let lastTxResult;
@@ -250,8 +238,7 @@ export default function WithdrawModal({
 
         // Handle success
         setTxHash(result.transactionHash);
-        // Update amount to show actual withdrawn amount
-        setAmount(withdrawAmount);
+        // Handle success
         setShowSuccessModal(true);
 
         // Haptic feedback
@@ -567,7 +554,7 @@ export default function WithdrawModal({
                   ${amount} {selectedToken}
                 </p>
                 <p className="text-sm mt-2 opacity-80">
-                  from {pool.pair_or_vault_name}
+                  from {pool.name}
                 </p>
               </div>
 
