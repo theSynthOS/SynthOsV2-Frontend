@@ -64,7 +64,6 @@ export default function Home() {
       refreshPoints();
       return data.totalUsdBalance || "0.00";
     } catch (error) {
-      console.error("Error fetching balance:", error);
       setBalance("0.00");
       return "0.00";
     } finally {
@@ -114,9 +113,13 @@ export default function Home() {
           toast.info("Wallet address copied to clipboard");
         })
         .catch((err) => {
-          console.error("Failed to copy address: ", err);
+          // Error handling
         });
     }
+  };
+
+  const handleRefreshHoldings = () => {
+    // Refresh holdings
   };
 
   return (
@@ -132,10 +135,7 @@ export default function Home() {
             fetchBalance(account.address);
           }
         }}
-        refreshHoldings={() => {
-          // Holdings will be refreshed via individual components
-          console.log("Holdings refresh requested");
-        }}
+        refreshHoldings={handleRefreshHoldings}
       >
         <motion.div
           initial={{ opacity: 0 }}

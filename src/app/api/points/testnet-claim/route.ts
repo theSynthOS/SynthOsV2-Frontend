@@ -10,7 +10,9 @@ export async function POST(req: Request) {
     const user = await addTestnetClaimPoints(address);
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error in testnet-claim API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to process testnet claim" },
+      { status: 500 }
+    );
   }
-} 
+}

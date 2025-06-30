@@ -60,9 +60,8 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error fetching transactions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch transactions" },
+      { success: false, error: "Failed to fetch transactions" },
       { status: 500 }
     );
   }
@@ -95,15 +94,10 @@ export async function POST(req: Request) {
       status,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Transaction saved successfully",
-      transaction,
-    });
+    return NextResponse.json({ success: true, transaction });
   } catch (error) {
-    console.error("Error saving transaction:", error);
     return NextResponse.json(
-      { success: false, message: "Error saving transaction" },
+      { success: false, error: "Failed to save transaction" },
       { status: 500 }
     );
   }
