@@ -4,9 +4,9 @@ import { validateAndChecksumURLParam, createErrorResponse } from "@/lib/api-util
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
     const checksummedAddress = validateAndChecksumURLParam(searchParams, 'address');
-    
+
     const response = await fetch(apiEndpoints.balance(checksummedAddress));
     const data = await response.json();
 

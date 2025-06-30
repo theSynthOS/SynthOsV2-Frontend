@@ -606,9 +606,7 @@ export default function DepositModal({
             error instanceof Error ? error.message : String(error);
 
           if (errorMessage) {
-            console.log(
-              "Detected EOA wallet, falling back to sequential transactions"
-            );
+            console.log("errorMessage", errorMessage);
 
             // For EOAs, send transactions sequentially
             let lastTxResult;
@@ -858,7 +856,7 @@ export default function DepositModal({
                   <span
                     className={theme === "dark" ? "text-white" : "text-black"}
                   >
-                    ${yearlyYield.toFixed(2)}
+                    ${yearlyYield.toFixed(3)}
                   </span>
                 </div>
               </div>
