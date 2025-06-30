@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import HoldingCard from "@/components/ui/holding-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
+import Card from "@/components/ui/card";
 
 type Holding = {
   protocolPairId: string;
@@ -810,210 +811,180 @@ export default function HoldingPage() {
             />
 
             {/* Modal Content */}
-            <div
-              className={`relative z-10 w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl ${
-                theme === "dark"
-                  ? "bg-[#1E1E1E] border border-gray-700"
-                  : "bg-white border border-gray-200"
-              } shadow-2xl`}
-            >
-              {/* Header */}
-              <div
-                className={`flex items-center justify-between p-6 border-b ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-[#2A2A2A]"
-                    : "border-gray-200 bg-gray-50"
-                }`}
+            <div className="relative z-10 w-full max-w-4xl max-h-[90vh]">
+              <Card
+                title="All Holdings"
+                onClose={() => setShowViewAllModal(false)}
+                className="max-h-[90vh] overflow-hidden"
               >
-                <h2
-                  className={`text-xl font-semibold ${
-                    theme === "dark" ? "text-white" : "text-black"
-                  }`}
-                >
-                  All Holdings
-                </h2>
-                <button
-                  onClick={() => setShowViewAllModal(false)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    theme === "dark"
-                      ? "hover:bg-gray-700 text-gray-300"
-                      : "hover:bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div
-                className={`p-6 overflow-y-auto max-h-[calc(90vh-120px)] ${
-                  theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
-                }`}
-              >
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={`w-full rounded-2xl overflow-hidden border ${
-                          theme === "dark"
-                            ? "bg-[#0B0424] border-gray-700"
-                            : "bg-[#F5F2FF] border-gray-200"
-                        } shadow-md relative`}
-                        style={{
-                          boxShadow:
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                  {isLoading ? (
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                      {[...Array(6)].map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-full rounded-2xl overflow-hidden border ${
                             theme === "dark"
-                              ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
-                              : "inset 0 0 20px rgba(143, 99, 233, 0.2)",
-                        }}
-                      >
-                        <div className="p-4 flex flex-col relative z-10">
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-2">
+                              ? "bg-[#0B0424] border-gray-700"
+                              : "bg-[#F5F2FF] border-gray-200"
+                          } shadow-md relative`}
+                          style={{
+                            boxShadow:
+                              theme === "dark"
+                                ? "inset 0 0 20px rgba(143, 99, 233, 0.45)"
+                                : "inset 0 0 20px rgba(143, 99, 233, 0.2)",
+                          }}
+                        >
+                          <div className="p-4 flex flex-col relative z-10">
+                            <div className="flex items-center justify-between mb-6">
+                              <div className="flex items-center gap-2">
+                                <Skeleton
+                                  className={`w-10 h-10 rounded-full ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-gray-300"
+                                  }`}
+                                />
+                                <div>
+                                  <Skeleton
+                                    className={`h-5 w-16 mb-1 ${
+                                      theme === "dark"
+                                        ? "bg-gray-700"
+                                        : "bg-gray-300"
+                                    }`}
+                                  />
+                                  <Skeleton
+                                    className={`h-3 w-20 ${
+                                      theme === "dark"
+                                        ? "bg-gray-700"
+                                        : "bg-gray-300"
+                                    }`}
+                                  />
+                                </div>
+                              </div>
                               <Skeleton
-                                className={`w-10 h-10 rounded-full ${
+                                className={`h-8 w-16 rounded-full ${
                                   theme === "dark"
                                     ? "bg-gray-700"
                                     : "bg-gray-300"
                                 }`}
                               />
-                              <div>
-                                <Skeleton
-                                  className={`h-5 w-16 mb-1 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-gray-300"
-                                  }`}
-                                />
-                                <Skeleton
-                                  className={`h-3 w-20 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-gray-300"
-                                  }`}
-                                />
-                              </div>
                             </div>
-                            <Skeleton
-                              className={`h-8 w-16 rounded-full ${
-                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                              }`}
-                            />
+                            <div className="text-center mb-4">
+                              <Skeleton
+                                className={`h-9 w-24 mx-auto ${
+                                  theme === "dark"
+                                    ? "bg-gray-700"
+                                    : "bg-gray-300"
+                                }`}
+                              />
+                            </div>
                           </div>
-                          <div className="text-center mb-4">
-                            <Skeleton
-                              className={`h-9 w-24 mx-auto ${
-                                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                              }`}
-                            />
-                          </div>
+                          <Skeleton
+                            className={`w-full h-12 rounded-none ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                            }`}
+                          />
                         </div>
-                        <Skeleton
-                          className={`w-full h-12 rounded-none ${
-                            theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                          }`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : holdings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div
-                      className={`text-lg font-medium mb-2 ${
-                        theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      No Holdings Available
+                      ))}
                     </div>
+                  ) : holdings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div
+                        className={`text-lg font-medium mb-2 ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        No Holdings Available
+                      </div>
+                      <div
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-500" : "text-gray-400"
+                        }`}
+                      >
+                        Start investing to see your holdings here
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                      {holdings.map((h, idx) => (
+                        <HoldingCard
+                          key={idx}
+                          symbol={h.pairName}
+                          name={h.protocolName}
+                          amount={h.currentAmount.toString()}
+                          apy={h.apy.toString()}
+                          protocolLogo={h.protocolLogo}
+                          pnl={h.pnl.toFixed(3)}
+                          initialAmount={h.initialAmount.toFixed(3)}
+                          pool={{
+                            name: h.protocolName,
+                            apy: h.apy.toFixed(3),
+                            risk: "Medium", // Default risk level
+                            pair_or_vault_name: h.pairName,
+                            protocol_id: h.protocolName
+                              .toLowerCase()
+                              .replace(/\s+/g, "-"),
+                            protocol_pair_id: h.protocolPairId
+                              .toLowerCase()
+                              .replace(/\s+/g, "-"),
+                          }}
+                          balance={h.currentAmount.toString()}
+                          address={displayAddress || undefined}
+                          refreshBalance={() => {
+                            // Refetch holdings data
+                            if (account?.address) {
+                              setIsLoading(true);
+                              fetch(`/api/holdings?address=${account.address}`)
+                                .then((res) => res.json())
+                                .then((data) => {
+                                  setHoldings(Array.isArray(data) ? data : []);
+                                  console.log("Refreshed holdings:", data);
+                                })
+                                .catch((error) => {
+                                  console.error(
+                                    "Error refreshing holdings:",
+                                    error
+                                  );
+                                  setHoldings([]);
+                                })
+                                .finally(() => setIsLoading(false));
+                            }
+                          }}
+                          onClick={() => {}}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div
+                  className={`mt-6 pt-4 border-t ${
+                    theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
                     <div
                       className={`text-sm ${
-                        theme === "dark" ? "text-gray-500" : "text-gray-400"
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Start investing to see your holdings here
+                      Total Holdings: {holdings.length}
                     </div>
+                    <button
+                      onClick={() => setShowViewAllModal(false)}
+                      className={`px-6 py-2 rounded-lg transition-colors ${
+                        theme === "dark"
+                          ? "bg-[#8266E6] hover:bg-[#3C229C] text-white"
+                          : "bg-[#8266E6] hover:bg-[#3C229C] text-white"
+                      }`}
+                    >
+                      Close
+                    </button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {holdings.map((h, idx) => (
-                      <HoldingCard
-                        key={idx}
-                        symbol={h.pairName}
-                        name={h.protocolName}
-                        amount={h.currentAmount.toString()}
-                        apy={h.apy.toString()}
-                        protocolLogo={h.protocolLogo}
-                        pnl={h.pnl.toFixed(3)}
-                        initialAmount={h.initialAmount.toFixed(3)}
-                        pool={{
-                          name: h.protocolName,
-                          apy: h.apy.toFixed(3),
-                          risk: "Medium", // Default risk level
-                          pair_or_vault_name: h.pairName,
-                          protocol_id: h.protocolName
-                            .toLowerCase()
-                            .replace(/\s+/g, "-"),
-                          protocol_pair_id: h.protocolPairId
-                            .toLowerCase()
-                            .replace(/\s+/g, "-"),
-                        }}
-                        balance={h.currentAmount.toString()}
-                        address={displayAddress || undefined}
-                        refreshBalance={() => {
-                          // Refetch holdings data
-                          if (account?.address) {
-                            setIsLoading(true);
-                            fetch(`/api/holdings?address=${account.address}`)
-                              .then((res) => res.json())
-                              .then((data) => {
-                                setHoldings(Array.isArray(data) ? data : []);
-                                console.log("Refreshed holdings:", data);
-                              })
-                              .catch((error) => {
-                                console.error(
-                                  "Error refreshing holdings:",
-                                  error
-                                );
-                                setHoldings([]);
-                              })
-                              .finally(() => setIsLoading(false));
-                          }
-                        }}
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div
-                className={`p-6 border-t ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-[#2A2A2A]"
-                    : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <div
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    Total Holdings: {holdings.length}
-                  </div>
-                  <button
-                    onClick={() => setShowViewAllModal(false)}
-                    className={`px-6 py-2 rounded-lg transition-colors ${
-                      theme === "dark"
-                        ? "bg-[#8266E6] hover:bg-[#3C229C] text-white"
-                        : "bg-[#8266E6] hover:bg-[#3C229C] text-white"
-                    }`}
-                  >
-                    Close
-                  </button>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         )}
