@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     console.log("processedBody", processedBody);
 
-    const response = await fetch(apiEndpoints.withdraw(), {
+    const response = await fetch(apiEndpoints.withdrawTracking(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
