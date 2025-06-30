@@ -10,6 +10,7 @@ import { parseUnits } from "viem";
 import { ChevronDown } from "lucide-react";
 import { scroll } from "thirdweb/chains";
 import { getWalletBalance } from "thirdweb/wallets";
+import { useBalance } from "@/contexts/BalanceContext";
 
 interface SendModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenType>("USDC");
+  const { refreshBalance, refreshHoldings } = useBalance();
   
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
@@ -141,8 +143,16 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         setAmount("");
         setRecipient("");
         
-        // Refresh balance
+        // Refresh local token balance
         fetchTokenBalance();
+        
+        // ONLY refresh global balance after confirmed transaction
+        if (refreshBalance) {
+          refreshBalance();
+        }
+        if (refreshHoldings) {
+          refreshHoldings();
+        }
       },
       onError: (error) => {
         console.error("Transaction error:", error);
