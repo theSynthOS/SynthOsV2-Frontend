@@ -69,7 +69,6 @@ export default function TrendingProtocols({
   const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] =
     useState(false);
 
-
   // Cleanup cache when wallet disconnects
   useEffect(() => {
     if (!account?.address) {
@@ -95,7 +94,6 @@ export default function TrendingProtocols({
       });
     }
   }, [account?.address]);
-
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -124,15 +122,12 @@ export default function TrendingProtocols({
     const fetchProtocolPairsApy = async () => {
       setIsLoading(true);
       try {
-        console.log("🔄 Fetching all protocol pairs for immediate display...");
         const response = await fetch("/api/protocol-pairs-apy");
-        console.log("📡 Protocol pairs response status:", response.status);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch protocol pairs: ${response.status}`);
         }
         const data = await response.json();
-        console.log("📊 Total protocol pairs received:", data.length);
 
         const filteredPairs = data.filter(
           (pair: ProtocolPair) => pair.chain_id === 534352
@@ -144,7 +139,6 @@ export default function TrendingProtocols({
 
         setProtocolPairs(filteredPairs);
       } catch (error) {
-        console.error("❌ Error fetching protocol pairs:", error);
         setProtocolPairs([]);
       } finally {
         setIsLoading(false);
@@ -229,7 +223,6 @@ export default function TrendingProtocols({
           };
           localStorage.setItem(cacheKey, JSON.stringify(cacheData));
         }
-
       } catch (error) {
         setInvestorProfile("Error fetching investor profile");
       } finally {
@@ -247,11 +240,6 @@ export default function TrendingProtocols({
         return;
       }
 
-      console.log(
-        "🔍 Fetching top opportunities for address:",
-        account.address
-      );
-
       // Check localStorage for cached top opportunities data
       const cacheKey = `top_opportunities_${account.address}`;
       const cachedData = localStorage.getItem(cacheKey);
@@ -262,13 +250,6 @@ export default function TrendingProtocols({
           const now = Date.now();
           const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-          console.log("📦 Found cached data:", { opportunities, timestamp });
-          console.log(
-            "⏰ Cache age:",
-            (now - timestamp) / (1000 * 60 * 60),
-            "hours"
-          );
-
           // If cache is still valid (less than 24 hours old)
           if (now - timestamp < cacheExpiry) {
             setTopOpportunities(opportunities);
@@ -277,36 +258,26 @@ export default function TrendingProtocols({
               // Remove asterisks from protocol_id if they exist
               return op.protocol_id?.replace(/\*/g, "") || op.protocol_id;
             });
-            console.log("✅ Using cached protocol IDs (cleaned):", protocolIds);
             setTopOpportunityIds(protocolIds);
             setIsLoadingTopOpportunities(false);
             return;
-          } else {
-            console.log("❌ Cache expired, fetching fresh data");
           }
         } catch (error) {
-          console.log("🚫 Invalid cached data, removing:", error);
           // Invalid cached data, remove it
           localStorage.removeItem(cacheKey);
         }
-      } else {
-        console.log("📭 No cached data found");
       }
 
       setIsLoadingTopOpportunities(true);
       try {
-        console.log("🌐 Making API request to /api/ai-analyser");
         const response = await fetch(
           `/api/ai-analyser?address=${account.address}`
         );
         if (!response.ok) throw new Error("Failed to fetch");
         const data = await response.json();
 
-        console.log("📨 Full API response:", data);
-
         // Extract from quickActions from API response
         const quickActions = data.investmentOpportunities?.quickActions || [];
-        console.log("🎯 Quick actions extracted:", quickActions);
 
         setTopOpportunities(quickActions);
         // Extract protocol_id from quickActions and clean asterisks
@@ -314,7 +285,6 @@ export default function TrendingProtocols({
           // Remove asterisks from protocol_id if they exist
           return action.protocol_id?.replace(/\*/g, "") || action.protocol_id;
         });
-        console.log("🔑 Protocol IDs extracted (cleaned):", protocolIds);
         setTopOpportunityIds(protocolIds);
 
         // Cache the result in localStorage using opportunities format
@@ -323,13 +293,9 @@ export default function TrendingProtocols({
             opportunities: quickActions,
             timestamp: Date.now(),
           };
-          console.log("💾 Caching data:", cacheData);
           localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        } else {
-          console.log("⚠️ No quick actions to cache");
         }
       } catch (error) {
-        console.log("❌ Error fetching opportunities:", error);
         setTopOpportunities([]);
         setTopOpportunityIds([]);
       } finally {
@@ -347,32 +313,21 @@ export default function TrendingProtocols({
         return;
       }
 
-      console.log(
-        "🔄 Fetching individual protocol details for AI recommendations..."
-      );
-      console.log("🎯 Protocol IDs to fetch:", topOpportunityIds);
-
       try {
         // Fetch all protocol details in parallel
         const protocolPromises = topOpportunityIds.map(async (protocolId) => {
           try {
-            console.log(`📡 Fetching details for protocol: ${protocolId}`);
             const response = await fetch(
               `/api/protocol-pairs-apy/${protocolId}`
             );
 
             if (!response.ok) {
-              console.error(
-                `❌ Failed to fetch protocol ${protocolId}: ${response.status}`
-              );
               return null;
             }
 
             const protocol = await response.json();
-            console.log(`✅ Successfully fetched protocol: ${protocol.name}`);
             return protocol;
           } catch (error) {
-            console.error(`❌ Error fetching protocol ${protocolId}:`, error);
             return null;
           }
         });
@@ -383,37 +338,14 @@ export default function TrendingProtocols({
             protocol !== null && protocol.chain_id === 534352
         );
 
-        console.log(
-          `✅ Successfully fetched ${validProtocols.length} AI-recommended protocols:`,
-          validProtocols.map((p) => ({ name: p.name, apy: p.apy }))
-        );
-
         setAiRecommendedProtocols(validProtocols);
       } catch (error) {
-        console.error(
-          "❌ Error fetching AI-recommended protocol details:",
-          error
-        );
         setAiRecommendedProtocols([]);
       }
     };
 
     fetchAiRecommendedProtocolDetails();
   }, [topOpportunityIds]);
-
-  // Debug effect to log state changes
-  useEffect(() => {
-    console.log("🔄 State updated:");
-    console.log("├─ topOpportunities:", topOpportunities);
-    console.log("├─ topOpportunityIds:", topOpportunityIds);
-    console.log("├─ isLoadingTopOpportunities:", isLoadingTopOpportunities);
-    console.log("└─ protocolPairs count:", protocolPairs.length);
-  }, [
-    topOpportunities,
-    topOpportunityIds,
-    isLoadingTopOpportunities,
-    protocolPairs,
-  ]);
 
   const handleProtocolClick = (pair: ProtocolPair) => {
     setSelectedPool({
@@ -464,25 +396,8 @@ export default function TrendingProtocols({
 
   let filteredProtocols: any[] = [];
   if (riskFilters.top) {
-    // Use AI-recommended protocols directly (fetched individually)
-    console.log("🔍 Using AI-recommended protocols...");
-    console.log(
-      "🎯 AI-recommended protocols available:",
-      aiRecommendedProtocols.length
-    );
-
     filteredProtocols = aiRecommendedProtocols;
-
-    console.log(
-      "✅ AI-recommended protocols to display:",
-      filteredProtocols.map((p) => ({
-        protocol_id: p.protocol_id,
-        name: p.name,
-        apy: p.apy,
-      }))
-    );
   } else {
-    console.log("🔍 Filtering by risk categories...");
     filteredProtocols = protocolPairs.filter((pair) => {
       if (riskFilters.all) return true;
       const riskCategory = getRiskCategory(pair.risk);
@@ -491,7 +406,6 @@ export default function TrendingProtocols({
       if (riskFilters.high && riskCategory === "high") return true;
       return false;
     });
-    console.log("📊 Risk filtered protocols:", filteredProtocols.length);
   }
 
   const getActiveFiltersLabel = () => {
@@ -827,22 +741,6 @@ export default function TrendingProtocols({
           </div>
         </div>
         <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
-          {(() => {
-            // Real-time render debugging
-            console.log("🖥️ RENDER DEBUG:", {
-              currentFilter: Object.keys(riskFilters).find(
-                (key) => riskFilters[key as keyof typeof riskFilters]
-              ),
-              isLoading,
-              protocolPairsLength: protocolPairs.length,
-              aiRecommendedProtocolsLength: aiRecommendedProtocols.length,
-              filteredProtocolsLength: filteredProtocols.length,
-              topOpportunityIdsLength: topOpportunityIds.length,
-              isLoadingProfile,
-              profileAnalysisComplete: !!investorProfile,
-            });
-            return null;
-          })()}
           {isLoading ? (
             <>
               <div

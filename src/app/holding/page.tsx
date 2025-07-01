@@ -195,12 +195,20 @@ export default function HoldingPage() {
 
     handleReferralCode();
   }, [account?.address]);
-  // Calculate total holding and pnl
-  const totalHolding = holdings.reduce(
+  // Filter out holdings with extremely small balances (1e-10 and smaller)
+  const filteredHoldings = holdings.filter((h) => {
+    // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
+    const isVisible = Math.abs(h.currentAmount) >= 1e-10;
+
+    return isVisible;
+  });
+
+  // Calculate total holding and pnl using filtered holdings
+  const totalHolding = filteredHoldings.reduce(
     (sum, h) => sum + (h.currentAmount || 0),
     0
   );
-  const totalPnl = holdings.reduce((sum, h) => sum + (h.pnl || 0), 0);
+  const totalPnl = filteredHoldings.reduce((sum, h) => sum + (h.pnl || 0), 0);
 
   // Format PnL with intelligent decimal places (for total PnL display)
   const formatPnl = (value: number): string => {
@@ -552,12 +560,12 @@ export default function HoldingPage() {
                     </div>
                   ))}
                 </div>
-              ) : holdings.length === 0 ? (
+              ) : filteredHoldings.length === 0 ? (
                 <div className="text-gray-400 text-center py-8">
                   No Holdings Available
                 </div>
               ) : (
-                holdings.slice(0, 1).map((h, idx) => {
+                filteredHoldings.slice(0, 1).map((h, idx) => {
                   return (
                     <HoldingCard
                       key={idx}
@@ -567,7 +575,7 @@ export default function HoldingPage() {
                       apy={h.apy.toString()}
                       protocolLogo={h.protocolLogo}
                       pnl={h.pnl}
-                      initialAmount={h.initialAmount.toFixed(3)}
+                      initialAmount={h.initialAmount.toString()}
                       pool={{
                         name: h.protocolName,
                         apy: h.apy.toFixed(3),
@@ -580,7 +588,7 @@ export default function HoldingPage() {
                           .toLowerCase()
                           .replace(/\s+/g, "-"),
                       }}
-                      balance={h.currentAmount.toString()}
+                      balance={h.initialAmount.toString()}
                       address={displayAddress || undefined}
                       refreshBalance={() => {
                         // Refetch holdings data
@@ -900,7 +908,7 @@ export default function HoldingPage() {
                         </div>
                       ))}
                     </div>
-                  ) : holdings.length === 0 ? (
+                  ) : filteredHoldings.length === 0 ? (
                     <div className="text-center py-12">
                       <div
                         className={`text-lg font-medium mb-2 ${
@@ -919,7 +927,7 @@ export default function HoldingPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-4">
-                      {holdings.map((h, idx) => (
+                      {filteredHoldings.map((h, idx) => (
                         <HoldingCard
                           key={idx}
                           symbol={h.pairName}
@@ -979,7 +987,7 @@ export default function HoldingPage() {
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Total Holdings: {holdings.length}
+                      Total Holdings: {filteredHoldings.length}
                     </div>
                     <button
                       onClick={() => {
