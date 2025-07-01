@@ -1095,26 +1095,6 @@ export default function DepositModal({
                   )}
                 </div>
                 
-                {/* Minimum Deposit for Tempest */}
-                {minimumDeposit > 0 && (
-                  <div className="flex justify-between text-sm mb-2">
-                    <span
-                      className={
-                        theme === "dark" ? "text-yellow-300" : "text-orange-600"
-                      }
-                    >
-                      ⚠️ Minimum Deposit
-                    </span>
-                    <span
-                      className={`font-medium ${
-                        theme === "dark" ? "text-yellow-300" : "text-orange-600"
-                      }`}
-                    >
-                      ${minimumDeposit}
-                    </span>
-                  </div>
-                )}
-                
                 <div className="flex justify-between text-sm">
                   <span
                     className={
@@ -1132,14 +1112,14 @@ export default function DepositModal({
                 <div className="flex justify-between text-sm">
                   <span
                     className={
-                      theme === "dark" ? "text-gray-300" : "text-black"
+                      theme === "dark" ? "text-yellow-300" : "text-red-600"
                     }
                   >
-                    Minimum Deposit
+                    ⚠️ Minimum Deposit
                   </span>
                   <span
                     className={
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      theme === "dark" ? "text-yellow-400" : "text-red-600"
                     }
                   >
                     {isLoadingMinimumDeposits ? (
