@@ -13,6 +13,7 @@ export type UserPoints = {
   pointsReferral: number;
   referralCode: string;
   referralBy: string;
+  referralAmount: number;
 };
 
 const userPointsSchema = new Schema({
@@ -26,6 +27,7 @@ const userPointsSchema = new Schema({
   pointsReferral: { type: Number, default: 0 },
   referralCode: { type: String, unique: true, sparse: true },
   referralBy: { type: String, sparse: true },
+  referralAmount: { type: Number, default: 0 },
   referralStatus: { type: Number, default: 0 },
 });
 
@@ -70,6 +72,7 @@ export async function upsertUserPoints(address: string, email?: string) {
       referralCode: referralCode,
       referralBy: "",
       referralStatus: 0,
+      referralAmount: 0,
     });
   } else {
     if (!user.referralCode) {
@@ -158,4 +161,35 @@ export async function addDepositPoints(address: string) {
   );
   if (!user) throw new Error("User not found");
   return user;
+}
+
+export async function applyAndIncrementReferral(
+  userAddress: string,
+  referralCode: string
+) {
+  await dbConnect();
+
+  // 1. Find the referrer
+  const referrer = await UserPoints.findOne({ referralCode });
+  if (!referrer) throw new Error("Invalid referral code");
+
+  // 2. Prevent self-referral
+  if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
+    throw new Error("You cannot refer yourself.");
+  }
+
+  // 3. Check if user already has a referral
+  const user = await UserPoints.findOne({ address: userAddress });
+  if (user?.referralBy) throw new Error("User already has a referral");
+
+  // 4. Update current user's referralBy
+  await UserPoints.updateOne(
+    { address: userAddress },
+    { referralBy: referralCode }
+  );
+
+  // 5. Increment referrer's referralAmount
+  await UserPoints.updateOne({ referralCode }, { $inc: { referralAmount: 1 } });
+
+  return true;
 }

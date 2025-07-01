@@ -248,17 +248,20 @@ export default function HoldingPage() {
   };
 
   // Handle copy address to clipboard
-  const handleCopyAddress = async () => {
-    if (!account?.address) return;
-
-    copyHaptic();
-    try {
-      await navigator.clipboard.writeText(account.address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.info("Wallet address copied to clipboard");
-    } catch (error) {
-      // Error handling
+  const handleCopyAddress = () => {
+    if (displayAddress) {
+      navigator.clipboard
+        .writeText(displayAddress)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          // Copy action haptic feedback
+          safeHaptic("copy");
+          toast.info("Wallet address copied to clipboard");
+        })
+        .catch((err) => {
+          // Error handling
+        });
     }
   };
 
@@ -840,7 +843,7 @@ export default function HoldingPage() {
                 }}
                 className="max-h-[90vh] overflow-hidden"
               >
-                <div className="overflow-hidden max-h-[calc(90vh-120px)]">
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)] pr-1 scrollbar-hide">
                   {isLoading ? (
                     <div className="grid grid-cols-1 gap-4">
                       {[...Array(6)].map((_, idx) => (
