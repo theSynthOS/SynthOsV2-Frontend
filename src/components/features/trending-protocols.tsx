@@ -54,7 +54,7 @@ export default function TrendingProtocols({
   });
   const [showFilter, setShowFilter] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-  const [balance, setBalance] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string>("0");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([]);
   const [aiRecommendedProtocols, setAiRecommendedProtocols] = useState<
@@ -68,6 +68,7 @@ export default function TrendingProtocols({
   const [topOpportunityIds, setTopOpportunityIds] = useState<string[]>([]);
   const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] =
     useState(false);
+
 
   // Cleanup cache when wallet disconnects
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function TrendingProtocols({
       });
     }
   }, [account?.address]);
+
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -155,7 +157,7 @@ export default function TrendingProtocols({
   useEffect(() => {
     const fetchBalance = async () => {
       if (!account?.address) {
-        setBalance(null);
+        setBalance("0");
         return;
       }
 
@@ -166,9 +168,9 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch balance");
         }
         const data = await response.json();
-        setBalance(data.usdBalance || null);
+        setBalance(data.usdBalance || "0");
       } catch (error) {
-        setBalance(null);
+        setBalance("0.00");
       } finally {
         setIsLoadingBalance(false);
       }
@@ -180,7 +182,7 @@ export default function TrendingProtocols({
   useEffect(() => {
     const fetchInvestorProfile = async () => {
       if (!account?.address) {
-        setInvestorProfile(null);
+        setInvestorProfile("Error fetching investor profile");
         return;
       }
 
@@ -215,6 +217,7 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch investor profile");
         }
         const data = await response.json();
+
         const profileType = data.profile?.type || null;
         setInvestorProfile(profileType);
 
@@ -226,8 +229,9 @@ export default function TrendingProtocols({
           };
           localStorage.setItem(cacheKey, JSON.stringify(cacheData));
         }
+
       } catch (error) {
-        setInvestorProfile(null);
+        setInvestorProfile("Error fetching investor profile");
       } finally {
         setIsLoadingProfile(false);
       }
@@ -1004,7 +1008,7 @@ export default function TrendingProtocols({
       <DepositModal
         pool={selectedPool}
         onClose={() => setSelectedPool(null)}
-        balance={balance || ""}
+        balance={balance}
         isLoadingBalance={isLoadingBalance}
         address={account?.address || ""}
         refreshBalance={() => {
@@ -1018,7 +1022,7 @@ export default function TrendingProtocols({
                 return response.json();
               })
               .then((data) => {
-                setBalance(data.usdBalance || null);
+                setBalance(data.usdBalance || "0");
               })
               .catch(() => {
                 // Error handling
