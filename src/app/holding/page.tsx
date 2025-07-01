@@ -195,12 +195,15 @@ export default function HoldingPage() {
 
     handleReferralCode();
   }, [account?.address]);
-  // Filter out holdings with extremely small balances (1e-10 and smaller)
+  // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
   const filteredHoldings = holdings.filter((h) => {
     // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
-    const isVisible = Math.abs(h.currentAmount) >= 1e-10;
+    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-10;
 
-    return isVisible;
+    // Exclude holdings where initialAmount is 0
+    const hasValidInitialAmount = h.initialAmount > 0;
+
+    return hasVisibleCurrentAmount && hasValidInitialAmount;
   });
 
   // Calculate total holding and pnl using filtered holdings

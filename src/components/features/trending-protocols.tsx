@@ -489,7 +489,7 @@ export default function TrendingProtocols({
                 onClick={() => setShowFilter(!showFilter)}
                 className={`px-2 py-2 xl:px-3 xl:py-4 rounded-lg transition-all duration-200 group ${
                   theme === "dark" ? "bg-[#1E1E1E]" : "bg-white"
-                } flex items-center justify-center border ${
+                } flex items-center justify-start border ${
                   theme === "dark" ? "border-gray-700" : "border-gray-200"
                 } xl:bg-transparent xl:border-[#afabbc] xl:backdrop-blur-[75px] ${
                   theme === "dark"
@@ -507,7 +507,7 @@ export default function TrendingProtocols({
                   } group-hover:text-white`}
                 />
                 <span
-                  className={` text-sm  xl:text-[20px] font-medium transition-colors duration-200 ${
+                  className={` text-sm  xl:text-[20px] font-medium transition-colors duration-200 text-left ${
                     theme === "dark"
                       ? "text-gray-400"
                       : "text-black group-hover:text-white"
@@ -552,7 +552,7 @@ export default function TrendingProtocols({
                       <button
                         onClick={() => toggleRiskFilter("top")}
                         disabled={isLoadingProfile && !investorProfile}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-start px-4 py-2 text-sm ${
                           isLoadingProfile && !investorProfile
                             ? "opacity-50 cursor-not-allowed"
                             : theme === "dark"
@@ -560,163 +560,143 @@ export default function TrendingProtocols({
                             : "text-gray-700 hover:bg-gray-100"
                         } rounded-md`}
                       >
-                        <span className="flex items-center">
-                          <div
-                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                              riskFilters.top
-                                ? "bg-purple-500 border-purple-500"
-                                : `border-gray-400 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-white"
-                                  }`
-                            }`}
-                          >
-                            {riskFilters.top && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                          <span
-                            className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
-                            }
-                          >
-                            {isLoadingProfile && !investorProfile
-                              ? "Analyzing Profile..."
-                              : "Top Opportunities"}
-                          </span>
+                        <div
+                          className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                            riskFilters.top
+                              ? "bg-purple-500 border-purple-500"
+                              : `border-gray-400 ${
+                                  theme === "dark" ? "bg-gray-700" : "bg-white"
+                                }`
+                          }`}
+                        >
+                          {riskFilters.top && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-left ${
+                            theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
+                        >
+                          {isLoadingProfile && !investorProfile
+                            ? "Analyzing Profile..."
+                            : "Top Opportunities"}
                         </span>
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("all")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-start px-4 py-2 text-sm ${
                           theme === "dark"
                             ? "text-white hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-100"
                         } rounded-md`}
                       >
-                        <span className="flex items-center">
-                          <div
-                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                              riskFilters.all
-                                ? "bg-purple-500 border-purple-500"
-                                : `border-gray-400 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-white"
-                                  }`
-                            }`}
-                          >
-                            {riskFilters.all && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                          <span
-                            className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
-                            }
-                          >
-                            All Risks
-                          </span>
+                        <div
+                          className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                            riskFilters.all
+                              ? "bg-purple-500 border-purple-500"
+                              : `border-gray-400 ${
+                                  theme === "dark" ? "bg-gray-700" : "bg-white"
+                                }`
+                          }`}
+                        >
+                          {riskFilters.all && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-left ${
+                            theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
+                        >
+                          All Risks
                         </span>
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("low")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-start px-4 py-2 text-sm ${
                           theme === "dark"
                             ? "text-white hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-100"
                         } rounded-md`}
                       >
-                        <span className="flex items-center">
-                          <div
-                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                              riskFilters.low
-                                ? "bg-purple-500 border-purple-500"
-                                : `border-gray-400 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-white"
-                                  }`
-                            }`}
-                          >
-                            {riskFilters.low && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                          <span
-                            className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
-                            }
-                          >
-                            Low
-                          </span>
+                        <div
+                          className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                            riskFilters.low
+                              ? "bg-purple-500 border-purple-500"
+                              : `border-gray-400 ${
+                                  theme === "dark" ? "bg-gray-700" : "bg-white"
+                                }`
+                          }`}
+                        >
+                          {riskFilters.low && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-left ${
+                            theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
+                        >
+                          Low
                         </span>
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("medium")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-start px-4 py-2 text-sm ${
                           theme === "dark"
                             ? "text-white hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-100"
                         } rounded-md`}
                       >
-                        <span className="flex items-center">
-                          <div
-                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                              riskFilters.medium
-                                ? "bg-purple-500 border-purple-500"
-                                : `border-gray-400 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-white"
-                                  }`
-                            }`}
-                          >
-                            {riskFilters.medium && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                          <span
-                            className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
-                            }
-                          >
-                            Medium
-                          </span>
+                        <div
+                          className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                            riskFilters.medium
+                              ? "bg-purple-500 border-purple-500"
+                              : `border-gray-400 ${
+                                  theme === "dark" ? "bg-gray-700" : "bg-white"
+                                }`
+                          }`}
+                        >
+                          {riskFilters.medium && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-left ${
+                            theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
+                        >
+                          Medium
                         </span>
                       </button>
                       <button
                         onClick={() => toggleRiskFilter("high")}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                        className={`w-full flex items-center justify-start px-4 py-2 text-sm ${
                           theme === "dark"
                             ? "text-white hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-100"
                         } rounded-md`}
                       >
-                        <span className="flex items-center">
-                          <div
-                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
-                              riskFilters.high
-                                ? "bg-purple-500 border-purple-500"
-                                : `border-gray-400 ${
-                                    theme === "dark"
-                                      ? "bg-gray-700"
-                                      : "bg-white"
-                                  }`
-                            }`}
-                          >
-                            {riskFilters.high && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                          <span
-                            className={
-                              theme === "dark" ? "text-white" : "text-gray-700"
-                            }
-                          >
-                            High
-                          </span>
+                        <div
+                          className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                            riskFilters.high
+                              ? "bg-purple-500 border-purple-500"
+                              : `border-gray-400 ${
+                                  theme === "dark" ? "bg-gray-700" : "bg-white"
+                                }`
+                          }`}
+                        >
+                          {riskFilters.high && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-left ${
+                            theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
+                        >
+                          High
                         </span>
                       </button>
                     </div>
@@ -801,7 +781,7 @@ export default function TrendingProtocols({
                 aiRecommendedProtocols.length === 0)
                 ? "Loading personalized recommendations..."
                 : topOpportunityIds.length === 0
-                ? "Complete profile analysis to see personalized recommendations"
+                ? "Analysis is still in progress"
                 : "No matching protocols found for your profile"}
             </div>
           ) : (
