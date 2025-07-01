@@ -375,7 +375,39 @@ export default function TrendingProtocols({
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
             {isLoadingProfile ? (
-              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-700" />
+              <div
+                className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal flex items-center ${
+                  theme === "dark"
+                    ? "bg-[#7266E61A] text-white"
+                    : "bg-[#7266E61A] text-black"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div
+                      className={`w-2 h-2 rounded-full animate-pulse ${
+                        theme === "dark" ? "bg-purple-400" : "bg-purple-600"
+                      }`}
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className={`w-2 h-2 rounded-full animate-pulse ${
+                        theme === "dark" ? "bg-purple-400" : "bg-purple-600"
+                      }`}
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className={`w-2 h-2 rounded-full animate-pulse ${
+                        theme === "dark" ? "bg-purple-400" : "bg-purple-600"
+                      }`}
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
+                  </div>
+                  <span className="text-sm xl:text-lg font-medium">
+                    AI Analyzing Your Profile...
+                  </span>
+                </div>
+              </div>
             ) : investorProfile ? (
               <div
                 className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
