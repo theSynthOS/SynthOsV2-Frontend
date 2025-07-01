@@ -87,7 +87,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
                   payOptions={{
                     mode: "fund_wallet",
                     buyWithFiat: {
-                      preferredProvider: "coinbase",
+                      preferredProvider: "COINBASE",
                     },
                     prefillBuy: {
                       chain: scroll,
