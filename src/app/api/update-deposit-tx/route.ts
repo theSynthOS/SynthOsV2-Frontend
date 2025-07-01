@@ -4,6 +4,8 @@ import {
   validateAndParseRequestBody,
   createErrorResponse,
 } from "@/lib/api-utils";
+import dotenv from "dotenv";
+dotenv.config();
 
 export async function POST(request: Request) {
   try {

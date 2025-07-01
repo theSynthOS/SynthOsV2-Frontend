@@ -11,7 +11,7 @@ import { scroll } from "thirdweb/chains";
 import { getWalletBalance } from "thirdweb/wallets";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { safeHaptic } from "@/lib/haptic-utils";
+import { safeHaptic, mediumHaptic, heavyHaptic } from "@/lib/haptic-utils";
 import { useBalance } from "@/contexts/BalanceContext";
 
 interface SendModalProps {
@@ -214,7 +214,10 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                   {/* Token Display with Direct Toggle */}
                   <div
                     className="w-full p-3 mb-4 border rounded-lg border-gray-200 dark:border-white/40 bg-white dark:bg-white/5 cursor-pointer"
-                    onClick={toggleToken}
+                    onClick={() => {
+                      mediumHaptic();
+                      toggleToken();
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -309,7 +312,10 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                               ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
                               : "bg-gray-100 text-blue-600 hover:bg-gray-200"
                           }`}
-                          onClick={handleSetMaxAmount}
+                          onClick={() => {
+                            mediumHaptic();
+                            handleSetMaxAmount();
+                          }}
                           disabled={isPending}
                         >
                           MAX
@@ -358,7 +364,10 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
                   {/* Send Button */}
                   <button
-                    onClick={handleSendFunds}
+                    onClick={() => {
+                      heavyHaptic();
+                      handleSendFunds();
+                    }}
                     disabled={
                       !recipient ||
                       !amount ||

@@ -18,6 +18,7 @@ import HistoryPanel from "@/components/features/history-panel";
 import { BalanceProvider } from "@/contexts/BalanceContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { mediumHaptic } from "@/lib/haptic-utils";
 
 export default function Home() {
   const router = useRouter();
@@ -203,7 +204,10 @@ export default function Home() {
                       {/* Action Buttons-- originally justify-between */}
                       <div className="flex justify-between xl:justify-start w-full mx-auto xl:mx-0 p-4 xl:gap-4 xl:pl-0">
                         <button
-                          onClick={() => setShowModal("deposit")}
+                          onClick={() => {
+                            mediumHaptic();
+                            setShowModal("deposit");
+                          }}
                           className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
@@ -245,7 +249,10 @@ export default function Home() {
                         </button>
 
                         <button
-                          onClick={() => setShowModal("send")}
+                          onClick={() => {
+                            mediumHaptic();
+                            setShowModal("send");
+                          }}
                           className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
@@ -287,7 +294,10 @@ export default function Home() {
                         </button>
 
                         <button
-                          onClick={() => setShowModal("buy")}
+                          onClick={() => {
+                            mediumHaptic();
+                            setShowModal("buy");
+                          }}
                           className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
@@ -347,7 +357,10 @@ export default function Home() {
                             ? "xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent"
                             : "xl:hover:bg-[#8266E6] xl:hover:border-[#8266E6]"
                         }`}
-                        onClick={() => setIsHistoryOpen(true)}
+                        onClick={() => {
+                          mediumHaptic();
+                          setIsHistoryOpen(true);
+                        }}
                         aria-label="Transaction History"
                       >
                         <History

@@ -10,7 +10,7 @@ const config = {
 export const apiEndpoints = {
   // AI Analyzer endpoints
   aiAnalyzer: (address: string) =>
-    `https://abundant-laughter-staging.up.railway.app/api/analyze/${address}`,
+    `${config.SYNTHOS_AI_ANALYZER_URL}/api/analyze/${address}`,
 
   // Account endpoints
   balance: (address: string) =>
@@ -42,6 +42,8 @@ export const apiEndpoints = {
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,
   protocolPairsApy: () =>
     `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs-apy`,
+  protocolPairsApySingle: (id: string) =>
+    `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs-apy-single/${id}`,
   protocols: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocols`,
 } as const;
 

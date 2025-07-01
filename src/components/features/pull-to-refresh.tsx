@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
+import { successHaptic, lightHaptic } from "@/lib/haptic-utils";
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
@@ -139,6 +140,7 @@ export default function PullToRefresh({
 
       if (pullDistance >= refreshThreshold) {
         // Trigger refresh
+        successHaptic();
         setRefreshing(true);
         setPullDistance(refreshThreshold); // Keep indicator visible
 
@@ -155,6 +157,7 @@ export default function PullToRefresh({
         }
       } else {
         // Not enough pull, reset immediately
+        lightHaptic();
         resetStates();
       }
     };

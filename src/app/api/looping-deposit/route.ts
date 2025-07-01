@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiEndpoints } from "@/lib/config";
+import dotenv from "dotenv";
+dotenv.config();
 
 export async function POST(request: Request) {
   try {

@@ -4,6 +4,8 @@ import {
   validateAndChecksumURLParam,
   createErrorResponse,
 } from "@/lib/api-utils";
+import dotenv from "dotenv";
+dotenv.config();
 
 export async function GET(request: Request) {
   try {

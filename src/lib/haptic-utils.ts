@@ -42,3 +42,11 @@ export const safeHaptic = (type: keyof typeof hapticFeedback) => {
     console.debug("Haptic feedback not supported:", error);
   }
 };
+
+// Individual exported functions for easier importing
+export const lightHaptic = () => safeHaptic("light");
+export const mediumHaptic = () => safeHaptic("medium");
+export const successHaptic = () => safeHaptic("success");
+export const heavyHaptic = () => safeHaptic("heavy");
+export const errorHaptic = () => safeHaptic("error");
+export const copyHaptic = () => safeHaptic("copy");

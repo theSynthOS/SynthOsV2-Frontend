@@ -13,7 +13,13 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { safeHaptic } from "@/lib/haptic-utils";
+import {
+  safeHaptic,
+  copyHaptic,
+  mediumHaptic,
+  heavyHaptic,
+  errorHaptic,
+} from "@/lib/haptic-utils";
 import HoldingCard from "@/components/ui/holding-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -231,30 +237,33 @@ export default function HoldingPage() {
   };
 
   // Handle copy address to clipboard
-  const handleCopyAddress = () => {
-    if (displayAddress) {
-      navigator.clipboard
-        .writeText(displayAddress)
-        .then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          // Copy action haptic feedback
-          safeHaptic("copy");
-          toast.info("Wallet address copied to clipboard");
-        })
-        .catch((err) => {
-          // Error handling
-        });
+  const handleCopyAddress = async () => {
+    if (!account?.address) return;
+
+    copyHaptic();
+    try {
+      await navigator.clipboard.writeText(account.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.info("Wallet address copied to clipboard");
+    } catch (error) {
+      // Error handling
     }
   };
 
   // Handle applying referral code
   const handleApplyReferralCode = async () => {
-    if (!account?.address || !inputReferralCode.trim()) {
-      toast.error("Please enter a referral code");
+    if (!inputReferralCode.trim()) {
+      errorHaptic();
       return;
     }
 
+    if (!account?.address) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+
+    heavyHaptic();
     setIsApplyingReferral(true);
     try {
       const response = await fetch("/api/referral", {
@@ -295,20 +304,17 @@ export default function HoldingPage() {
   };
 
   // Handle copying referral code
-  const handleCopyReferralCode = () => {
-    if (userReferralCode) {
-      navigator.clipboard
-        .writeText(userReferralCode)
-        .then(() => {
-          setReferralCopied(true);
-          setTimeout(() => setReferralCopied(false), 2000);
-          // Copy action haptic feedback
-          safeHaptic("copy");
-          toast.info("Your referral code has been copied to clipboard");
-        })
-        .catch((err) => {
-          // Error handling
-        });
+  const handleCopyReferralCode = async () => {
+    if (!referralCode) return;
+
+    copyHaptic();
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      setReferralCopied(true);
+      setTimeout(() => setReferralCopied(false), 2000);
+      toast.info("Your referral code has been copied to clipboard");
+    } catch (error) {
+      // Error handling
     }
   };
 
@@ -472,7 +478,10 @@ export default function HoldingPage() {
                   className={`flex items-center gap-1 ${
                     theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                   } cursor-pointer hover:underline hover:opacity-80 transition-opacity`}
-                  onClick={() => setShowViewAllModal(true)}
+                  onClick={() => {
+                    mediumHaptic();
+                    setShowViewAllModal(true);
+                  }}
                 >
                   <span className="tracking-widest font-medium">View All</span>
                   <ArrowRight size={16} />
@@ -797,9 +806,12 @@ export default function HoldingPage() {
         {showViewAllModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={(e) =>
-              e.target === e.currentTarget && setShowViewAllModal(false)
-            }
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                mediumHaptic();
+                setShowViewAllModal(false);
+              }
+            }}
           >
             {/* Backdrop */}
             <div
@@ -811,7 +823,10 @@ export default function HoldingPage() {
             <div className="relative z-10 w-full max-w-4xl max-h-[90vh]">
               <Card
                 title="All Holdings"
-                onClose={() => setShowViewAllModal(false)}
+                onClose={() => {
+                  mediumHaptic();
+                  setShowViewAllModal(false);
+                }}
                 className="max-h-[90vh] overflow-hidden"
               >
                 <div className="overflow-hidden max-h-[calc(90vh-120px)]">
@@ -943,7 +958,10 @@ export default function HoldingPage() {
                                 .finally(() => setIsLoading(false));
                             }
                           }}
-                          onClick={() => {}}
+                          onClick={() => {
+                            mediumHaptic();
+                            setShowViewAllModal(false);
+                          }}
                         />
                       ))}
                     </div>
@@ -964,7 +982,10 @@ export default function HoldingPage() {
                       Total Holdings: {holdings.length}
                     </div>
                     <button
-                      onClick={() => setShowViewAllModal(false)}
+                      onClick={() => {
+                        mediumHaptic();
+                        setShowViewAllModal(false);
+                      }}
                       className={`px-6 py-2 rounded-lg transition-colors ${
                         theme === "dark"
                           ? "bg-[#8266E6] hover:bg-[#3C229C] text-white"

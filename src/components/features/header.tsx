@@ -10,6 +10,7 @@ import HistoryPanel from "@/components/features/history-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveAccount } from "thirdweb/react";
 import { usePoints } from "@/contexts/PointsContext";
+import { mediumHaptic } from "@/lib/haptic-utils";
 
 export default function Header() {
   const router = useRouter();
@@ -60,6 +61,7 @@ export default function Header() {
 
   // Toggle theme between dark and light
   const toggleTheme = () => {
+    mediumHaptic();
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
@@ -142,7 +144,10 @@ export default function Header() {
           } flex items-center justify-center border ${
             theme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
-          onClick={() => setIsHistoryOpen(true)}
+          onClick={() => {
+            mediumHaptic();
+            setIsHistoryOpen(true);
+          }}
           aria-label="Transaction History"
         >
           <History
@@ -159,7 +164,10 @@ export default function Header() {
           } flex items-center justify-center border ${
             theme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => {
+            mediumHaptic();
+            setIsSettingsOpen(true);
+          }}
           aria-label="Settings"
         >
           <Settings

@@ -40,7 +40,6 @@ import { getWalletBalance } from "thirdweb/wallets";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { safeHaptic } from "@/lib/haptic-utils";
 
 // Token details for Scroll Mainnet
 const TOKENS = {
@@ -174,8 +173,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
-          // Copy action haptic feedback
-          safeHaptic("copy");
           toast.info("Wallet address copied to clipboard");
         })
         .catch(() => {});
@@ -184,8 +181,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   // Handle opening modals
   const handleOpenModal = (modalType: "deposit" | "send" | "buy") => {
-    // Haptic feedback for modal navigation
-    safeHaptic("medium");
     setIsExiting(true);
     setTimeout(() => {
       onClose();

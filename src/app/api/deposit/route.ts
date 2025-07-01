@@ -5,6 +5,8 @@ import {
   createErrorResponse,
   withAddressValidation,
 } from "@/lib/api-utils";
+import dotenv from "dotenv";
+dotenv.config();
 
 async function depositHandler(request: Request) {
   try {
