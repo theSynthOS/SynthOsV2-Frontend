@@ -260,7 +260,7 @@ export default function TrendingProtocols({
   const getActiveFiltersLabel = () => {
     if (riskFilters.top)
       return (
-        <span className="text-purple-700 dark:text-purple-300 text-left">
+        <span className="block text-left text-purple-700 dark:text-purple-300">
           Top Opportunities
         </span>
       );
