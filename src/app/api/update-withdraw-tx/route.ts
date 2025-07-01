@@ -16,8 +16,6 @@ export async function POST(request: Request) {
       ["withdrawalIds"] // Array fields
     );
 
-    console.log("processedBody", processedBody);
-
     const response = await fetch(apiEndpoints.updateWithdrawTx(), {
       method: "POST",
       headers: {

@@ -73,6 +73,9 @@ export default function DepositModal({
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
   const refreshTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [localIsLoadingBalance, setLocalIsLoadingBalance] = useState(false);
+  const [minimumDeposits, setMinimumDeposits] = useState<any>(null);
+  const [isLoadingMinimumDeposits, setIsLoadingMinimumDeposits] =
+    useState(false);
 
   // Keep track of the previous maxBalance value to handle transitions
   const prevMaxBalanceRef = useRef(maxBalance);
@@ -164,6 +167,42 @@ export default function DepositModal({
       setCurrentApy(pool?.apy || 0);
     }
   }, [pool]);
+
+  // Fetch minimum deposits data
+  useEffect(() => {
+    const fetchMinimumDeposits = async () => {
+      setIsLoadingMinimumDeposits(true);
+      try {
+        const response = await fetch("/api/minimum-deposits");
+        if (!response.ok) {
+          throw new Error("Failed to fetch minimum deposits");
+        }
+        const data = await response.json();
+
+        // Convert array response to lookup object keyed by protocol_pair_id
+        const minimumDepositsLookup: { [key: string]: number } = {};
+        if (Array.isArray(data)) {
+          data.forEach((item: any) => {
+            if (item.protocol_pair_id && item.minimum_deposit_usd) {
+              minimumDepositsLookup[item.protocol_pair_id] = parseFloat(
+                item.minimum_deposit_usd
+              );
+            }
+          });
+        }
+
+        setMinimumDeposits(minimumDepositsLookup);
+      } catch (error) {
+        console.error("Error fetching minimum deposits:", error);
+        // Set fallback minimum if API fails
+        setMinimumDeposits({ default: 10 });
+      } finally {
+        setIsLoadingMinimumDeposits(false);
+      }
+    };
+
+    fetchMinimumDeposits();
+  }, []);
 
   // Update maxBalance when balance prop changes
   useEffect(() => {
@@ -372,6 +411,17 @@ export default function DepositModal({
 
   // Calculate estimated yearly yield using the fetched APY
   const yearlyYield = (Number.parseFloat(amount) * (currentApy || 0)) / 100;
+
+  // Helper function to get minimum deposit amount for current pool
+  const getMinimumDepositAmount = (): number => {
+    if (!minimumDeposits || !pool?.protocol_pair_id) {
+      return 10; // Default fallback
+    }
+
+    // Direct lookup by protocol_pair_id since minimumDeposits is now a lookup object
+    const poolMinimum = minimumDeposits[pool.protocol_pair_id];
+    return poolMinimum || 10; // Fallback to 10 if not found
+  };
 
   // Tenderly RPC bundled simulation function
   const simulateTransactionBundle = async (
@@ -626,9 +676,33 @@ export default function DepositModal({
       return;
     }
 
-    // Check minimum deposit requirement
-    if (minimumDeposit > 0 && parseFloat(depositAmount) < minimumDeposit) {
-      toast.error(`Minimum deposit for ${pool?.name} is $${minimumDeposit}`);
+    // Check if minimum deposits data is still loading
+    if (isLoadingMinimumDeposits) {
+      toast.error("Loading deposit requirements, please wait...");
+      return;
+    }
+
+    // Dynamic minimum deposit validation
+    const minDepositAmount = getMinimumDepositAmount();
+    if (parseFloat(depositAmount) < minDepositAmount) {
+      toast.error(
+        `Minimum deposit amount for this pool is $${minDepositAmount}`
+      );
+      return;
+    }
+
+    // Check if deposit amount exceeds balance
+    if (parseFloat(depositAmount) > maxBalance) {
+      toast.error("Deposit amount exceeds available balance");
+      return;
+    }
+
+    // Check for reasonable maximum (optional safety check)
+    const MAX_DEPOSIT_AMOUNT = 1000000; // $1M maximum
+    if (parseFloat(depositAmount) > MAX_DEPOSIT_AMOUNT) {
+      toast.error(
+        `Maximum deposit amount is $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`
+      );
       return;
     }
 
@@ -1053,6 +1127,30 @@ export default function DepositModal({
                     className={theme === "dark" ? "text-white" : "text-black"}
                   >
                     ${(Math.floor(yearlyYield * 1000) / 1000).toFixed(3)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span
+                    className={
+                      theme === "dark" ? "text-gray-300" : "text-black"
+                    }
+                  >
+                    Minimum Deposit
+                  </span>
+                  <span
+                    className={
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }
+                  >
+                    {isLoadingMinimumDeposits ? (
+                      <div className="h-4 w-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+                    ) : minimumDeposits ? (
+                      `$${getMinimumDepositAmount()}`
+                    ) : (
+                      <span className="text-red-500 text-xs">
+                        Failed to load
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
