@@ -193,3 +193,9 @@ export async function applyAndIncrementReferral(
 
   return true;
 }
+
+export async function getReferralAmount(address: string) {
+  await dbConnect();
+  const user = await UserPoints.findOne({ address });
+  return user?.referralAmount || 0;
+}
