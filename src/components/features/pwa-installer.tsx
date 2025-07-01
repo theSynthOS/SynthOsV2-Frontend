@@ -57,7 +57,7 @@ export default function PWAInstaller() {
   if (!showInstallButton) return null
 
   return (
-    <div className="fixed bottom-20 left-0 right-0 flex justify-center z-50 px-4">
+    <div className="fixed bottom-20 left-0 right-0 flex justify-center z-50 px-4 xl:hidden">
       <button
         onClick={handleInstallClick}
         className="bg-green-400 text-black font-semibold py-3 px-6 rounded-lg flex items-center shadow-lg"

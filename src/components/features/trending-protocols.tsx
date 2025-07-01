@@ -54,7 +54,7 @@ export default function TrendingProtocols({
   });
   const [showFilter, setShowFilter] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-  const [balance, setBalance] = useState<string>("0");
+  const [balance, setBalance] = useState<string | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [protocolPairs, setProtocolPairs] = useState<ProtocolPair[]>([]);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -63,6 +63,7 @@ export default function TrendingProtocols({
   const apyInfoRef = useRef<HTMLDivElement>(null);
   const [topOpportunities, setTopOpportunities] = useState<any[]>([]);
   const [topOpportunityIds, setTopOpportunityIds] = useState<string[]>([]);
+  const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -112,7 +113,7 @@ export default function TrendingProtocols({
   useEffect(() => {
     const fetchBalance = async () => {
       if (!account?.address) {
-        setBalance("0");
+        setBalance(null);
         return;
       }
 
@@ -123,9 +124,9 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch balance");
         }
         const data = await response.json();
-        setBalance(data.usdBalance || "0");
+        setBalance(data.usdBalance || null);
       } catch (error) {
-        setBalance("0.00");
+        setBalance(null);
       } finally {
         setIsLoadingBalance(false);
       }
@@ -137,21 +138,11 @@ export default function TrendingProtocols({
   useEffect(() => {
     const fetchInvestorProfile = async () => {
       if (!account?.address) {
-        setInvestorProfile("Degen Learner");
+        setInvestorProfile(null);
         return;
       }
       setIsLoadingProfile(true);
       try {
-        // First, try to get data from localStorage
-        const storedProfile = localStorage.getItem("investor_profile");
-        if (storedProfile) {
-          const parsedProfile = JSON.parse(storedProfile);
-          setInvestorProfile(parsedProfile.profile?.type || "Degen Learner");
-          setIsLoadingProfile(false);
-          return;
-        }
-
-        // If no cached data, make the API request
         const response = await fetch(
           `/api/ai-analyser?address=${account.address}`
         );
@@ -159,10 +150,9 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch investor profile");
         }
         const data = await response.json();
-        localStorage.setItem("investor_profile", JSON.stringify(data));
-        setInvestorProfile(data.profile?.type || "Degen Learner");
+        setInvestorProfile(data.profile?.type || null);
       } catch (error) {
-        setInvestorProfile("Degen Learner");
+        setInvestorProfile(null);
       } finally {
         setIsLoadingProfile(false);
       }
@@ -177,6 +167,7 @@ export default function TrendingProtocols({
         setTopOpportunityIds([]);
         return;
       }
+      setIsLoadingTopOpportunities(true);
       try {
         const response = await fetch(
           `/api/ai-analyser?address=${account.address}`
@@ -189,6 +180,8 @@ export default function TrendingProtocols({
       } catch {
         setTopOpportunities([]);
         setTopOpportunityIds([]);
+      } finally {
+        setIsLoadingTopOpportunities(false);
       }
     };
     fetchTopOpportunities();
@@ -704,7 +697,7 @@ export default function TrendingProtocols({
       <DepositModal
         pool={selectedPool}
         onClose={() => setSelectedPool(null)}
-        balance={balance}
+        balance={balance || ""}
         isLoadingBalance={isLoadingBalance}
         address={account?.address || ""}
         refreshBalance={() => {
@@ -718,7 +711,7 @@ export default function TrendingProtocols({
                 return response.json();
               })
               .then((data) => {
-                setBalance(data.usdBalance || "0");
+                setBalance(data.usdBalance || null);
               })
               .catch(() => {
                 // Error handling
