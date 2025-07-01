@@ -174,7 +174,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                 isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Deposited Amount: ${initialAmount}
+              Deposited Amount: ${parseFloat(initialAmount).toFixed(2)}
             </p>
           </div>
         </div>

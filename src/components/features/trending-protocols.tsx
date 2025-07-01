@@ -248,7 +248,7 @@ export default function TrendingProtocols({
       }
 
       console.log(
-        "🔍 Fetching top opportunities for address:",
+        "🔍 Fetching AI recommendations for address:",
         account.address
       );
 
@@ -498,7 +498,7 @@ export default function TrendingProtocols({
     if (riskFilters.top)
       return (
         <span className="block text-left text-purple-700 dark:text-purple-300">
-          Top Opportunities
+          AI Recommendations
         </span>
       );
     if (riskFilters.all)
@@ -669,7 +669,7 @@ export default function TrendingProtocols({
                           >
                             {isLoadingProfile && !investorProfile
                               ? "Analyzing Profile..."
-                              : "Top Opportunities"}
+                              : "AI Recommendations"}
                           </span>
                         </span>
                       </button>
