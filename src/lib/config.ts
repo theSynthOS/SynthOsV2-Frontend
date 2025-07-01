@@ -1,13 +1,9 @@
 const config = {
   SYNTHOS_AI_ANALYZER_URL:
-    process.env.NODE_ENV === "production"
-      ? "https://ai.synthos.fun"
-      : "http://localhost:3000",
+    process.env.SYNTHOS_AI_ANALYZER_URL || "https://ai.synthos.fun",
   // Backend URLs
   SYNTHOS_BACKEND_URL:
-    process.env.NODE_ENV === "production"
-      ? "https://backend.synthos.fun"
-      : "http://localhost:8080",
+    process.env.SYNTHOS_BACKEND_URL || "https://backend.synthos.fun",
 } as const;
 
 // API endpoint builders

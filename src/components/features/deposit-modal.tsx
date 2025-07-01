@@ -184,7 +184,9 @@ export default function DepositModal({
         // The slider value (percentage) should remain the same
         // Only the absolute amount needs to be recalculated
         const currentPercentage = sliderValue;
-        const newAmount = ((currentPercentage / 100) * maxBalance).toFixed(2);
+        const newAmount = (
+          Math.floor((currentPercentage / 100) * maxBalance * 100) / 100
+        ).toFixed(2);
         setAmount(newAmount);
         lastCalculatedAmountRef.current = newAmount;
       }
@@ -347,7 +349,9 @@ export default function DepositModal({
 
     // Calculate the new amount based on the percentage of maxBalance
     // Ensure we get at least 2 decimal places
-    const calculatedAmount = ((validPercentage / 100) * maxBalance).toFixed(2);
+    const calculatedAmount = (
+      Math.floor((validPercentage / 100) * maxBalance * 100) / 100
+    ).toFixed(2);
 
     // Store in ref immediately (not affected by React's async state updates)
     lastCalculatedAmountRef.current = calculatedAmount;
@@ -379,7 +383,12 @@ export default function DepositModal({
 
         // Only include value if it's not zero (to match Tenderly's expected format)
         if (tx.value && tx.value !== "0x0" && tx.value !== "0") {
-          call.value = tx.value;
+          // Convert value to hex string if it's a decimal number
+          const valueStr =
+            typeof tx.value === "string" ? tx.value : tx.value.toString();
+          call.value = valueStr.startsWith("0x")
+            ? valueStr
+            : `0x${Number(valueStr).toString(16)}`;
         }
 
         return call;
@@ -1006,7 +1015,7 @@ export default function DepositModal({
                   <span
                     className={theme === "dark" ? "text-white" : "text-black"}
                   >
-                    ${yearlyYield.toFixed(3)}
+                    ${(Math.floor(yearlyYield * 1000) / 1000).toFixed(3)}
                   </span>
                 </div>
               </div>
@@ -1161,7 +1170,10 @@ export default function DepositModal({
                 <div className="flex justify-between">
                   <span className="opacity-70">Estimated Yearly Yield</span>
                   <span className="font-semibold">
-                    ${submittedYearlyYieldRef.current.toFixed(3)}
+                    $
+                    {(
+                      Math.floor(submittedYearlyYieldRef.current * 1000) / 1000
+                    ).toFixed(3)}
                   </span>
                 </div>
               </div>

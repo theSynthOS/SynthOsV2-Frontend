@@ -85,7 +85,12 @@ export default function WithdrawModal({
 
         // Only include value if it's not zero (to match Tenderly's expected format)
         if (tx.value && tx.value !== "0x0" && tx.value !== "0") {
-          call.value = tx.value;
+          // Convert value to hex string if it's a decimal number
+          const valueStr =
+            typeof tx.value === "string" ? tx.value : tx.value.toString();
+          call.value = valueStr.startsWith("0x")
+            ? valueStr
+            : `0x${Number(valueStr).toString(16)}`;
         }
 
         return call;
@@ -246,6 +251,8 @@ export default function WithdrawModal({
     }
 
     // Check if amount exceeds balance
+    console.log("parseFloat(amount)", parseFloat(amount));
+    console.log("parseFloat(balance)", parseFloat(balance));
     if (parseFloat(amount) > parseFloat(balance)) {
       toast.error("Insufficient Balance");
       return;
@@ -271,7 +278,7 @@ export default function WithdrawModal({
         ...(isMaxWithdraw && { maxWithdraw: true }), // Add maxWithdraw flag if within tolerance
       };
 
-      const response = await fetch("/api/withdraw-tracking", {
+      const response = await fetch("/api/withdraw", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
