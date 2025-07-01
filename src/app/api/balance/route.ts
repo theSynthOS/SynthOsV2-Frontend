@@ -15,7 +15,12 @@ export async function GET(request: Request) {
     );
 
     const response = await fetch(
-      apiEndpoints.balance(checksummedAddress || "")
+      apiEndpoints.balance(checksummedAddress || ""),
+      {
+        headers: {
+          "X-API-Key": process.env.X_API_KEY || "",
+        },
+      }
     );
     const data = await response.json();
 

@@ -3,7 +3,11 @@ import { apiEndpoints } from "@/lib/config";
 
 export async function GET() {
   try {
-    const response = await fetch(apiEndpoints.protocols());
+    const response = await fetch(apiEndpoints.protocols(), {
+      headers: {
+        "X-API-Key": process.env.X_API_KEY || "",
+      },
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch protocols");
     }

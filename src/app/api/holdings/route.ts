@@ -14,7 +14,11 @@ export async function GET(request: Request) {
       true
     );
 
-    const response = await fetch(apiEndpoints.holdings(checksummedAddress));
+    const response = await fetch(apiEndpoints.holdings(checksummedAddress), {
+      headers: {
+        "X-API-Key": process.env.X_API_KEY || "",
+      },
+    });
     const data = await response.json();
 
     return NextResponse.json(data);
