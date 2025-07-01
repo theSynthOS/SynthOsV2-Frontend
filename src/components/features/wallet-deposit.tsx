@@ -352,9 +352,9 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                       {displayAddress || "Please connect your wallet"}
                     </div>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
                         copyHaptic();
-                        copyToClipboard();
+                        copyToClipboard(e);
                       }}
                       className={`ml-2 ${
                         isMobile ? "p-1" : "p-1.5"
