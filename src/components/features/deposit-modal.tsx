@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle, ExternalLink, X, Copy } from "lucide-react";
+import { CheckCircle, ExternalLink, X, Copy, Info } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
 import { useActiveAccount, useActiveWallet } from "thirdweb/react";
@@ -92,6 +92,16 @@ export default function DepositModal({
 
   // Add a ref to store the yearly yield at the time of submission
   const submittedYearlyYieldRef = useRef<number>(0);
+
+  // Minimum deposit configuration for specific protocols
+  const getMinimumDeposit = (protocolName: string): number => {
+    if (protocolName.toLowerCase() === "tempest") {
+      return 10; // $10 minimum for tempest
+    }
+    return 0; // No minimum for other protocols
+  };
+
+  const minimumDeposit = pool ? getMinimumDeposit(pool.name) : 0;
 
   // Reset state when the modal is opened with a different pool
   useEffect(() => {
@@ -616,6 +626,12 @@ export default function DepositModal({
       return;
     }
 
+    // Check minimum deposit requirement
+    if (minimumDeposit > 0 && parseFloat(depositAmount) < minimumDeposit) {
+      toast.error(`Minimum deposit for ${pool?.name} is $${minimumDeposit}`);
+      return;
+    }
+
     // Set processing flag to prevent RadialProgressBar updates
     isProcessingRef.current = true;
 
@@ -1004,6 +1020,27 @@ export default function DepositModal({
                     </span>
                   )}
                 </div>
+                
+                {/* Minimum Deposit for Tempest */}
+                {minimumDeposit > 0 && (
+                  <div className="flex justify-between text-sm mb-2">
+                    <span
+                      className={
+                        theme === "dark" ? "text-yellow-300" : "text-orange-600"
+                      }
+                    >
+                      ⚠️ Minimum Deposit
+                    </span>
+                    <span
+                      className={`font-medium ${
+                        theme === "dark" ? "text-yellow-300" : "text-orange-600"
+                      }`}
+                    >
+                      ${minimumDeposit}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-sm">
                   <span
                     className={
@@ -1034,6 +1071,7 @@ export default function DepositModal({
                 }`}
                 disabled={
                   parseFloat(amount) <= 0 ||
+                  (minimumDeposit > 0 && parseFloat(amount) < minimumDeposit) ||
                   (isSubmitting && pool?.protocol_pair_id === processingPoolId)
                 }
                 onClick={() => {
