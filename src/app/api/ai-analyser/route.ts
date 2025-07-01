@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const checksummedAddress = getAddress(address);
     const response = await fetch(apiEndpoints.aiAnalyzer(checksummedAddress), {
       headers: {
-        origin: process.env.ORIGIN || "",
+        "X-API-Key": process.env.X_API_KEY || "",
       },
     });
 
