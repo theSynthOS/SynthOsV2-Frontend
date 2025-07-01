@@ -65,7 +65,7 @@ export default function PWAInstaller() {
         className="bg-green-400 text-black font-semibold py-3 px-6 rounded-lg flex items-center shadow-lg"
       >
         <Download className="w-5 h-5 mr-2" />
-        Install DeFi Tracker App
+        Install SynthOS
       </button>
     </div>
   );
