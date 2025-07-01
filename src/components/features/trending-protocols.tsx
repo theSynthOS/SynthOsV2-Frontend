@@ -63,7 +63,34 @@ export default function TrendingProtocols({
   const apyInfoRef = useRef<HTMLDivElement>(null);
   const [topOpportunities, setTopOpportunities] = useState<any[]>([]);
   const [topOpportunityIds, setTopOpportunityIds] = useState<string[]>([]);
-  const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] = useState(false);
+  const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] =
+    useState(false);
+
+  // Cleanup cache when wallet disconnects
+  useEffect(() => {
+    if (!account?.address) {
+      // Clear any cached data for the current session when wallet disconnects
+      const keys = Object.keys(localStorage);
+      keys.forEach((key) => {
+        if (
+          key.startsWith("investor_profile_") ||
+          key.startsWith("top_opportunities_")
+        ) {
+          // Only remove if it's old data (optional - you might want to keep it)
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || "{}");
+            const now = Date.now();
+            const dayOld = 24 * 60 * 60 * 1000;
+            if (now - data.timestamp > dayOld) {
+              localStorage.removeItem(key);
+            }
+          } catch {
+            localStorage.removeItem(key);
+          }
+        }
+      });
+    }
+  }, [account?.address]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -141,6 +168,29 @@ export default function TrendingProtocols({
         setInvestorProfile(null);
         return;
       }
+
+      // Check localStorage for cached profile data
+      const cacheKey = `investor_profile_${account.address}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        try {
+          const { profile, timestamp } = JSON.parse(cachedData);
+          const now = Date.now();
+          const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+          // If cache is still valid (less than 24 hours old)
+          if (now - timestamp < cacheExpiry) {
+            setInvestorProfile(profile);
+            setIsLoadingProfile(false);
+            return;
+          }
+        } catch (error) {
+          // Invalid cached data, remove it
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       setIsLoadingProfile(true);
       try {
         const response = await fetch(
@@ -150,7 +200,17 @@ export default function TrendingProtocols({
           throw new Error("Failed to fetch investor profile");
         }
         const data = await response.json();
-        setInvestorProfile(data.profile?.type || null);
+        const profileType = data.profile?.type || null;
+        setInvestorProfile(profileType);
+
+        // Cache the result in localStorage
+        if (profileType) {
+          const cacheData = {
+            profile: profileType,
+            timestamp: Date.now(),
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        }
       } catch (error) {
         setInvestorProfile(null);
       } finally {
@@ -167,6 +227,30 @@ export default function TrendingProtocols({
         setTopOpportunityIds([]);
         return;
       }
+
+      // Check localStorage for cached top opportunities data
+      const cacheKey = `top_opportunities_${account.address}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        try {
+          const { opportunities, timestamp } = JSON.parse(cachedData);
+          const now = Date.now();
+          const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+          // If cache is still valid (less than 24 hours old)
+          if (now - timestamp < cacheExpiry) {
+            setTopOpportunities(opportunities);
+            setTopOpportunityIds(opportunities.map((op: any) => op.protocolId));
+            setIsLoadingTopOpportunities(false);
+            return;
+          }
+        } catch (error) {
+          // Invalid cached data, remove it
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       setIsLoadingTopOpportunities(true);
       try {
         const response = await fetch(
@@ -177,6 +261,15 @@ export default function TrendingProtocols({
         const topOpps = data.investmentOpportunities?.topOpportunities || [];
         setTopOpportunities(topOpps);
         setTopOpportunityIds(topOpps.map((op: any) => op.protocolId));
+
+        // Cache the result in localStorage
+        if (topOpps.length > 0) {
+          const cacheData = {
+            opportunities: topOpps,
+            timestamp: Date.now(),
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        }
       } catch {
         setTopOpportunities([]);
         setTopOpportunityIds([]);
