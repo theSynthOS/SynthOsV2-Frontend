@@ -653,7 +653,7 @@ export default function WithdrawModal({
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      Balance: ${balance}
+                      Balance: ${parseFloat(balance).toFixed(2)}
                     </span>
                     <button
                       type="button"
@@ -802,7 +802,7 @@ export default function WithdrawModal({
               <div className="mb-6">
                 <p className="text-lg mb-1">You've withdrawn</p>
                 <p className="text-3xl font-bold text-purple-500">
-                  ${amount} {selectedToken}
+                  ${parseFloat(amount).toFixed(2)} {selectedToken}
                 </p>
                 <p className="text-sm mt-2 opacity-80">from {pool.name}</p>
               </div>

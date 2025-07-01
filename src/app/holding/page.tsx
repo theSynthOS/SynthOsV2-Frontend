@@ -829,7 +829,7 @@ export default function HoldingPage() {
                 }}
                 className="max-h-[90vh] overflow-hidden"
               >
-                <div className="overflow-hidden max-h-[calc(90vh-120px)]">
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)] pr-1 scrollbar-hide">
                   {isLoading ? (
                     <div className="grid grid-cols-1 gap-4">
                       {[...Array(6)].map((_, idx) => (
