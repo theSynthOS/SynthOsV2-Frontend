@@ -7,6 +7,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scroll } from "thirdweb/chains";
+import { lightHaptic } from "@/lib/haptic-utils";
 
 interface HistoryPanelProps {
   isOpen: boolean;
@@ -110,6 +111,7 @@ export default function HistoryPanel({
   };
 
   const handleTransactionClick = (transaction: Transaction) => {
+    lightHaptic();
     setIsExiting(true);
     setTimeout(() => {
       onClose();
@@ -129,7 +131,10 @@ export default function HistoryPanel({
       {/* Header */}
       <div className="flex-none px-4 py-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
         <button
-          onClick={handleGoBack}
+          onClick={() => {
+            lightHaptic();
+            handleGoBack();
+          }}
           className="w-8 h-8 flex items-center justify-center"
         >
           <ArrowLeft className="h-6 w-6" />

@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import Card from "@/components/ui/card";
 import { useBalance } from "@/contexts/BalanceContext";
+import { mediumHaptic, copyHaptic } from "@/lib/haptic-utils";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -202,7 +203,10 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                               ? "hover:bg-[#494385]"
                               : "hover:bg-gray-100"
                           }`}
-                          onClick={(e) => selectCoin("USDC", e)}
+                          onClick={(e) => {
+                            mediumHaptic();
+                            selectCoin("USDC", e);
+                          }}
                         >
                           <Image
                             src="/usdc.png"
@@ -231,7 +235,10 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                               ? "hover:bg-[#494385]"
                               : "hover:bg-gray-100"
                           }`}
-                          onClick={(e) => selectCoin("USDT", e)}
+                          onClick={(e) => {
+                            mediumHaptic();
+                            selectCoin("USDT", e);
+                          }}
                         >
                           <Image
                             src="/usdt.png"
@@ -345,7 +352,10 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                       {displayAddress || "Please connect your wallet"}
                     </div>
                     <button
-                      onClick={copyToClipboard}
+                      onClick={() => {
+                        copyHaptic();
+                        copyToClipboard();
+                      }}
                       className={`ml-2 ${
                         isMobile ? "p-1" : "p-1.5"
                       } rounded-full ${

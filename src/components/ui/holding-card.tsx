@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { ArrowUp } from "lucide-react";
 import WithdrawModal from "@/components/features/withdraw-modal";
 import { useBalance } from "@/contexts/BalanceContext";
+import { heavyHaptic } from "@/lib/haptic-utils";
 
 interface HoldingCardProps {
   symbol: string;
@@ -179,6 +180,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
         </div>
         <button
           onClick={() => {
+            heavyHaptic();
             if (pool && balance && address) {
               setShowWithdrawModal(true);
             } else if (onClick) {
