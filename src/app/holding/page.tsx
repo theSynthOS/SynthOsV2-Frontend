@@ -58,6 +58,7 @@ export default function HoldingPage() {
   const [isLoadingReferral, setIsLoadingReferral] = useState(false);
   const [inputReferralCode, setInputReferralCode] = useState<string>("");
   const [isApplyingReferral, setIsApplyingReferral] = useState(false);
+  const [referralAmount, setReferralAmount] = useState<number>(0);
 
   // View All modal state
   const [showViewAllModal, setShowViewAllModal] = useState(false);
@@ -113,6 +114,7 @@ export default function HoldingPage() {
   useEffect(() => {
     if (!account?.address) return;
     setIsLoadingReferral(true);
+    // Fetch referral data
     fetch(`/api/referral?address=${account.address}`)
       .then((res) => res.json())
       .then((data) => {
@@ -121,11 +123,18 @@ export default function HoldingPage() {
           setReferralBy(data.user.referralBy || "");
         }
       })
-      .catch((error) => {
+      .catch(() => {
         // Error handling
       })
       .finally(() => {
         setIsLoadingReferral(false);
+      });
+    // Fetch referral amount
+    fetch(`/api/referral-amount?address=${account.address}`)
+      .then((res) => res.json())
+      .then((data) => setReferralAmount(data.referralAmount || 0))
+      .catch(() => {
+        // Error handling
       });
   }, [account?.address]);
 
@@ -307,18 +316,20 @@ export default function HoldingPage() {
     }
   };
 
-  // Handle copying referral code
-  const handleCopyReferralCode = async () => {
-    if (!referralCode) return;
-
-    copyHaptic();
-    try {
-      await navigator.clipboard.writeText(referralCode);
-      setReferralCopied(true);
-      setTimeout(() => setReferralCopied(false), 2000);
-      toast.info("Your referral code has been copied to clipboard");
-    } catch (error) {
-      // Error handling
+  const handleCopyReferralCode = () => {
+    if (userReferralCode) {
+      navigator.clipboard
+        .writeText(userReferralCode)
+        .then(() => {
+          setReferralCopied(true);
+          setTimeout(() => setReferralCopied(false), 2000);
+          // Copy action haptic feedback
+          safeHaptic("copy");
+          toast.info("Your referral code has been copied to clipboard");
+        })
+        .catch((err) => {
+          // Error handling
+        });
     }
   };
 
@@ -672,7 +683,7 @@ export default function HoldingPage() {
                   {/* Skeleton for info text */}
                   <div className="text-xs text-center">
                     Share your referral code with friends to earn points when
-                    they join!
+                    they deposited!
                   </div>
                 </div>
               ) : (
@@ -790,6 +801,12 @@ export default function HoldingPage() {
                       </div>
                     </div>
                   )}
+                  {/* Referral Amount */}
+                  <div className="mt-3 flex justify-center">
+                    <div className="rounded-lg bg-purple-50 dark:bg-[#2a1a4d] px-4 py-3 text-purple-800 dark:text-purple-200 text-sm font-semibold shadow-sm border border-purple-200 dark:border-[#3a2566] min-w-[220px] text-center">
+                      You have referred <b>{referralAmount}</b> people.
+                    </div>
+                  </div>
 
                   {/* Referral Info */}
                   <div
@@ -798,7 +815,7 @@ export default function HoldingPage() {
                     } text-center`}
                   >
                     Share your referral code with friends to earn points when
-                    they join!
+                    they deposited!
                   </div>
                 </div>
               )}
