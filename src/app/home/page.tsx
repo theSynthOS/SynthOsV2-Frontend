@@ -208,7 +208,7 @@ export default function Home() {
                             mediumHaptic();
                             setShowModal("deposit");
                           }}
-                          className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                          className="flex flex-col items-center xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
                             className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
@@ -253,7 +253,7 @@ export default function Home() {
                             mediumHaptic();
                             setShowModal("send");
                           }}
-                          className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                          className="flex flex-col items-center xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
                             className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
@@ -298,7 +298,7 @@ export default function Home() {
                             mediumHaptic();
                             setShowModal("buy");
                           }}
-                          className="flex flex-col xl:flex-row xl:items-center xl:gap-3 group"
+                          className="flex flex-col items-center xl:flex-row xl:items-center xl:gap-3 group"
                         >
                           <div
                             className={`w-14 h-14 xl:w-auto xl:h-auto xl:px-4 xl:py-3 rounded-full xl:rounded-lg flex items-center justify-center mb-2 xl:mb-0 border transition-all duration-200 relative ${
