@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useActiveAccount, ConnectButton } from "thirdweb/react";
 import { client, wallets } from "@/client";
 import { scroll } from "thirdweb/chains";
+import { safeHaptic } from "@/lib/haptic-utils";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -25,6 +26,8 @@ export default function Home() {
 
   // Handle wallet connected
   const handleWalletConnected = () => {
+    // Success haptic feedback for wallet connection
+    safeHaptic("success");
     // Redirect directly to home page after wallet connection
     router.push("/home");
   };
@@ -50,7 +53,7 @@ export default function Home() {
       </div>
     );
   }
-        
+
   return (
     <div
       className={`flex flex-col items-center justify-center min-h-screen p-4 ${
@@ -105,14 +108,14 @@ export default function Home() {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="mt-2"
         >
-          <ConnectButton 
-            client={client} 
-            onConnect={handleWalletConnected}  
+          <ConnectButton
+            client={client}
+            onConnect={handleWalletConnected}
             wallets={wallets}
             theme={theme === "dark" ? "dark" : "light"}
             connectModal={{ size: "compact" }}
             // accountAbstraction={{
-            //   chain: scroll, 
+            //   chain: scroll,
             //   sponsorGas: true,
             // }}
           />

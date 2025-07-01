@@ -11,6 +11,7 @@ import { scroll } from "thirdweb/chains";
 import { getWalletBalance } from "thirdweb/wallets";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { safeHaptic } from "@/lib/haptic-utils";
 import { useBalance } from "@/contexts/BalanceContext";
 
 interface SendModalProps {
@@ -97,11 +98,15 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
   // Handle setting max amount
   const handleSetMaxAmount = () => {
+    // Haptic feedback for max amount selection
+    safeHaptic("medium");
     setAmount(balance);
   };
 
   // Handle sending tokens
   const handleSendFunds = () => {
+    // Haptic feedback for critical send action
+    safeHaptic("heavy");
     const tokenConfig = TOKENS[selectedToken];
 
     // Get token contract
@@ -129,6 +134,8 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         // Set transaction hash for success display
         setTxHash(result.transactionHash);
 
+        // Success haptic feedback
+        safeHaptic("success");
         toast.success(`Your ${selectedToken} has been sent successfully!`);
 
         // Reset form
@@ -160,6 +167,8 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         // Set error for display
         setTxError(errorMessage);
 
+        // Error haptic feedback
+        safeHaptic("error");
         toast.error(errorMessage);
       },
     });

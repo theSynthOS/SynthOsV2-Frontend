@@ -17,6 +17,7 @@ import {
 import Card from "@/components/ui/card";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { safeHaptic } from "@/lib/haptic-utils";
 
 // Add Ethereum window type
 declare global {
@@ -579,10 +580,8 @@ export default function DepositModal({
         toast.success(`$${amount} deposited into ${pool?.name}`);
       }
 
-      // Haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
-      }
+      // Success haptic feedback
+      safeHaptic("success");
 
       // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {
@@ -648,12 +647,16 @@ export default function DepositModal({
         }
       } catch (error) {}
     } catch (error) {
+      // Error haptic feedback
+      safeHaptic("error");
       toast.error("Deposit failed");
     }
   };
 
   // Handle deposit confirmation
   const handleConfirmDeposit = async () => {
+    // Haptic feedback for critical financial action
+    safeHaptic("heavy");
     // Get the current amount value from our ref for consistent access
     // This ensures we use the most recent amount calculation, even if state hasn't updated yet
     const depositAmount = lastCalculatedAmountRef.current || amount;
@@ -672,6 +675,8 @@ export default function DepositModal({
 
     // Check if the amount is valid
     if (parseFloat(depositAmount) <= 0) {
+      // Error haptic feedback for validation
+      safeHaptic("error");
       toast.error("Please enter a valid deposit amount");
       return;
     }
@@ -948,6 +953,8 @@ export default function DepositModal({
 
         // Only show error toast if the modal is still open
         if (!modalClosedDuringProcessingRef.current) {
+          // Error haptic feedback
+          safeHaptic("error");
           toast.error(errorMessage);
         }
       }
@@ -1094,7 +1101,7 @@ export default function DepositModal({
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex justify-between text-sm">
                   <span
                     className={

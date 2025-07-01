@@ -16,6 +16,7 @@ import Card from "@/components/ui/card";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { safeHaptic } from "@/lib/haptic-utils";
 import { X, CheckCircle, ExternalLink } from "lucide-react";
 
 // Add Ethereum window type
@@ -239,6 +240,8 @@ export default function WithdrawModal({
 
   // Handle withdraw confirmation
   const handleConfirmWithdraw = async () => {
+    // Haptic feedback for critical financial action
+    safeHaptic("heavy");
     // Reset any previous errors
     setWithdrawError(null);
     setTxProgressPercent(0);
@@ -463,10 +466,8 @@ export default function WithdrawModal({
         // Handle success
         setShowSuccessModal(true);
 
-        // Haptic feedback
-        if (navigator.vibrate) {
-          navigator.vibrate([100, 50, 100]);
-        }
+        // Success haptic feedback
+        safeHaptic("success");
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
