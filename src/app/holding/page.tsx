@@ -195,14 +195,31 @@ export default function HoldingPage() {
   );
   const totalPnl = holdings.reduce((sum, h) => sum + (h.pnl || 0), 0);
 
-  // Format PnL
+  // Format PnL with intelligent decimal places (for total PnL display)
+  const formatPnl = (value: number): string => {
+    const absValue = Math.abs(value);
+    if (absValue === 0) return "0.00";
+    if (absValue >= 0.01) return absValue.toFixed(2);
+    if (absValue >= 0.001) return absValue.toFixed(3);
+    if (absValue >= 0.0001) return absValue.toFixed(4);
+    if (absValue >= 0.00001) return absValue.toFixed(5);
+    if (absValue >= 0.000001) return absValue.toFixed(6);
+    // For very small values, use scientific notation
+    return absValue.toExponential(2);
+  };
+
+  // Fix floating-point precision issues - use a more robust approach
+  const normalizedTotalPnl = parseFloat(totalPnl.toFixed(10));
+
+  // Format PnL - use normalized value for both color and sign
   const pnlColor =
-    totalPnl > 0
+    normalizedTotalPnl > 0
       ? "text-green-500"
-      : totalPnl < 0
+      : normalizedTotalPnl < 0
       ? "text-red-500"
       : "text-gray-500";
-  const pnlSign = totalPnl > 0 ? "+" : totalPnl < 0 ? "-" : "";
+  const pnlSign =
+    normalizedTotalPnl > 0 ? "+" : normalizedTotalPnl < 0 ? "-" : "";
 
   // Format address to show first 6 and last 4 characters
   const formatAddress = (address: string | null) => {
@@ -382,7 +399,7 @@ export default function HoldingPage() {
                       <span
                         className={`text-sm xl:text-lg tracking-widest font-medium px-2 ${pnlColor}`}
                       >
-                        {pnlSign}${Math.abs(totalPnl).toFixed(2)}
+                        {pnlSign}${formatPnl(normalizedTotalPnl)}
                       </span>
                     </>
                   )}
@@ -535,7 +552,7 @@ export default function HoldingPage() {
                       amount={h.currentAmount.toString()}
                       apy={h.apy.toString()}
                       protocolLogo={h.protocolLogo}
-                      pnl={h.pnl.toFixed(3)}
+                      pnl={h.pnl}
                       initialAmount={h.initialAmount.toFixed(3)}
                       pool={{
                         name: h.protocolName,
@@ -890,7 +907,7 @@ export default function HoldingPage() {
                           amount={h.currentAmount.toString()}
                           apy={h.apy.toString()}
                           protocolLogo={h.protocolLogo}
-                          pnl={h.pnl.toFixed(3)}
+                          pnl={h.pnl}
                           initialAmount={h.initialAmount.toFixed(3)}
                           pool={{
                             name: h.protocolName,

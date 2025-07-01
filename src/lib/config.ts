@@ -1,7 +1,13 @@
 const config = {
+  SYNTHOS_AI_ANALYZER_URL:
+    process.env.NODE_ENV === "production"
+      ? "https://ai.synthos.fun"
+      : "http://localhost:3000",
   // Backend URLs
-  SYNTHOS_AI_ANALYZER_URL: "https://ai.synthos.fun",
-  SYNTHOS_BACKEND_URL: "https://backend.synthos.fun",
+  SYNTHOS_BACKEND_URL:
+    process.env.NODE_ENV === "production"
+      ? "https://backend.synthos.fun"
+      : "http://localhost:8080",
 } as const;
 
 // API endpoint builders
@@ -29,6 +35,9 @@ export const apiEndpoints = {
 
   updateDepositTx: () =>
     `${config.SYNTHOS_BACKEND_URL}/action/update-deposit-transaction`,
+
+  updateWithdrawTx: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/update-withdraw-transaction`,
 
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,

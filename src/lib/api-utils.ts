@@ -8,6 +8,7 @@ import { validateAndChecksumAddress } from "./utils";
  * @param addressFields - Array of field names that contain addresses
  * @param numberFields - Array of field names that should be numbers
  * @param optionalFields - Array of field names that are optional
+ * @param arrayFields - Array of field names that should be arrays
  * @returns Parsed and validated body with checksummed addresses (if any)
  */
 export async function validateAndParseRequestBody(
@@ -15,7 +16,8 @@ export async function validateAndParseRequestBody(
   requiredFields: string[] = [],
   addressFields: string[] = ["user_address", "address"],
   numberFields: string[] = [],
-  optionalFields: string[] = []
+  optionalFields: string[] = [],
+  arrayFields: string[] = []
 ): Promise<Record<string, any>> {
   // Check if request has content
   const contentLength = request.headers.get("content-length");
@@ -38,12 +40,32 @@ export async function validateAndParseRequestBody(
 
   // Validate required string fields
   for (const field of requiredFields) {
+    // Skip validation if this field is meant to be an array
+    if (arrayFields.includes(field)) continue;
+
     if (
       !body[field] ||
       typeof body[field] !== "string" ||
-      body[field].trim() === ""
+      body[field].trim() === "" ||
+      Array.isArray(body[field]) ||
+      body[field] === null
     ) {
       throw new Error(`${field} must be a non-empty string`);
+    }
+  }
+
+  // Validate array fields
+  for (const field of arrayFields) {
+    if (body[field] !== undefined && body[field] !== null) {
+      if (!Array.isArray(body[field])) {
+        throw new Error(`${field} must be an array`);
+      }
+      // Optional: validate that array is not empty if it's required
+      if (!optionalFields.includes(field) && body[field].length === 0) {
+        throw new Error(`${field} must not be an empty array`);
+      }
+    } else if (!optionalFields.includes(field)) {
+      throw new Error(`${field} is required and must be an array`);
     }
   }
 

@@ -11,7 +11,7 @@ interface HoldingCardProps {
   amount: string;
   apy: string;
   protocolLogo: string;
-  pnl: string;
+  pnl: string | number;
   initialAmount: string;
   onClick?: () => void;
   pool?: {
@@ -124,7 +124,15 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
           <div className="text-center mb-4">
             <h2
               className={`text-3xl ${
-                parseFloat(amount) > parseFloat(initialAmount)
+                typeof pnl === "number"
+                  ? pnl > 0
+                    ? "text-green-500"
+                    : pnl < 0
+                    ? "text-red-500"
+                    : isDark
+                    ? "text-white"
+                    : "text-black"
+                  : parseFloat(amount) > parseFloat(initialAmount)
                   ? "text-green-500"
                   : parseFloat(amount) < parseFloat(initialAmount)
                   ? "text-red-500"
@@ -133,12 +141,30 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                   : "text-black"
               }`}
             >
-              {parseFloat(amount) > parseFloat(initialAmount)
+              {typeof pnl === "number"
+                ? pnl > 0
+                  ? "+"
+                  : pnl < 0
+                  ? "-"
+                  : ""
+                : parseFloat(amount) > parseFloat(initialAmount)
                 ? "+"
                 : parseFloat(amount) < parseFloat(initialAmount)
                 ? "-"
                 : ""}
-              ${pnl}
+              $
+              {typeof pnl === "number"
+                ? (() => {
+                    const absValue = Math.abs(pnl);
+                    if (absValue === 0) return "0.00";
+                    if (absValue >= 0.01) return absValue.toFixed(2);
+                    if (absValue >= 0.001) return absValue.toFixed(3);
+                    if (absValue >= 0.0001) return absValue.toFixed(4);
+                    if (absValue >= 0.00001) return absValue.toFixed(5);
+                    if (absValue >= 0.000001) return absValue.toFixed(6);
+                    return absValue.toExponential(2);
+                  })()
+                : pnl}
             </h2>
           </div>
           <div className="text-center mb-4">

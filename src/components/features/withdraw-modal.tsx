@@ -10,6 +10,7 @@ import {
   prepareTransaction,
   sendAndConfirmTransaction,
   sendBatchTransaction,
+  waitForReceipt,
 } from "thirdweb";
 import Card from "@/components/ui/card";
 import Image from "next/image";
@@ -62,6 +63,7 @@ export default function WithdrawModal({
   const account = useActiveAccount();
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
+  const [withdrawIds, setWithdrawIds] = useState<string[]>([]);
 
   // Tenderly RPC bundled simulation function
   const simulateTransactionBundle = async (
@@ -190,6 +192,7 @@ export default function WithdrawModal({
       setTxHash("");
       setTxProgressPercent(0);
       setSimulationStatus(null);
+      setWithdrawIds([]);
     }
   }, [pool]);
 
@@ -202,6 +205,7 @@ export default function WithdrawModal({
       setTxHash("");
       setTxProgressPercent(0);
       setSimulationStatus(null);
+      setWithdrawIds([]);
     }
     onClose();
   };
@@ -215,6 +219,7 @@ export default function WithdrawModal({
     setTxHash("");
     setTxProgressPercent(0);
     setSimulationStatus(null);
+    setWithdrawIds([]);
 
     // Refresh balance only when user closes the success modal
     // Add a small delay to ensure backend has processed the withdrawal
@@ -278,6 +283,17 @@ export default function WithdrawModal({
       setTxProgressPercent(30);
 
       const responseData = await response.json();
+
+      // Store withdrawIds for later database update
+      const withdrawalIds = responseData.withdrawalRecords || [];
+
+      console.log("withdrawalIds", withdrawalIds);
+      console.log("Array.isArray(withdrawalIds)", Array.isArray(withdrawalIds));
+      console.log("withdrawalIds.length > 0", withdrawalIds.length > 0);
+
+      if (Array.isArray(withdrawalIds) && withdrawalIds.length > 0) {
+        setWithdrawIds(withdrawalIds);
+      }
 
       // Update progress
       setTxProgressPercent(50);
@@ -372,6 +388,60 @@ export default function WithdrawModal({
 
         // Handle success
         setTxHash(result.transactionHash);
+
+        // Get transaction receipt to obtain block number
+        let blockNumber: number | null = null;
+        try {
+          const receipt = await waitForReceipt({
+            client: client,
+            chain: scroll,
+            transactionHash: result.transactionHash as `0x${string}`,
+          });
+
+          if (receipt && receipt.blockNumber) {
+            blockNumber = Number(receipt.blockNumber);
+          }
+        } catch (receiptError) {
+          // Continue without block number
+        }
+
+        // Update withdrawal record in database with transaction details
+        // Use the local withdrawalIds variable instead of state (which updates asynchronously)
+        if (
+          withdrawalIds &&
+          Array.isArray(withdrawalIds) &&
+          withdrawalIds.length > 0
+        ) {
+          try {
+            console.log(
+              "Calling /api/update-withdraw-tx with IDs:",
+              withdrawalIds
+            );
+            const updateResponse = await fetch("/api/update-withdraw-tx", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                withdrawalIds: withdrawalIds,
+                transactionHash: result.transactionHash as `0x${string}`,
+                blockNumber: blockNumber,
+              }),
+            });
+
+            console.log("Update response status:", updateResponse.status);
+            if (!updateResponse.ok) {
+              console.warn("Failed to update withdrawal transaction record");
+            } else {
+              console.log("Successfully updated withdrawal transaction record");
+            }
+          } catch (updateError) {
+            // Continue with success flow even if update fails
+            console.warn("Error updating withdrawal transaction:", updateError);
+          }
+        } else {
+          console.warn("No withdrawalIds available for update:", withdrawalIds);
+        }
 
         const response = await fetch("/api/transactions", {
           method: "POST",
