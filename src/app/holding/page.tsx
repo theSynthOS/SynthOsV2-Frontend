@@ -195,6 +195,7 @@ export default function HoldingPage() {
 
     handleReferralCode();
   }, [account?.address]);
+
   // Calculate total holding and pnl
   const totalHolding = holdings.reduce(
     (sum, h) => sum + (h.currentAmount || 0),
@@ -237,17 +238,20 @@ export default function HoldingPage() {
   };
 
   // Handle copy address to clipboard
-  const handleCopyAddress = async () => {
-    if (!account?.address) return;
-
-    copyHaptic();
-    try {
-      await navigator.clipboard.writeText(account.address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.info("Wallet address copied to clipboard");
-    } catch (error) {
-      // Error handling
+  const handleCopyAddress = () => {
+    if (displayAddress) {
+      navigator.clipboard
+        .writeText(displayAddress)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          // Copy action haptic feedback
+          safeHaptic("copy");
+          toast.info("Wallet address copied to clipboard");
+        })
+        .catch((err) => {
+          // Error handling
+        });
     }
   };
 
