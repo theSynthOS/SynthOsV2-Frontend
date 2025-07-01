@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useDraggable } from "./useDraggable";
 import { useTheme } from "next-themes";
+import { safeHaptic } from "@/lib/haptic-utils";
 
 interface RadialProgressBarProps {
   initialAngle: number; // 0-1 range from parent
@@ -112,6 +113,9 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
 
   // Handle percentage button clicks
   const handlePercentageClick = (percentage: number) => {
+    // Haptic feedback for amount selection
+    safeHaptic("medium");
+
     // Set flag to prevent feedback loops during animation
     processingPercentageClick.current = true;
 

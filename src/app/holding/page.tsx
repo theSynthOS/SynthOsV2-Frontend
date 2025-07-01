@@ -13,6 +13,7 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { safeHaptic } from "@/lib/haptic-utils";
 import HoldingCard from "@/components/ui/holding-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -237,6 +238,8 @@ export default function HoldingPage() {
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
+          // Copy action haptic feedback
+          safeHaptic("copy");
           toast.info("Wallet address copied to clipboard");
         })
         .catch((err) => {
@@ -299,6 +302,8 @@ export default function HoldingPage() {
         .then(() => {
           setReferralCopied(true);
           setTimeout(() => setReferralCopied(false), 2000);
+          // Copy action haptic feedback
+          safeHaptic("copy");
           toast.info("Your referral code has been copied to clipboard");
         })
         .catch((err) => {
