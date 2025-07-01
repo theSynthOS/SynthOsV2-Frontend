@@ -251,8 +251,7 @@ export default function WithdrawModal({
     }
 
     // Check if amount exceeds balance
-    console.log("parseFloat(amount)", parseFloat(amount));
-    console.log("parseFloat(balance)", parseFloat(balance));
+
     if (parseFloat(amount) > parseFloat(balance)) {
       toast.error("Insufficient Balance");
       return;
@@ -293,10 +292,6 @@ export default function WithdrawModal({
 
       // Store withdrawIds for later database update
       const withdrawalIds = responseData.withdrawalRecords || [];
-
-      console.log("withdrawalIds", withdrawalIds);
-      console.log("Array.isArray(withdrawalIds)", Array.isArray(withdrawalIds));
-      console.log("withdrawalIds.length > 0", withdrawalIds.length > 0);
 
       if (Array.isArray(withdrawalIds) && withdrawalIds.length > 0) {
         setWithdrawIds(withdrawalIds);
@@ -420,10 +415,6 @@ export default function WithdrawModal({
           withdrawalIds.length > 0
         ) {
           try {
-            console.log(
-              "Calling /api/update-withdraw-tx with IDs:",
-              withdrawalIds
-            );
             const updateResponse = await fetch("/api/update-withdraw-tx", {
               method: "POST",
               headers: {
@@ -436,7 +427,6 @@ export default function WithdrawModal({
               }),
             });
 
-            console.log("Update response status:", updateResponse.status);
             if (!updateResponse.ok) {
               console.warn("Failed to update withdrawal transaction record");
             } else {
