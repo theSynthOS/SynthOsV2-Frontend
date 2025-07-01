@@ -35,6 +35,9 @@ export const apiEndpoints = {
   updateWithdrawTx: () =>
     `${config.SYNTHOS_BACKEND_URL}/action/update-withdraw-transaction`,
 
+  minimumDeposits: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/protocol-minimum-deposits`,
+
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,
   protocolPairsApy: () =>
