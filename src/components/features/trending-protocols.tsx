@@ -29,6 +29,7 @@ interface ProtocolPair {
   apy?: number;
   protocol_id: string;
   logo_url: string;
+  risk: string;
 }
 
 interface TrendingProtocolsProps {
@@ -45,7 +46,8 @@ export default function TrendingProtocols({
   const [selectedPool, setSelectedPool] = useState<any>(null);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
   const [riskFilters, setRiskFilters] = useState({
-    all: true,
+    top: true,
+    all: false,
     low: false,
     medium: false,
     high: false,
@@ -59,6 +61,8 @@ export default function TrendingProtocols({
   const [isLoading, setIsLoading] = useState(true);
   const [showApyInfo, setShowApyInfo] = useState(false);
   const apyInfoRef = useRef<HTMLDivElement>(null);
+  const [topOpportunities, setTopOpportunities] = useState<any[]>([]);
+  const [topOpportunityIds, setTopOpportunityIds] = useState<string[]>([]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -96,7 +100,6 @@ export default function TrendingProtocols({
         );
         setProtocolPairs(filteredPairs);
       } catch (error) {
-        console.error("Error fetching protocol pairs:", error);
         setProtocolPairs([]);
       } finally {
         setIsLoading(false);
@@ -122,8 +125,7 @@ export default function TrendingProtocols({
         const data = await response.json();
         setBalance(data.usdBalance || "0");
       } catch (error) {
-        console.error("Error fetching balance:", error);
-        setBalance("0");
+        setBalance("0.00");
       } finally {
         setIsLoadingBalance(false);
       }
@@ -160,7 +162,6 @@ export default function TrendingProtocols({
         localStorage.setItem("investor_profile", JSON.stringify(data));
         setInvestorProfile(data.profile?.type || "Degen Learner");
       } catch (error) {
-        console.error("Error fetching investor profile:", error);
         setInvestorProfile("Degen Learner");
       } finally {
         setIsLoadingProfile(false);
@@ -169,11 +170,35 @@ export default function TrendingProtocols({
     fetchInvestorProfile();
   }, [account?.address]);
 
+  useEffect(() => {
+    const fetchTopOpportunities = async () => {
+      if (!account?.address) {
+        setTopOpportunities([]);
+        setTopOpportunityIds([]);
+        return;
+      }
+      try {
+        const response = await fetch(
+          `/api/ai-analyser?address=${account.address}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+        const topOpps = data.investmentOpportunities?.topOpportunities || [];
+        setTopOpportunities(topOpps);
+        setTopOpportunityIds(topOpps.map((op: any) => op.protocolId));
+      } catch {
+        setTopOpportunities([]);
+        setTopOpportunityIds([]);
+      }
+    };
+    fetchTopOpportunities();
+  }, [account?.address]);
+
   const handleProtocolClick = (pair: ProtocolPair) => {
     setSelectedPool({
       name: pair.name,
       apy: pair.apy || 0,
-      risk: "Medium",
+      risk: pair.risk,
       pair_or_vault_name: pair.pair_or_vault_name,
       protocol_id: pair.protocol_id.toString(),
       protocol_pair_id: pair.id,
@@ -181,41 +206,64 @@ export default function TrendingProtocols({
     });
   };
 
-  const getRiskCategory = (type: string) => {
-    // Placeholder risk level for now
-    return "medium";
+  const getRiskCategory = (risk: string) => {
+    return risk.toLowerCase();
   };
 
-  const getRiskLabel = (type: string) => {
-    return "Medium";
+  const getRiskLabel = (risk: string) => {
+    return risk;
   };
 
-  const getRiskColor = (type: string) => {
-    return "text-yellow-500";
+  const getRiskColor = (risk: string) => {
+    const riskLower = risk.toLowerCase();
+    switch (riskLower) {
+      case "low":
+        return "text-green-500";
+      case "medium":
+        return "text-yellow-500";
+      case "high":
+        return "text-red-500";
+      default:
+        return "text-gray-500";
+    }
   };
 
-  const toggleRiskFilter = (category: "all" | "low" | "medium" | "high") => {
-    // Set only the selected filter to true, all others to false
+  const toggleRiskFilter = (
+    category: "top" | "all" | "low" | "medium" | "high"
+  ) => {
     setRiskFilters({
+      top: category === "top",
       all: category === "all",
       low: category === "low",
       medium: category === "medium",
       high: category === "high",
     });
-
-    // Close the filter menu after selection
     setShowFilter(false);
   };
 
-  // Update the filtered protocols to use the API data
-  const filteredProtocols = protocolPairs
-    .filter((pair) => {
+  let filteredProtocols: any[] = [];
+  if (riskFilters.top) {
+    filteredProtocols = protocolPairs.filter((pair) =>
+      topOpportunityIds.includes(pair.id)
+    );
+  } else {
+    filteredProtocols = protocolPairs.filter((pair) => {
       if (riskFilters.all) return true;
-      return false; // No risk filtering for parent protocols
-    })
-    .slice(0, riskFilters.all ? undefined : 4);
+      const riskCategory = getRiskCategory(pair.risk);
+      if (riskFilters.low && riskCategory === "low") return true;
+      if (riskFilters.medium && riskCategory === "medium") return true;
+      if (riskFilters.high && riskCategory === "high") return true;
+      return false;
+    });
+  }
 
   const getActiveFiltersLabel = () => {
+    if (riskFilters.top)
+      return (
+        <span className="block text-left text-purple-700 dark:text-purple-300">
+          Top Opportunities
+        </span>
+      );
     if (riskFilters.all)
       return <span className="text-gray-700 dark:text-white ">All Risks</span>;
     if (riskFilters.low)
@@ -241,7 +289,7 @@ export default function TrendingProtocols({
         <div className="flex-col mb-6">
           <div className="relative py-1 flex justify-between items-center">
             {isLoadingProfile ? (
-              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="h-8 w-32 xl:h-12 xl:w-52 rounded-sm bg-gray-300 dark:bg-gray-700" />
             ) : investorProfile ? (
               <div
                 className={`px-4 py-2 xl:py-3 rounded-lg text-sm xl:text-lg font-normal ${
@@ -318,6 +366,39 @@ export default function TrendingProtocols({
                       </button>
                     </div>
                     <div className="space-y-1 mt-1">
+                      <button
+                        onClick={() => toggleRiskFilter("top")}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
+                          theme === "dark"
+                            ? "text-white hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } rounded-md`}
+                      >
+                        <span className="flex items-center">
+                          <div
+                            className={`w-4 h-4 mr-2 flex items-center justify-center border rounded ${
+                              riskFilters.top
+                                ? "bg-purple-500 border-purple-500"
+                                : `border-gray-400 ${
+                                    theme === "dark"
+                                      ? "bg-gray-700"
+                                      : "bg-white"
+                                  }`
+                            }`}
+                          >
+                            {riskFilters.top && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <span
+                            className={
+                              theme === "dark" ? "text-white" : "text-gray-700"
+                            }
+                          >
+                            Top Opportunities
+                          </span>
+                        </span>
+                      </button>
                       <button
                         onClick={() => toggleRiskFilter("all")}
                         className={`w-full flex items-center justify-between px-4 py-2 text-sm ${
@@ -473,10 +554,46 @@ export default function TrendingProtocols({
         </div>
         <div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
           {isLoading ? (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 py-8">
-              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-40 xl:h-52 rounded-xl bg-gray-300 dark:bg-gray-800" />
-            </div>
+            <>
+              <div
+                className={`flex flex-col ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40"
+                    : "bg-[#FDFDFF] shadow-sm"
+                } p-5 rounded-xl`}
+              >
+                <div className="flex items-center mb-4">
+                  <Skeleton className="w-14 h-14 rounded-full mr-4 bg-gray-300 dark:bg-gray-700" />
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2 bg-gray-300 dark:bg-gray-700" />
+                    <Skeleton className="h-4 w-20 bg-gray-300 dark:bg-gray-700" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <Skeleton className="h-8 w-16 bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-20 bg-gray-300 dark:bg-gray-700" />
+                </div>
+              </div>
+              <div
+                className={`flex flex-col ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-[#3C229C]/40 to-[#0B0424]/40"
+                    : "bg-[#FDFDFF] shadow-sm"
+                } p-5 rounded-xl`}
+              >
+                <div className="flex items-center mb-4">
+                  <Skeleton className="w-14 h-14 rounded-full mr-4 bg-gray-300 dark:bg-gray-700" />
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2 bg-gray-300 dark:bg-gray-700" />
+                    <Skeleton className="h-4 w-20 bg-gray-300 dark:bg-gray-700" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <Skeleton className="h-8 w-16 bg-gray-300 dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-20 bg-gray-300 dark:bg-gray-700" />
+                </div>
+              </div>
+            </>
           ) : protocolPairs.length === 0 ? (
             <div
               className={`py-8 text-center ${
@@ -486,7 +603,7 @@ export default function TrendingProtocols({
               No investment options available
             </div>
           ) : (
-            protocolPairs
+            filteredProtocols
               .filter(
                 (pair) =>
                   pair.apy !== undefined && pair.apy !== null && pair.apy > 0
@@ -573,10 +690,10 @@ export default function TrendingProtocols({
                     </div>
                     <div
                       className={`font-semibold text-md whitespace-nowrap ${getRiskColor(
-                        pair.type
+                        pair.risk
                       )}`}
                     >
-                      Risk: {getRiskLabel(pair.type)}
+                      Risk: {getRiskLabel(pair.risk)}
                     </div>
                   </div>
                 </div>
@@ -603,8 +720,8 @@ export default function TrendingProtocols({
               .then((data) => {
                 setBalance(data.usdBalance || "0");
               })
-              .catch((error) => {
-                console.error("Error refreshing balance:", error);
+              .catch(() => {
+                // Error handling
               })
               .finally(() => {
                 setIsLoadingBalance(false);

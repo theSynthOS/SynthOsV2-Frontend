@@ -3,21 +3,19 @@ import { apiEndpoints } from "@/lib/config";
 
 export async function GET() {
   try {
-    const response = await fetch(apiEndpoints.protocolPairsApy(), {
+    const response = await fetch(apiEndpoints.minimumDeposits(), {
       headers: {
         "X-API-Key": process.env.X_API_KEY || "",
       },
     });
-
     if (!response.ok) {
-      throw new Error("Failed to fetch protocol pairs");
+      throw new Error("Failed to fetch minimum deposits");
     }
-
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: "Failed to fetch protocol pairs" },
+      { success: false, error: "Failed to fetch minimum deposits" },
       { status: 500 }
     );
   }

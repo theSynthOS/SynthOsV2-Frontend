@@ -15,15 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const { address, amount } = await request.json();
 
-    console.log(
-      "🔍 POST /api/referral-points - Address:",
-      address,
-      "Amount:",
-      amount
-    );
-
     if (!address) {
-      console.log("❌ No address provided");
       return NextResponse.json(
         { success: false, error: "Address is required" },
         { status: 400 }
@@ -31,7 +23,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!amount || parseFloat(amount) < 10) {
-      console.log("❌ Amount is less than 10, ignoring referral points");
       return NextResponse.json(
         { success: false, error: "Amount must be >= 10 for referral points" },
         { status: 400 }
@@ -40,26 +31,15 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
 
-    // Get user data
     const user = await getUserPoints(address);
     if (!user) {
-      console.log("❌ User not found");
       return NextResponse.json(
         { success: false, error: "User not found" },
         { status: 404 }
       );
     }
 
-    console.log("📊 User data:", {
-      address: user.address,
-      referralBy: user.referralBy,
-      referralStatus: user.referralStatus,
-      pointsReferral: user.pointsReferral,
-    });
-
-    // Rule 3: If referralBy is null or empty, ignore
     if (!user.referralBy || user.referralBy.trim() === "") {
-      console.log("❌ No referralBy found, ignoring");
       return NextResponse.json({
         success: true,
         message: "No referral relationship found",
@@ -67,9 +47,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Rule 4: If referralStatus is 1, ignore (already processed)
     if (user.referralStatus === 1) {
-      console.log("❌ Referral already processed (status = 1), ignoring");
       return NextResponse.json({
         success: true,
         message: "Referral already processed",
@@ -77,26 +55,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Rule 5: Process referral points
-    console.log("✅ Processing referral points...");
-
-    // Get the referrer user
     const referrer = await getUserPoints(user.referralBy);
     if (!referrer) {
-      console.log("❌ Referrer not found");
       return NextResponse.json(
         { success: false, error: "Referrer not found" },
         { status: 404 }
       );
     }
 
-    // Start a transaction to ensure data consistency
     const session = await mongoose.startSession();
     let result;
 
     try {
       await session.withTransaction(async () => {
-        // Update current user: add 100 points and set referralStatus to 1
         await mongoose.model("UserPoints").findOneAndUpdate(
           { address: user.address },
           {
@@ -106,7 +77,6 @@ export async function POST(request: NextRequest) {
           { session }
         );
 
-        // Update referrer: add 100 points
         await mongoose
           .model("UserPoints")
           .findOneAndUpdate(
@@ -116,7 +86,6 @@ export async function POST(request: NextRequest) {
           );
       });
 
-      console.log("✅ Referral points processed successfully");
       result = {
         success: true,
         message: "Referral points added successfully",
@@ -125,7 +94,6 @@ export async function POST(request: NextRequest) {
         newStatus: 1,
       };
     } catch (transactionError) {
-      console.error("❌ Transaction failed:", transactionError);
       throw new Error("Failed to process referral points");
     } finally {
       await session.endSession();
@@ -133,7 +101,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("🚨 POST /api/referral-points error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -147,10 +114,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const address = searchParams.get("address");
 
-    console.log("🔍 GET /api/referral-points - Address:", address);
-
     if (!address) {
-      console.log("❌ No address provided");
       return NextResponse.json(
         { success: false, error: "Address is required" },
         { status: 400 }
@@ -161,7 +125,6 @@ export async function GET(request: NextRequest) {
 
     const user = await getUserPoints(address);
     if (!user) {
-      console.log("❌ User not found");
       return NextResponse.json(
         { success: false, error: "User not found" },
         { status: 404 }
@@ -182,10 +145,8 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log("📤 Sending referral status:", response);
     return NextResponse.json(response);
   } catch (error) {
-    console.error("🚨 GET /api/referral-points error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

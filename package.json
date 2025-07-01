@@ -31,8 +31,9 @@
     "react-qr-code": "^2.0.15",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
+    "tactus": "^0.0.3",
     "tailwind-merge": "^3.3.1",
-    "thirdweb": "^5.98.0"
+    "thirdweb": "^5.105.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -3,16 +3,19 @@ import { apiEndpoints } from "@/lib/config";
 
 export async function GET() {
   try {
-    const response = await fetch(apiEndpoints.protocolPairs());
+    const response = await fetch(apiEndpoints.protocolPairs(), {
+      headers: {
+        "X-API-Key": process.env.X_API_KEY || "",
+      },
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch protocol pairs");
     }
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching protocol pairs:", error);
     return NextResponse.json(
-      { error: "Failed to fetch protocol pairs" },
+      { success: false, error: "Failed to fetch protocol pairs" },
       { status: 500 }
     );
   }

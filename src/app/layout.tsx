@@ -51,12 +51,14 @@ export const metadata: Metadata = {
       "Invest with confidence using personalized crypto yield plans.",
     url: "https://app.synthos.fun",
     siteName: "SynthOS",
+    type: "website",
+    locale: "en_US",
     images: [
       {
         url: "https://app.synthos.fun/og.jpg",
         width: 1200,
         height: 630,
-        alt: "SynthOS",
+        alt: "SynthOS - Personalized Crypto Yield Plans",
       },
     ],
   },
@@ -81,19 +83,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <title>SynthOS</title>
-        <meta
-          name="description"
-          content="SynthOS - Invest with confidence using personalized crypto yield plans."
-        />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/favicon.ico" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        {/* <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" /> */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${ttTravels.variable} antialiased h-full`}

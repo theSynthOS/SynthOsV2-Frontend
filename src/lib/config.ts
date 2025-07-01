@@ -1,7 +1,7 @@
 const config = {
-  // Backend URLs
   SYNTHOS_AI_ANALYZER_URL:
     process.env.SYNTHOS_AI_ANALYZER_URL || "https://ai.synthos.fun",
+  // Backend URLs
   SYNTHOS_BACKEND_URL:
     process.env.SYNTHOS_BACKEND_URL || "https://backend.synthos.fun",
 } as const;
@@ -31,6 +31,12 @@ export const apiEndpoints = {
 
   updateDepositTx: () =>
     `${config.SYNTHOS_BACKEND_URL}/action/update-deposit-transaction`,
+
+  updateWithdrawTx: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/update-withdraw-transaction`,
+
+  minimumDeposits: () =>
+    `${config.SYNTHOS_BACKEND_URL}/action/protocol-minimum-deposits`,
 
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,

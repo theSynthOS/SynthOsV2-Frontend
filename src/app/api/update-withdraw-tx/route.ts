@@ -3,18 +3,20 @@ import { apiEndpoints } from "@/lib/config";
 import {
   validateAndParseRequestBody,
   createErrorResponse,
-  withAddressValidation,
 } from "@/lib/api-utils";
 
-async function depositHandler(request: Request) {
+export async function POST(request: Request) {
   try {
     const processedBody = await validateAndParseRequestBody(
       request,
-      ["user_address", "protocol_pair_id", "amount"],
-      ["user_address"]
+      ["transactionHash"], // Required strings
+      [], // No addresses
+      ["blockNumber"], // Number field
+      [], // Optional (can be null)
+      ["withdrawalIds"] // Array fields
     );
 
-    const response = await fetch(apiEndpoints.deposit(), {
+    const response = await fetch(apiEndpoints.updateWithdrawTx(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,15 +32,13 @@ async function depositHandler(request: Request) {
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch {
-    return createErrorResponse("Failed to process deposit", 500);
+  } catch (error) {
+    console.error("Error processing update withdraw tx:", error);
+    return createErrorResponse(
+      error instanceof Error
+        ? error.message
+        : "Failed to process update withdraw tx",
+      500
+    );
   }
 }
-
-export const POST = withAddressValidation(async (request: Request) => {
-  try {
-    return await depositHandler(request);
-  } catch {
-    return createErrorResponse("Failed to process deposit", 500);
-  }
-});

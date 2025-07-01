@@ -144,8 +144,7 @@ export default function PullToRefresh({
 
         try {
           await onRefresh();
-        } catch (error) {
-          console.error("Refresh failed:", error);
+        } catch {
         } finally {
           // Reset after refresh with a delay
           setTimeout(() => {

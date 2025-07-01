@@ -10,6 +10,7 @@ import {
   prepareTransaction,
   sendAndConfirmTransaction,
   sendBatchTransaction,
+  waitForReceipt,
 } from "thirdweb";
 import Card from "@/components/ui/card";
 import Image from "next/image";
@@ -62,6 +63,7 @@ export default function WithdrawModal({
   const account = useActiveAccount();
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
+  const [withdrawIds, setWithdrawIds] = useState<string[]>([]);
 
   // Tenderly RPC bundled simulation function
   const simulateTransactionBundle = async (
@@ -69,7 +71,6 @@ export default function WithdrawModal({
     account: any
   ) => {
     try {
-      console.log("🔍 Starting Tenderly RPC bundled simulation...");
       setSimulationStatus(
         `Simulating ${transactionData.length} transactions...`
       );
@@ -84,15 +85,16 @@ export default function WithdrawModal({
 
         // Only include value if it's not zero (to match Tenderly's expected format)
         if (tx.value && tx.value !== "0x0" && tx.value !== "0") {
-          call.value = tx.value;
+          // Convert value to hex string if it's a decimal number
+          const valueStr =
+            typeof tx.value === "string" ? tx.value : tx.value.toString();
+          call.value = valueStr.startsWith("0x")
+            ? valueStr
+            : `0x${Number(valueStr).toString(16)}`;
         }
 
         return call;
       });
-
-      console.log(
-        `📦 Simulating bundle of ${transactionCalls.length} transactions`
-      );
 
       // Log the exact request format for debugging
       const requestBody = {
@@ -102,7 +104,6 @@ export default function WithdrawModal({
           "latest", // Block parameter - use latest block
         ],
       };
-      console.log("📋 Request body:", JSON.stringify(requestBody, null, 2));
 
       // Call Tenderly RPC tenderly_simulateBundle method
       const response = await fetch("/api/tenderly-rpc", {
@@ -129,29 +130,13 @@ export default function WithdrawModal({
         throw new Error("Invalid simulation results format");
       }
 
-      console.log(
-        "📊 Simulation results:",
-        simulationResults.length,
-        "transactions"
-      );
-
       // Check if ALL transactions have status: true
       const failedTransactions = simulationResults.filter(
         (result: any, index: number) => {
           const success = result.status === true;
-          console.log(
-            `Transaction ${index + 1}: ${success ? "✅" : "❌"} Status: ${
-              result.status
-            }`
-          );
 
           // Log failure details for debugging
           if (!success) {
-            console.log(`   ❌ Transaction ${index + 1} failed:`, {
-              error: result.error,
-              revertReason: result.revertReason,
-              gasUsed: result.gasUsed,
-            });
           }
 
           return !success;
@@ -181,9 +166,6 @@ export default function WithdrawModal({
         0
       );
 
-      console.log("✅ All transactions passed simulation");
-      console.log(`💰 Total gas used: ${totalGasUsed}`);
-
       // Update status for success
       setSimulationStatus("✅ All transactions validated successfully");
       setTimeout(() => setSimulationStatus(null), 1500);
@@ -194,7 +176,6 @@ export default function WithdrawModal({
         results: simulationResults,
       };
     } catch (error) {
-      console.error("❌ Tenderly RPC simulation error:", error);
       setSimulationStatus("❌ Simulation failed");
       setTimeout(() => setSimulationStatus(null), 2000);
       throw error;
@@ -216,6 +197,7 @@ export default function WithdrawModal({
       setTxHash("");
       setTxProgressPercent(0);
       setSimulationStatus(null);
+      setWithdrawIds([]);
     }
   }, [pool]);
 
@@ -228,6 +210,7 @@ export default function WithdrawModal({
       setTxHash("");
       setTxProgressPercent(0);
       setSimulationStatus(null);
+      setWithdrawIds([]);
     }
     onClose();
   };
@@ -241,6 +224,7 @@ export default function WithdrawModal({
     setTxHash("");
     setTxProgressPercent(0);
     setSimulationStatus(null);
+    setWithdrawIds([]);
 
     // Refresh balance only when user closes the success modal
     // Add a small delay to ensure backend has processed the withdrawal
@@ -267,6 +251,7 @@ export default function WithdrawModal({
     }
 
     // Check if amount exceeds balance
+
     if (parseFloat(amount) > parseFloat(balance)) {
       toast.error("Insufficient Balance");
       return;
@@ -277,23 +262,40 @@ export default function WithdrawModal({
     try {
       // Update progress - start progress animation
       setTxProgressPercent(10);
+
+      // Check if withdrawal amount is within 2% tolerance of maximum balance
+      const maxBalance = parseFloat(balance);
+      const withdrawAmount = parseFloat(amount);
+      const tolerance = maxBalance * 0.02; // 2% tolerance
+      const isMaxWithdraw = maxBalance - withdrawAmount <= tolerance;
+
+      const requestBody = {
+        user_address: address,
+        protocol_pair_id: pool?.protocol_pair_id,
+        amount: amount,
+        withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
+        ...(isMaxWithdraw && { maxWithdraw: true }), // Add maxWithdraw flag if within tolerance
+      };
+
       const response = await fetch("/api/withdraw-tracking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          user_address: address,
-          protocol_pair_id: pool?.protocol_pair_id,
-          amount: amount,
-          withdrawToken: selectedToken, // Must be 'USDC' or 'USDT'
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       // Update progress
       setTxProgressPercent(30);
 
       const responseData = await response.json();
+
+      // Store withdrawIds for later database update
+      const withdrawalIds = responseData.withdrawalRecords || [];
+
+      if (Array.isArray(withdrawalIds) && withdrawalIds.length > 0) {
+        setWithdrawIds(withdrawalIds);
+      }
 
       // Update progress
       setTxProgressPercent(50);
@@ -309,15 +311,12 @@ export default function WithdrawModal({
         }
 
         // Simulate the transaction bundle with Tenderly RPC
-        console.log("🔍 Running Tenderly RPC bundled simulation...");
         try {
           const simulationResult = await simulateTransactionBundle(
             responseData.callData,
             account
           );
-          console.log("✅ Tenderly RPC simulation passed:", simulationResult);
         } catch (simulationError) {
-          console.error("❌ Tenderly RPC simulation failed:", simulationError);
           const errorMessage =
             simulationError instanceof Error
               ? simulationError.message
@@ -353,9 +352,7 @@ export default function WithdrawModal({
             transactions,
             account,
           });
-          console.log("result", result);
         } catch (error) {
-          console.log("error", error);
           // Check if the error is because account doesn't support batch transactions
           const errorMessage =
             error instanceof Error ? error.message : String(error);
@@ -389,10 +386,80 @@ export default function WithdrawModal({
         }
 
         // Update progress to complete
-        setTxProgressPercent(100);
+        setTxProgressPercent(95);
 
         // Handle success
         setTxHash(result.transactionHash);
+
+        // Get transaction receipt to obtain block number
+        let blockNumber: number | null = null;
+        try {
+          const receipt = await waitForReceipt({
+            client: client,
+            chain: scroll,
+            transactionHash: result.transactionHash as `0x${string}`,
+          });
+
+          if (receipt && receipt.blockNumber) {
+            blockNumber = Number(receipt.blockNumber);
+          }
+        } catch (receiptError) {
+          // Continue without block number
+        }
+
+        // Update withdrawal record in database with transaction details
+        // Use the local withdrawalIds variable instead of state (which updates asynchronously)
+        if (
+          withdrawalIds &&
+          Array.isArray(withdrawalIds) &&
+          withdrawalIds.length > 0
+        ) {
+          try {
+            const updateResponse = await fetch("/api/update-withdraw-tx", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                withdrawalIds: withdrawalIds,
+                transactionHash: result.transactionHash as `0x${string}`,
+                blockNumber: blockNumber,
+              }),
+            });
+
+            if (!updateResponse.ok) {
+              console.warn("Failed to update withdrawal transaction record");
+            } else {
+              console.log("Successfully updated withdrawal transaction record");
+            }
+          } catch (updateError) {
+            // Continue with success flow even if update fails
+            console.warn("Error updating withdrawal transaction:", updateError);
+          }
+        } else {
+          console.warn("No withdrawalIds available for update:", withdrawalIds);
+        }
+
+        const response = await fetch("/api/transactions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            address: address,
+            hash: result.transactionHash,
+            amount: amount,
+            type: "withdraw",
+            status: "completed",
+          }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+        } else {
+        }
+
+        setTxProgressPercent(100);
         // Handle success
         setShowSuccessModal(true);
 
@@ -404,8 +471,6 @@ export default function WithdrawModal({
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
-        console.error("Withdrawal execution error:", error);
-
         // Show user-friendly error message
         let errorMessage = "Transaction failed";
         if (error instanceof Error) {
@@ -437,8 +502,6 @@ export default function WithdrawModal({
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Withdrawal API error:", error);
-
       let errorMessage = "Failed to process withdrawal";
       if (error instanceof Error) {
         const errorString = error.message;
