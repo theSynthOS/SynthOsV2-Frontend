@@ -761,7 +761,9 @@ export default function DepositModal({
         // Extract transactions from callData
 
         if (!responseData || !Array.isArray(responseData.callData)) {
-          throw new Error(" We are experiencing high investment volumes, please try again later."); 
+          throw new Error(
+            " We are experiencing high investment volumes, please try again later."
+          );
           // Invalid response format: expected callData array
         }
 
@@ -806,7 +808,9 @@ export default function DepositModal({
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-          throw new Error("We are experiencing high investment volumes, please try again later.");
+          throw new Error(
+            "We are experiencing high investment volumes, please try again later."
+          );
           // Pre-execution simulation failed: ${errorMessage}
         }
 
@@ -871,26 +875,35 @@ export default function DepositModal({
         // Update progress after transaction execution
         setTxProgressPercent(85);
 
-        // Get transaction receipt to obtain block number
+        // Wait for transaction receipt and block number - keep trying until we get it
         let blockNumber: number | null = null;
-        try {
-          const receipt = await waitForReceipt({
-            client: client,
-            chain: scroll,
-            transactionHash: result.transactionHash as `0x${string}`,
-          });
 
-          if (receipt && receipt.blockNumber) {
-            blockNumber = Number(receipt.blockNumber);
+        // Keep retrying until we get the receipt with block number
+        while (blockNumber === null) {
+          try {
+            const receipt = await waitForReceipt({
+              client: client,
+              chain: scroll,
+              transactionHash: result.transactionHash as `0x${string}`,
+            });
+
+            if (receipt && receipt.blockNumber) {
+              blockNumber = Number(receipt.blockNumber);
+            } else {
+              // Wait a bit before retrying if receipt doesn't have block number
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          } catch (receiptError) {
+            // Wait a bit before retrying if receipt call fails
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           }
-        } catch (receiptError) {
-          // Continue without block number
         }
 
         // Update progress after getting receipt
         setTxProgressPercent(90);
 
         // Update deposit record in database with transaction details
+        // Only proceed once we have valid transaction hash and block number
         try {
           const updateResponse = await fetch("/api/update-deposit-tx", {
             method: "POST",
@@ -905,8 +918,10 @@ export default function DepositModal({
           });
 
           if (!updateResponse.ok) {
+            console.error("Failed to update deposit transaction in database");
           }
         } catch (updateError) {
+          console.error("Error updating deposit transaction:", updateError);
           // Continue with success flow even if update fails
         }
 
