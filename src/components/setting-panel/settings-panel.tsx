@@ -201,12 +201,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   // Panel content that remains the same regardless of theme
   const panelContent = (
-    <div className="flex flex-col min-h-screen pt-6">
+    <div className="flex flex-col min-h-screen pt-6 text-black dark:text-white">
       {/* Header */}
       <div className="px-4 pb-6 flex items-center justify-between">
         <button
           onClick={handleGoBack}
-          className="w-8 h-8 flex items-center justify-center"
+          className="w-8 h-8 flex items-center justify-center text-black dark:text-white"
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
@@ -219,7 +219,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       {/* User Info */}
       <div className={`px-4 pb-6 flex items-center`}>
         <div className="flex-1">
-          <h2 className={`text-lg truncate font-semibold`}>
+          <h2 className={`text-lg truncate font-semibold text-black dark:text-white`}>
             {displayAddress ? formatAddress(displayAddress) : "Not connected"}
           </h2>
           {displayAddress && (
@@ -259,7 +259,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           onClick={() => handleOpenModal("deposit")}
           className={`w-full flex items-center p-3 border border-white/40 ${
             theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
-          } rounded-lg hover:bg-opacity-80 transition-colors`}
+          } rounded-lg hover:bg-opacity-80 transition-colors text-black dark:text-white`}
         >
           <MoveDown
             className={`h-5 w-5 mr-3 transform rotate-45 ${
@@ -274,7 +274,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           onClick={() => handleOpenModal("send")}
           className={`w-full flex items-center p-3 border border-white/60 ${
             theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
-          } rounded-lg hover:bg-opacity-80 transition-colors`}
+          } rounded-lg hover:bg-opacity-80 transition-colors text-black dark:text-white`}
         >
           <MoveUp
             className={`h-5 w-5 mr-3 transform -rotate-45 ${
@@ -289,7 +289,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           onClick={() => handleOpenModal("buy")}
           className={`w-full flex items-center p-3 border border-white/60 ${
             theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
-          } rounded-lg hover:bg-opacity-80 transition-colors`}
+          } rounded-lg hover:bg-opacity-80 transition-colors text-black dark:text-white`}
         >
           <Plus
             className={`h-5 w-5 mr-3 ${
@@ -327,7 +327,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <div
               className={`mt-2 p-3 rounded-lg ${
                 theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
-              }`}
+              } text-black dark:text-white`}
             >
               {isLoadingBalances ? (
                 <div className="py-2 text-center text-sm">
