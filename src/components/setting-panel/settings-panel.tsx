@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Plus,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -74,6 +75,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showConnectButtonDropdown, setShowConnectButtonDropdown] = useState(false);
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
@@ -203,6 +205,11 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     if (!showFundsDropdown && account?.address) {
       fetchTokenBalances(account.address);
     }
+  };
+
+  // Toggle wallet details dropdown
+  const toggleWalletDetailsDropdown = () => {
+    setShowConnectButtonDropdown(!showConnectButtonDropdown);
   };
 
   if (!isOpen) return null;
@@ -389,6 +396,59 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           )}
         </div>
 
+        <div className="w-full">
+          <button
+            onClick={toggleWalletDetailsDropdown}
+            className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-black dark:text-white ${
+              showConnectButtonDropdown ? "bg-white/5" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <Wallet
+                className={`h-5 w-5 mr-3 ${
+                  theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
+                }`}
+              />
+              <span>Wallet Details</span>
+            </div>
+            <ChevronRight
+              className={`h-5 w-5 text-[#202020] dark:text-white transition-transform ${
+                showConnectButtonDropdown ? "transform rotate-90" : ""
+              }`}
+            />
+          </button>
+
+          {/* Wallet Details Dropdown Content */}
+          {showConnectButtonDropdown && (
+            <div
+              className={`mt-2 p-3 rounded-lg ${
+                theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
+              } text-black dark:text-white`}
+            >
+              {account ? (
+                  <div className="">
+                    <ConnectButton
+                      client={client}
+                      wallets={wallets}
+                      theme={theme === "dark" ? "dark" : "light"}
+                      connectModal={{ size: "compact" }}
+                    />
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-sm mb-3 opacity-80">Connect your wallet to get started</p>
+                  <ConnectButton
+                    client={client}
+                    wallets={wallets}
+                    theme={theme === "dark" ? "dark" : "light"}
+                    connectModal={{ size: "compact" }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {account ? (
           <button
             onClick={handleAuth}
@@ -401,18 +461,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
           </button>
         ) : (
-          <div className="flex w-full items-center mt-2">
-            <ConnectButton
-              client={client}
-              wallets={wallets}
-              theme={theme === "dark" ? "dark" : "light"}
-              connectModal={{ size: "compact" }}
-              // accountAbstraction={{
-              //   chain: scroll,
-              //   sponsorGas: true,
-              // }}
-            />
-          </div>
+          <></>
         )}
       </div>
 
