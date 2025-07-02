@@ -78,7 +78,11 @@ export default function Header() {
 
   return (
     <div
-      className={`flex justify-between items-center px-4 py-3 relative z-10 transition-all duration-300 `}
+      className={`flex justify-between items-center px-4 py-3 relative z-10 transition-all duration-300 ${
+        isScrolled && !isSettingsOpen
+          ? "bg-white/95 dark:bg-[#1E1E1E]/95 backdrop-blur-md shadow-sm"
+          : "bg-transparent"
+      }`}
     >
       {/* Logo */}
       <div className="flex items-center">

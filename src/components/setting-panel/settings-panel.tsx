@@ -219,7 +219,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       {/* User Info */}
       <div className={`px-4 pb-6 flex items-center`}>
         <div className="flex-1">
-          <h2 className={`text-lg truncate font-semibold text-black dark:text-white`}>
+          <h2
+            className={`text-lg truncate font-semibold text-black dark:text-white`}
+          >
             {displayAddress ? formatAddress(displayAddress) : "Not connected"}
           </h2>
           {displayAddress && (
@@ -422,7 +424,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         {/* Semi-transparent backdrop */}
         <div
           className={`fixed inset-0 ${
-            theme === "dark" ? "bg-black/20" : "bg-gray-900/10"
+            theme === "dark" ? "bg-black/40" : "bg-gray-900/30"
           } backdrop-blur-[2px]`}
           style={{
             animation: isExiting
