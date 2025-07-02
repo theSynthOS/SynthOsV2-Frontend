@@ -315,7 +315,9 @@ export default function WithdrawModal({
 
         // Extract transactions from callData
         if (!responseData || !Array.isArray(responseData.callData)) {
-          throw new Error(" We are experiencing high investment volume, please try again later."); 
+          throw new Error(
+            " We are experiencing high investment volumes, please try again later."
+          );
           // Invalid response format: expected callData array
         }
 
@@ -357,7 +359,9 @@ export default function WithdrawModal({
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-           throw new Error("We are experiencing high investment volume, please try again later.");
+          throw new Error(
+            "We are experiencing high investment volumes, please try again later."
+          );
           // Pre-execution simulation failed: ${errorMessage}
         }
 
