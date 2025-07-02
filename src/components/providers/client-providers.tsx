@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import PullToRefresh from "@/components/features/pull-to-refresh";
+// import PullToRefresh from "@/components/features/pull-to-refresh";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { PointsProvider } from "@/contexts/PointsContext";
@@ -41,9 +41,9 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
           )}
 
           <main className={`${!isLandingPage ? "pt-16 pb-20" : ""}`}>
-            <PullToRefresh onRefresh={handleGlobalRefresh}>
-              {children}
-            </PullToRefresh>
+            {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
+            {children}
+            {/* </PullToRefresh> */}
           </main>
 
           {/* Only show navbar on non-landing pages */}
