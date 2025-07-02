@@ -866,8 +866,8 @@ export default function DepositModal({
           }
         }
 
-        // Update progress to complete
-        setTxProgressPercent(100);
+        // Update progress after transaction execution
+        setTxProgressPercent(85);
 
         // Get transaction receipt to obtain block number
         let blockNumber: number | null = null;
@@ -884,6 +884,9 @@ export default function DepositModal({
         } catch (receiptError) {
           // Continue without block number
         }
+
+        // Update progress after getting receipt
+        setTxProgressPercent(90);
 
         // Update deposit record in database with transaction details
         try {
@@ -906,6 +909,9 @@ export default function DepositModal({
         }
 
         await handleTransactionSuccess(result.transactionHash, depositAmount);
+
+        // Update progress to complete
+        setTxProgressPercent(100);
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));

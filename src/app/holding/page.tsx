@@ -605,7 +605,7 @@ export default function HoldingPage() {
                           .toLowerCase()
                           .replace(/\s+/g, "-"),
                       }}
-                      balance={h.initialAmount.toString()}
+                      balance={h.currentAmount.toString()}
                       address={displayAddress || undefined}
                       refreshBalance={() => {
                         // Refetch holdings data
@@ -972,7 +972,7 @@ export default function HoldingPage() {
                               .toLowerCase()
                               .replace(/\s+/g, "-"),
                           }}
-                          balance={h.currentAmount.toString()}
+                          balance={h.initialAmount.toString()}
                           address={displayAddress || undefined}
                           refreshBalance={() => {
                             // Refetch holdings data
