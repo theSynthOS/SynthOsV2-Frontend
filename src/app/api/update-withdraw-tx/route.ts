@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       [], // No addresses
       ["blockNumber"], // Number field
       [], // Optional (can be null)
-      ["withdrawalIds"] // Array fields
+      ["withdrawalPlan"] // Array fields
     );
 
     const response = await fetch(apiEndpoints.updateWithdrawTx(), {

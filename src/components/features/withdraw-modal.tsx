@@ -294,10 +294,10 @@ export default function WithdrawModal({
       const responseData = await response.json();
 
       // Store withdrawIds for later database update
-      const withdrawalIds = responseData.withdrawalRecords || [];
+      const withdrawalPlan = responseData.withdrawalPlan || [];
 
-      if (Array.isArray(withdrawalIds) && withdrawalIds.length > 0) {
-        setWithdrawIds(withdrawalIds);
+      if (Array.isArray(withdrawalPlan) && withdrawalPlan.length > 0) {
+        setWithdrawIds(withdrawalPlan);
       }
 
       // Update progress
@@ -413,9 +413,9 @@ export default function WithdrawModal({
         // Update withdrawal record in database with transaction details
         // Use the local withdrawalIds variable instead of state (which updates asynchronously)
         if (
-          withdrawalIds &&
-          Array.isArray(withdrawalIds) &&
-          withdrawalIds.length > 0
+          withdrawalPlan &&
+          Array.isArray(withdrawalPlan) &&
+          withdrawalPlan.length > 0
         ) {
           try {
             const updateResponse = await fetch("/api/update-withdraw-tx", {
@@ -424,7 +424,7 @@ export default function WithdrawModal({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                withdrawalIds: withdrawalIds,
+                withdrawalPlan: withdrawalPlan,
                 transactionHash: result.transactionHash as `0x${string}`,
                 blockNumber: blockNumber,
               }),
@@ -440,7 +440,7 @@ export default function WithdrawModal({
             console.warn("Error updating withdrawal transaction:", updateError);
           }
         } else {
-          console.warn("No withdrawalIds available for update:", withdrawalIds);
+          console.warn("No withdrawalPlan available for update:", withdrawalPlan);
         }
 
         const response = await fetch("/api/transactions", {
