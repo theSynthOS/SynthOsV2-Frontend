@@ -315,7 +315,8 @@ export default function WithdrawModal({
 
         // Extract transactions from callData
         if (!responseData || !Array.isArray(responseData.callData)) {
-          throw new Error("Invalid response format: expected callData array");
+          throw new Error(" We are experiencing high investment volume, please try again later."); 
+          // Invalid response format: expected callData array
         }
 
         const transactionData = responseData.callData;
@@ -356,7 +357,8 @@ export default function WithdrawModal({
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-          throw new Error(`Pre-execution simulation failed: ${errorMessage}`);
+           throw new Error("We are experiencing high investment volume, please try again later.");
+          // Pre-execution simulation failed: ${errorMessage}
         }
 
         // Update progress after successful simulation
@@ -574,7 +576,7 @@ export default function WithdrawModal({
       {/* Main Withdraw Modal */}
       {!showSuccessModal ? (
         <div
-          className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
+          className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <Card
