@@ -56,7 +56,7 @@ export default function Navbar() {
       }
     };
     fetchPoints();
-  }, [account, lastRefresh]);
+  }, [account]);
 
   const isActive = (path: string) => {
     return pathname === path;
