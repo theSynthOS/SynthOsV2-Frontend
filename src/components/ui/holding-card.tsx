@@ -13,7 +13,7 @@ interface HoldingCardProps {
   apy: string;
   protocolLogo: string;
   pnl: string | number;
-  initialAmount: string;
+  currentAmount: string;
   onClick?: () => void;
   pool?: {
     name: string;
@@ -39,7 +39,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
   balance,
   address,
   pnl,
-  initialAmount,
+  currentAmount,
   refreshBalance,
 }) => {
   const { theme } = useTheme();
@@ -133,9 +133,9 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                     : isDark
                     ? "text-white"
                     : "text-black"
-                  : parseFloat(amount) > parseFloat(initialAmount)
+                  : parseFloat(amount) > parseFloat(currentAmount)
                   ? "text-green-500"
-                  : parseFloat(amount) < parseFloat(initialAmount)
+                  : parseFloat(amount) < parseFloat(currentAmount)
                   ? "text-red-500"
                   : isDark
                   ? "text-white"
@@ -148,9 +148,9 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                   : pnl < 0
                   ? "-"
                   : ""
-                : parseFloat(amount) > parseFloat(initialAmount)
+                : parseFloat(amount) > parseFloat(currentAmount)
                 ? "+"
-                : parseFloat(amount) < parseFloat(initialAmount)
+                : parseFloat(amount) < parseFloat(currentAmount)
                 ? "-"
                 : ""}
               $
@@ -174,7 +174,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                 isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Deposited Amount: ${parseFloat(initialAmount).toFixed(2)}
+              Deposited Amount: ${parseFloat(currentAmount).toFixed(2)}
             </p>
           </div>
         </div>

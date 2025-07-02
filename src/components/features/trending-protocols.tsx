@@ -132,10 +132,6 @@ export default function TrendingProtocols({
         const filteredPairs = data.filter(
           (pair: ProtocolPair) => pair.chain_id === 534352
         );
-        console.log(
-          "⚡ Filtered pairs for chain 534352:",
-          filteredPairs.length
-        );
 
         setProtocolPairs(filteredPairs);
       } catch (error) {

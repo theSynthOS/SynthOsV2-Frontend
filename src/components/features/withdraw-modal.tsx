@@ -313,10 +313,42 @@ export default function WithdrawModal({
           throw new Error("Wallet not connected");
         }
 
+        // Extract transactions from callData
+        if (!responseData || !Array.isArray(responseData.callData)) {
+          throw new Error("Invalid response format: expected callData array");
+        }
+
+        const transactionData = responseData.callData;
+
+        // Function to check if a transaction is an approval
+        const isApprovalTransaction = (data: string): boolean => {
+          if (!data || data.length < 10) return false;
+
+          // Extract function selector (first 4 bytes after 0x)
+          const functionSelector = data.slice(0, 10).toLowerCase();
+
+          // Common ERC20 approval function selectors
+          const approvalSelectors = [
+            "0x095ea7b3", // approve(address,uint256)
+            "0xa9059cbb", // transfer(address,uint256)
+          ];
+
+          return approvalSelectors.includes(functionSelector);
+        };
+
+        // Reorder transactions to put approvals first
+        const approvalTxs = transactionData.filter((tx: any) =>
+          isApprovalTransaction(tx.data)
+        );
+        const nonApprovalTxs = transactionData.filter(
+          (tx: any) => !isApprovalTransaction(tx.data)
+        );
+        const orderedTxs = [...approvalTxs, ...nonApprovalTxs];
+
         // Simulate the transaction bundle with Tenderly RPC
         try {
           const simulationResult = await simulateTransactionBundle(
-            responseData.callData,
+            orderedTxs,
             account
           );
         } catch (simulationError) {
@@ -330,8 +362,8 @@ export default function WithdrawModal({
         // Update progress after successful simulation
         setTxProgressPercent(55);
 
-        // Prepare all transactions (only after simulation passes)
-        const transactions = responseData.callData.map((tx: any) =>
+        // Prepare all transactions in the correct order (only after simulation passes)
+        const transactions = orderedTxs.map((tx: any) =>
           prepareTransaction({
             to: tx.to,
             data: tx.data,
@@ -429,18 +461,15 @@ export default function WithdrawModal({
                 blockNumber: blockNumber,
               }),
             });
-
-            if (!updateResponse.ok) {
-              console.warn("Failed to update withdrawal transaction record");
-            } else {
-              console.log("Successfully updated withdrawal transaction record");
-            }
           } catch (updateError) {
             // Continue with success flow even if update fails
             console.warn("Error updating withdrawal transaction:", updateError);
           }
         } else {
-          console.warn("No withdrawalPlan available for update:", withdrawalPlan);
+          console.warn(
+            "No withdrawalPlan available for update:",
+            withdrawalPlan
+          );
         }
 
         const response = await fetch("/api/transactions", {
