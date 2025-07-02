@@ -545,7 +545,7 @@ export default function WithdrawModal({
       {/* Main Withdraw Modal */}
       {!showSuccessModal ? (
         <div
-          className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
+          className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <Card
@@ -786,7 +786,7 @@ export default function WithdrawModal({
       ) : (
         /* Success Modal */
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 pb-28 z-[9999]"
           onClick={(e) => e.target === e.currentTarget && handleCloseAll()}
         >
           <Card

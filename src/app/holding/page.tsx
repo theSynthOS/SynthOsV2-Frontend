@@ -851,7 +851,7 @@ export default function HoldingPage() {
             />
 
             {/* Modal Content */}
-            <div className="relative z-10 w-full max-w-4xl max-h-[90vh]">
+            <div className="relative z-[999] w-full max-w-4xl max-h-[90vh]">
               <Card
                 title="All Holdings"
                 onClose={() => {

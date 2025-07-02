@@ -87,8 +87,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   });
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
 
+  // Update the mounted state and ensure theme is properly applied
   useEffect(() => {
     setMounted(true);
+    // Force a re-render after mounting to ensure proper theme application
+    const timer = setTimeout(() => {
+      // This will trigger a re-render with the correct theme
+      setMounted(state => state);
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Format address to show first 6 and last 4 characters
@@ -198,6 +206,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   };
 
   if (!isOpen) return null;
+  if (!mounted) return null; // Don't render until mounted to avoid theme flashing
 
   // Panel content that remains the same regardless of theme
   const panelContent = (
