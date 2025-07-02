@@ -280,7 +280,7 @@ export default function WithdrawModal({
         ...(isMaxWithdraw && { maxWithdraw: true }), // Add maxWithdraw flag if within tolerance
       };
 
-      const response = await fetch("/api/withdraw-tracking", {
+      const response = await fetch("/api/withdraw", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
