@@ -222,9 +222,9 @@ export default function HoldingPage() {
     const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-8;
 
     // Exclude holdings where initialAmount is 0
-    // const hasValidInitialAmount = h.initialAmount > 0;
+    const hasValidInitialAmount = h.initialAmount > 0;
 
-    return hasVisibleCurrentAmount;
+    return hasVisibleCurrentAmount && hasValidInitialAmount;
   });
 
   // Calculate total holding and pnl using filtered holdings
