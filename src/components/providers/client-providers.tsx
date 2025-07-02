@@ -40,7 +40,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
             </div>
           )}
 
-          <main className={`${!isLandingPage ? "pt-16 pb-20" : ""}`}>
+          <main className={`${!isLandingPage ? "pt-16 pb-24" : ""}`}>
             {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
             {children}
             {/* </PullToRefresh> */}

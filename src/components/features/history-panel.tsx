@@ -129,7 +129,7 @@ export default function HistoryPanel({
   const panelContent = (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-none px-4 py-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+      <div className="flex-none px-4 py-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 ">
         <button
           onClick={() => {
             lightHaptic();
@@ -146,7 +146,7 @@ export default function HistoryPanel({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden pb-28">
         {!account ? (
           <div className="h-full flex items-center justify-center px-4">
             <p

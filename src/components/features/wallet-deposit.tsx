@@ -6,7 +6,6 @@ import QRCode from "react-qr-code";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Card from "@/components/ui/card";
-import { useBalance } from "@/contexts/BalanceContext";
 import { mediumHaptic, copyHaptic } from "@/lib/haptic-utils";
 
 interface DepositModalProps {
@@ -27,7 +26,6 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [selectedCoin, setSelectedCoin] = useState<StablecoinType>("USDC");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { refreshBalance } = useBalance();
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -72,15 +70,6 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
     };
   }, [dropdownOpen]);
 
-  // One-time refresh when modal opens (not periodic)
-  useEffect(() => {
-    if (isOpen && account?.address) {
-      if (refreshBalance) {
-        refreshBalance();
-      }
-    }
-  }, [isOpen, account?.address, refreshBalance]);
-
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal close
     if (displayAddress) {
@@ -114,7 +103,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -129,7 +118,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <Card title="Deposit Funds" onClose={onClose}>
-          <div className="max-h-[60vh]">
+          <div className="">
             {!displayAddress ? (
               <div
                 className={`${
@@ -383,7 +372,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                 </div>
 
                 {/* Network Information */}
-                <div>
+                <div className="pb-2">
                   <h3
                     className={`font-medium mb-2 ${isMobile ? "text-sm" : ""}`}
                   >
@@ -393,7 +382,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                   <ul
                     className={`${isMobile ? "text-xs" : "text-sm"} ${
                       theme === "dark" ? "text-[#747474]" : "text-gray-500"
-                    } space-y-1`}
+                    } space-y-1 `}
                   >
                     <li>
                       • Only send assets on the{" "}

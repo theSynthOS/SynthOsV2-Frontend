@@ -63,6 +63,18 @@ export default function HoldingPage() {
   // View All modal state
   const [showViewAllModal, setShowViewAllModal] = useState(false);
 
+  // Lock background scroll when View All modal is open
+  useEffect(() => {
+    if (showViewAllModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showViewAllModal]);
+
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
     setMounted(true);
@@ -343,17 +355,17 @@ export default function HoldingPage() {
     }
   };
 
-  const handleDragEnd = (
-    event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    const threshold = 100; // minimum distance to trigger navigation
-    if (info.offset.x > threshold) {
-      router.replace("/home");
-    } else {
-      controls.start({ x: 0 });
-    }
-  };
+  // const handleDragEnd = (
+  //   event: MouseEvent | TouchEvent | PointerEvent,
+  //   info: PanInfo
+  // ) => {
+  //   const threshold = 100; // minimum distance to trigger navigation
+  //   if (info.offset.x > threshold) {
+  //     router.replace("/home");
+  //   } else {
+  //     controls.start({ x: 0 });
+  //   }
+  // };
 
   // Reset animation state when component mounts or updates
   useEffect(() => {
@@ -366,15 +378,15 @@ export default function HoldingPage() {
   return (
     <>
       <motion.div
-        {...(isMobile
-          ? {
-              drag: "x",
-              dragConstraints: { left: 0, right: 0 },
-              dragElastic: 0.2,
-              onDragEnd: handleDragEnd,
-              whileDrag: { cursor: "grabbing" },
-            }
-          : {})}
+        // {...(isMobile
+        //   ? {
+        //       drag: "x",
+        //       dragConstraints: { left: 0, right: 0 },
+        //       dragElastic: 0.2,
+        //       onDragEnd: handleDragEnd,
+        //       whileDrag: { cursor: "grabbing" },
+        //     }
+        //   : {})}
         animate={controls}
         initial={{ x: 0 }}
         className={`flex flex-col bg-transparent ${

@@ -49,7 +49,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -80,7 +80,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center ">
                 <PayEmbed
                   theme={theme === "dark" ? "dark" : "light"}
                   client={client}
