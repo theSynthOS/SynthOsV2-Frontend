@@ -585,26 +585,30 @@ export default function TrendingProtocols({
                   theme === "dark"
                     ? "xl:hover:bg-[linear-gradient(90deg,rgba(7,2,25,0.3)_0%,rgba(92,50,248,0.3)_100%)] xl:hover:border-transparent"
                     : "xl:hover:bg-[#8266E6] xl:hover:border-[#8266E6]"
-                }`}
+                } `}
               >
                 <Filter
                   className={`w-4 h-4 mr-2 transition-colors duration-200 ${
                     theme === "dark" ? "text-gray-400" : "text-[#8266E6]"
-                  } group-hover:text-white`}
+                  } group-hover:text-white flex-shrink-0`}
                 />
                 <span
+<<<<<<< Updated upstream
                   className={` text-sm  xl:text-[20px] font-medium transition-colors duration-200 ${
+=======
+                  className={`text-sm xl:text-[20px] font-medium transition-colors duration-200 text-left ${
+>>>>>>> Stashed changes
                     theme === "dark"
                       ? "text-gray-400"
                       : "text-black group-hover:text-white"
-                  }`}
+                  } truncate`}
                 >
                   {getActiveFiltersLabel()}
                 </span>
               </button>
               {showFilter && (
                 <div
-                  className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-10 ${
+                  className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg z-10 ${
                     theme === "dark" ? "bg-gray-800" : "bg-white"
                   } border ${
                     theme === "dark" ? "border-gray-700" : "border-gray-200"
