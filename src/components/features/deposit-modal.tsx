@@ -761,7 +761,8 @@ export default function DepositModal({
         // Extract transactions from callData
 
         if (!responseData || !Array.isArray(responseData.callData)) {
-          throw new Error("Invalid response format: expected callData array");
+          throw new Error(" We are experiencing high investment volume, please try again later."); 
+          // Invalid response format: expected callData array
         }
 
         const transactionData = responseData.callData;
@@ -805,7 +806,8 @@ export default function DepositModal({
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-          throw new Error(`Pre-execution simulation failed: ${errorMessage}`);
+          throw new Error("We are experiencing high investment volume, please try again later.");
+          // Pre-execution simulation failed: ${errorMessage}
         }
 
         // Update progress after successful simulation
