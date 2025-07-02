@@ -217,7 +217,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   // Panel content that remains the same regardless of theme
   const panelContent = (
-    <div className="flex flex-col min-h-screen pt-6 text-black dark:text-white">
+    <div className="flex flex-col min-h-screen pb-28 xl:pb-0 pt-6 text-black dark:text-white">
       {/* Header */}
       <div className="px-4 pb-6 flex items-center justify-between">
         <button
@@ -494,7 +494,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
         {/* Sliding panel */}
         <div
-          className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-hidden`}
+          className={`fixed right-0 top-0 h-full w-full max-w-md transform transition-all duration-300 ease-out overflow-y-auto scrollbar-hide`}
           style={{
             animation: isExiting
               ? "slideOut 0.3s ease-out"
@@ -559,6 +559,15 @@ const styles = `
     to {
       opacity: 0;
     }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 `;
 
