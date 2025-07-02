@@ -983,7 +983,9 @@ export default function DepositModal({
       }
     } catch (error) {
       // Set the error message for the banner
-      setDepositError("Failed to prepare transaction");
+      setDepositError(
+        "We are experiencing high investment volumes, please try again later."
+      );
       setTxProgressPercent(0);
       setSimulationStatus(null); // Clear simulation status on error
       // Reset submission state to allow retrying
