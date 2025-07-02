@@ -593,11 +593,7 @@ export default function TrendingProtocols({
                   } group-hover:text-white flex-shrink-0`}
                 />
                 <span
-<<<<<<< Updated upstream
-                  className={` text-sm  xl:text-[20px] font-medium transition-colors duration-200 ${
-=======
                   className={`text-sm xl:text-[20px] font-medium transition-colors duration-200 text-left ${
->>>>>>> Stashed changes
                     theme === "dark"
                       ? "text-gray-400"
                       : "text-black group-hover:text-white"
