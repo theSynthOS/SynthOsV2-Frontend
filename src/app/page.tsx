@@ -99,7 +99,7 @@ export default function Home() {
             theme === "dark" ? "text-white" : "text-black"
           }`}
         >
-          Invest with confidence using personalized crypto yield plans
+          AI-powered personalized crypto yield plans
         </motion.div>
 
         <motion.div

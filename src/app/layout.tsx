@@ -35,7 +35,7 @@ const ttTravels = localFont({
 export const metadata: Metadata = {
   title: "SynthOS",
   metadataBase: new URL("https://app.synthos.fun/"),
-  description: "Invest with confidence using personalized crypto yield plans.",
+  description: "AI-powered personalized crypto yield plans",
   icons: {
     icon: "/favicon.ico",
   },
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SynthOS",
     description:
-      "Invest with confidence using personalized crypto yield plans.",
+      "AI-powered personalized crypto yield plans",
     url: "https://app.synthos.fun",
     siteName: "SynthOS",
     type: "website",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
         url: "https://app.synthos.fun/og.jpg",
         width: 1200,
         height: 630,
-        alt: "SynthOS - Personalized Crypto Yield Plans",
+        alt: "SynthOS - AI-powered personalized crypto yield plans",
       },
     ],
   },
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SynthOS",
     description:
-      "Invest with confidence using personalized crypto yield plans.",
+      "AI-powered personalized crypto yield plans",
     images: ["https://app.synthos.fun/og.jpg"],
   },
 };
