@@ -219,12 +219,12 @@ export default function HoldingPage() {
   // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
   const filteredHoldings = holdings.filter((h) => {
     // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
-    // const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-8;
+    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-8;
 
     // Exclude holdings where initialAmount is 0
     const hasValidInitialAmount = h.initialAmount > 0;
 
-    return hasValidInitialAmount;
+    return hasValidInitialAmount && hasVisibleCurrentAmount;
   });
 
   // Calculate total holding and pnl using filtered holdings
