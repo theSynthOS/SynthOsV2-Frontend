@@ -48,22 +48,30 @@ export const metadata: Metadata = {
       "SynthOS lets you invest in AI-powered personalized crypto yield plans",
     type: "website",
     url: "https://app.synthos.fun/",
+    siteName: "SynthOS",
+    locale: "en_US",
     images: [
       {
-        url: "/og.jpg",
+        url: "https://app.synthos.fun/og.jpg",
         width: 1200,
         height: 630,
         alt: "SynthOS - AI-powered personalized crypto yield plans",
+        type: "image/jpeg",
       },
     ],
-    siteName: "SynthOS",
   },
   twitter: {
     card: "summary_large_image",
     title: "SynthOS",
     description:
       "SynthOS lets you invest in AI-powered personalized crypto yield plans",
-    images: ["/og.jpg"],
+    images: [
+      {
+        url: "https://app.synthos.fun/og.jpg",
+        alt: "SynthOS - AI-powered personalized crypto yield plans",
+      },
+    ],
+    creator: "@synthos",
   },
 };
 
