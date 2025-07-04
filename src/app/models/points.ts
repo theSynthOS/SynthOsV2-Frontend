@@ -3,8 +3,8 @@ import dbConnect from "../lib/mongodb";
 
 // UserPoints schema
 export type UserPoints = {
-  email?: string; // optional
   address: string; // unique
+  email: string;
   pointsLogin: number;
   pointsDeposit: number;
   pointsFeedback: number;
@@ -17,8 +17,8 @@ export type UserPoints = {
 };
 
 const userPointsSchema = new Schema({
-  email: { type: String, unique: true, sparse: true },
   address: { type: String, unique: true, required: true },
+  email: { type: String, unique: true, sparse: true },
   pointsLogin: { type: Number, default: 0 },
   pointsDeposit: { type: Number, default: 0 },
   pointsFeedback: { type: Number, default: 0 },
@@ -61,7 +61,7 @@ export async function upsertUserPoints(address: string, email?: string) {
     }
 
     user = await UserPoints.create({
-      email,
+      email: "",
       address,
       pointsLogin: 50,
       pointsDeposit: 0,

@@ -10,9 +10,12 @@ export async function POST(req: Request) {
     }
     // Checksum the address to ensure it's properly formatted
     const checksummedAddress = getAddress(address);
+    console.log("Upserting user:", checksummedAddress);
     const user = await upsertUserPoints(checksummedAddress);
+    console.log("User upserted:", user);
     return NextResponse.json({ user });
   } catch (error) {
+    console.error("POST /api/points error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to process points" },
       { status: 500 }

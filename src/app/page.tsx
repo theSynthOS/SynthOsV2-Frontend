@@ -17,17 +17,45 @@ export default function Home() {
 
   // Check authentication state on initial load
   useEffect(() => {
-    if (account?.address) {
-      // If user is already connected, redirect to home
-      router.replace("/home");
-    }
-    setInitialAuthChecked(true);
+    const checkAndUpsertUser = async () => {
+      if (account?.address) {
+        console.log("Checking and upserting user:", account.address);
+        try {
+          await fetch("/api/points", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: account.address }),
+          });
+        } catch (error) {
+          console.error("Failed to save user data:", error);
+        }
+        // Only redirect after POST completes
+        router.replace("/home");
+      }
+      setInitialAuthChecked(true);
+    };
+
+    checkAndUpsertUser();
   }, [account, router]);
 
   // Handle wallet connected
-  const handleWalletConnected = () => {
+  const handleWalletConnected = async () => {
     // Success haptic feedback for wallet connection
     safeHaptic("success");
+    // Save user to database before redirect
+    if (account?.address) {
+      console.log("Saving user to database:", account.address);
+      try {
+        await fetch("/api/points", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: account.address }),
+        });
+      } catch (error) {
+        console.error("Failed to save user data:", error);
+      }
+    }
+
     // Redirect directly to home page after wallet connection
     router.push("/home");
   };
