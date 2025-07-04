@@ -219,10 +219,10 @@ export default function HoldingPage() {
   // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
   const filteredHoldings = holdings.filter((h) => {
     // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
-    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-8;
+    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-5;
 
     // Exclude holdings where initialAmount is 0
-    const hasValidInitialAmount = h.initialAmount > 0;
+    const hasValidInitialAmount = Math.abs(h.initialAmount) >= 1e-5;
 
     return hasValidInitialAmount && hasVisibleCurrentAmount;
   });
@@ -600,11 +600,11 @@ export default function HoldingPage() {
                       key={idx}
                       symbol={h.pairName}
                       name={h.protocolName}
-                      amount={h.currentAmount.toString()}
+                      amount={h.initialAmount.toString()}
                       apy={h.apy.toString()}
                       protocolLogo={h.protocolLogo}
                       pnl={h.pnl}
-                      currentAmount={h.currentAmount.toString()}
+                      currentAmount={h.initialAmount.toString()}
                       pool={{
                         name: h.protocolName,
                         apy: h.apy.toFixed(3),

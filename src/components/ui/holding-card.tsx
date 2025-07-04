@@ -50,6 +50,8 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
     refreshHoldings: refreshHoldingsContext,
   } = useBalance();
 
+  console.log(balance);
+
   return (
     <>
       <div
@@ -174,7 +176,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
                 isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Deposited Amount: ${parseFloat(currentAmount).toFixed(2)}
+              Deposited Amount: ${parseFloat(amount).toFixed(2)}
             </p>
           </div>
         </div>
@@ -198,7 +200,7 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
         <WithdrawModal
           pool={pool}
           onClose={() => setShowWithdrawModal(false)}
-          balance={balance}
+          balance={currentAmount}
           address={address}
           refreshBalance={() => {
             // Refresh local holdings

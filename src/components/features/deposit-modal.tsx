@@ -779,7 +779,6 @@ export default function DepositModal({
           // Common ERC20 approval function selectors
           const approvalSelectors = [
             "0x095ea7b3", // approve(address,uint256)
-            "0xa9059cbb", // transfer(address,uint256)
           ];
 
           return approvalSelectors.includes(functionSelector);
