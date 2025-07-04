@@ -18,7 +18,7 @@ export type UserPoints = {
 
 const userPointsSchema = new Schema({
   address: { type: String, unique: true, required: true },
-  email: { type: String, unique: true, sparse: true },
+  email: { type: String, sparse: true },
   pointsLogin: { type: Number, default: 0 },
   pointsDeposit: { type: Number, default: 0 },
   pointsFeedback: { type: Number, default: 0 },
@@ -61,7 +61,7 @@ export async function upsertUserPoints(address: string, email?: string) {
     }
 
     user = await UserPoints.create({
-      email: email || "no recorded email",
+      email,
       address,
       pointsLogin: 50,
       pointsDeposit: 0,
