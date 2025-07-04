@@ -390,7 +390,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                         Scroll Mainnet
                       </span>
                     </li>
-                    <li>• You can send any asset to this address</li>
+                    <li>• We only accept USDT and USDC on this address</li>
                     <li>• Transactions may take a few minutes to confirm</li>
                   </ul>
                 </div>
