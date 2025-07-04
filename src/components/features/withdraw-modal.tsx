@@ -145,6 +145,27 @@ export default function WithdrawModal({
       );
 
       if (failedTransactions.length > 0) {
+        // Check for specific "RouteProcessor: Unknown pool type" error
+        const hasRouteProcessorError = failedTransactions.some(
+          (failed: any) => {
+            // Check if there's a trace with the specific error reason
+            if (failed.trace && Array.isArray(failed.trace)) {
+              return failed.trace.some(
+                (traceEntry: any) =>
+                  traceEntry.errorReason === "RouteProcessor: Unknown pool type"
+              );
+            }
+            return false;
+          }
+        );
+
+        if (hasRouteProcessorError) {
+          throw new Error(
+            "Please try a different token or withdraw amount or try again later."
+          );
+        }
+
+        // Default error handling for other failures
         const errorMessages = failedTransactions
           .map((failed: any, index: number) => {
             const actualIndex =
@@ -358,9 +379,7 @@ export default function WithdrawModal({
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-          throw new Error(
-            "We are experiencing high investment volumes, please try again later."
-          );
+          throw new Error(errorMessage);
           // Pre-execution simulation failed: ${errorMessage}
         }
 

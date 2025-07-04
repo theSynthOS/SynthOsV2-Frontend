@@ -50,8 +50,6 @@ const HoldingCard: React.FC<HoldingCardProps> = ({
     refreshHoldings: refreshHoldingsContext,
   } = useBalance();
 
-  console.log(balance);
-
   return (
     <>
       <div
