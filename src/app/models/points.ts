@@ -61,7 +61,7 @@ export async function upsertUserPoints(address: string, email?: string) {
     }
 
     user = await UserPoints.create({
-      email: "",
+      email: email || "no recorded email",
       address,
       pointsLogin: 50,
       pointsDeposit: 0,
