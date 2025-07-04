@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
 Allow: /api/og/*
+
+# Social Media Crawlers
+User-agent: facebookexternalhit/*
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
  
 # Sitemap
 Sitemap: https://app.synthos.fun/sitemap.xml 

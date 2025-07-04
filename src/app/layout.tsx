@@ -42,6 +42,7 @@ export const metadata: Metadata = {
       url: "/favicon.ico",
     },
   ],
+  metadataBase: new URL("https://app.synthos.fun"),
   openGraph: {
     title: "SynthOS",
     description:
