@@ -34,40 +34,36 @@ const ttTravels = localFont({
 
 export const metadata: Metadata = {
   title: "SynthOS",
-  metadataBase: new URL("https://app.synthos.fun/"),
-  description: "AI-powered personalized crypto yield plans",
-  icons: {
-    icon: "/favicon.ico",
-  },
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "SynthOS",
-  },
+  description:
+    "SynthOS lets you invest in AI-powered personalized crypto yield plans",
+  icons: [
+    {
+      rel: "icon",
+      url: "/favicon.ico",
+    },
+  ],
   openGraph: {
     title: "SynthOS",
     description:
-      "AI-powered personalized crypto yield plans",
-    url: "https://app.synthos.fun",
-    siteName: "SynthOS",
+      "SynthOS lets you invest in AI-powered personalized crypto yield plans",
     type: "website",
-    locale: "en_US",
+    url: "https://app.synthos.fun/",
     images: [
       {
-        url: "https://app.synthos.fun/og.jpg",
+        url: "/og.jpg",
         width: 1200,
         height: 630,
         alt: "SynthOS - AI-powered personalized crypto yield plans",
       },
     ],
+    siteName: "SynthOS",
   },
   twitter: {
     card: "summary_large_image",
     title: "SynthOS",
     description:
-      "AI-powered personalized crypto yield plans",
-    images: ["https://app.synthos.fun/og.jpg"],
+      "SynthOS lets you invest in AI-powered personalized crypto yield plans",
+    images: ["/og.jpg"],
   },
 };
 
