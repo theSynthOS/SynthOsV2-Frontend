@@ -967,11 +967,11 @@ export default function HoldingPage() {
                           key={idx}
                           symbol={h.pairName}
                           name={h.protocolName}
-                          amount={h.currentAmount.toString()}
+                          amount={h.initialAmount.toString()}
                           apy={h.apy.toString()}
                           protocolLogo={h.protocolLogo}
                           pnl={h.pnl}
-                          currentAmount={h.currentAmount.toFixed(3)}
+                          currentAmount={h.initialAmount.toString()}
                           pool={{
                             name: h.protocolName,
                             apy: h.apy.toFixed(3),
@@ -984,7 +984,7 @@ export default function HoldingPage() {
                               .toLowerCase()
                               .replace(/\s+/g, "-"),
                           }}
-                          balance={h.initialAmount.toString()}
+                          balance={h.currentAmount.toString()}
                           address={displayAddress || undefined}
                           refreshBalance={() => {
                             // Refetch holdings data
