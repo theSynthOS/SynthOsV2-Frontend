@@ -25,19 +25,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useActiveAccount,
-  useActiveWallet,
-  useDisconnect,
-  useConnect,
-  ConnectButton,
-} from "thirdweb/react";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
-import { client, wallets } from "@/client";
-import { scroll } from "thirdweb/chains";
-import { getWalletBalance } from "thirdweb/wallets";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -66,9 +57,8 @@ interface SettingsPanelProps {
 }
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const account = useActiveAccount();
-  const wallet = useActiveWallet();
-  const { disconnect } = useDisconnect();
+  const { user, logout, login } = usePrivy();
+  const { wallets } = useWallets();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -88,6 +78,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     USDT: "0.00",
   });
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+
+  // Get the first wallet (embedded wallet) if available
+  const wallet = wallets[0];
+  const account = wallet ? { address: wallet.address } : null;
 
   // Update the mounted state and ensure theme is properly applied
   useEffect(() => {
@@ -119,47 +113,62 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [account]);
 
-  // Fetch token balances using ThirdWeb's getWalletBalance
+  // Fetch token balances using Privy smart wallet
   const fetchTokenBalances = async (address: string) => {
-    if (!address) return;
+    if (!address || !wallet) return;
 
     setIsLoadingBalances(true);
     try {
-      // Fetch USDC balance
-      const usdcBalance = await getWalletBalance({
-        address,
-        client,
-        chain: scroll,
-        tokenAddress: TOKENS.USDC.address,
-      });
+      // Use Privy wallet to get provider for balance fetching
+      const eip1193Provider = await wallet.getEthereumProvider();
+      const { BrowserProvider, Contract, formatUnits } = await import('ethers');
+      const provider = new BrowserProvider(eip1193Provider);
+      
+      // Create contract interface for ERC20 tokens
+      const abi = [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)"
+      ];
 
-      // Fetch USDT balance
-      const usdtBalance = await getWalletBalance({
-        address,
-        client,
-        chain: scroll,
-        tokenAddress: TOKENS.USDT.address,
-      });
+      // Function to get token balance
+      const getTokenBalance = async (tokenAddress: string, decimals: number) => {
+        try {
+          const contract = new Contract(tokenAddress, abi, provider);
+          const balance = await contract.balanceOf(address);
+          return parseFloat(formatUnits(balance, decimals)).toFixed(2);
+        } catch (error) {
+          console.error(`Failed to fetch balance for ${tokenAddress}:`, error);
+          return "0.00";
+        }
+      };
+
+      // Fetch both token balances
+      const [usdcBalance, usdtBalance] = await Promise.all([
+        getTokenBalance(TOKENS.USDC.address, TOKENS.USDC.decimals),
+        getTokenBalance(TOKENS.USDT.address, TOKENS.USDT.decimals)
+      ]);
 
       setTokenBalances({
-        USDC: usdcBalance
-          ? parseFloat(usdcBalance.displayValue).toFixed(2)
-          : "0.00",
-        USDT: usdtBalance
-          ? parseFloat(usdtBalance.displayValue).toFixed(2)
-          : "0.00",
+        USDC: usdcBalance,
+        USDT: usdtBalance,
       });
     } catch (error) {
+      console.error("Failed to fetch token balances:", error);
       toast.error("Failed to fetch token balances");
+      // Set fallback values
+      setTokenBalances({
+        USDC: "0.00",
+        USDT: "0.00",
+      });
     } finally {
       setIsLoadingBalances(false);
     }
   };
 
-  const handleAuth = () => {
-    if (account && wallet) {
+  const handleAuth = async () => {
+    if (user && wallet) {
       setDisplayAddress(null);
-      disconnect(wallet);
+      await logout();
       onClose();
       window.location.href = "/";
     } else {
@@ -427,22 +436,26 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             >
               {account ? (
                   <div className="">
-                    <ConnectButton
-                      client={client}
-                      wallets={wallets}
-                      theme={theme === "dark" ? "dark" : "light"}
-                      connectModal={{ size: "compact" }}
-                    />
+                    {/* Thirdweb ConnectButton is removed, so this section is now empty */}
+                    <p className="text-sm mb-3 opacity-80">Wallet connected</p>
+                    <button
+                      onClick={handleAuth}
+                      className="w-full flex items-center justify-center p-3 rounded-lg text-red-400"
+                    >
+                      <LogOut className="h-5 w-5 mr-3" />
+                      <span>Log Out</span>
+                    </button>
                 </div>
               ) : (
                 <div className="text-center">
                   <p className="text-sm mb-3 opacity-80">Connect your wallet to get started</p>
-                  <ConnectButton
-                    client={client}
-                    wallets={wallets}
-                    theme={theme === "dark" ? "dark" : "light"}
-                    connectModal={{ size: "compact" }}
-                  />
+                  <button
+                    onClick={login}
+                    className="w-full flex items-center justify-center p-3 rounded-lg text-black dark:text-white"
+                  >
+                    <LogIn className="h-5 w-5 mr-3" />
+                    <span>Connect Wallet</span>
+                  </button>
                 </div>
               )}
             </div>

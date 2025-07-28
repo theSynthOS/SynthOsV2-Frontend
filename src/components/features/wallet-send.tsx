@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { prepareContractCall, getContract } from "thirdweb";
-import { client } from "@/client";
+import { usePrivy, useSendTransaction } from "@privy-io/react-auth";
 import Card from "@/components/ui/card";
 import Image from "next/image";
-import { parseUnits } from "viem";
+import { parseUnits, formatUnits } from "viem";
 import { ChevronDown } from "lucide-react";
 import { scroll } from "thirdweb/chains";
 import { getWalletBalance } from "thirdweb/wallets";
@@ -43,7 +41,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const { theme } = useTheme();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenType>("USDC");
@@ -51,8 +49,12 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
-  const { mutate: sendTx, isPending } = useSendTransaction();
+  const { sendTransaction } = useSendTransaction();
+
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   // Toggle between USDC and USDT
   const toggleToken = () => {
@@ -69,26 +71,26 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     }
   }, [account, selectedToken]);
 
-  // Function to fetch token balance using ThirdWeb's getWalletBalance
+  // TODO: Function to fetch token balance using Privy wallet and ethers
   const fetchTokenBalance = async (tokenType: TokenType = selectedToken) => {
-    if (!account?.address) return;
+    if (!account?.address || !user?.wallet) return;
 
     setIsLoadingBalance(true);
     try {
-      const tokenConfig = TOKENS[tokenType];
-      const tokenBalance = await getWalletBalance({
-        address: account?.address,
-        client,
-        chain: scroll,
-        tokenAddress: tokenConfig.address,
-      });
+      // const tokenConfig = TOKENS[tokenType];
+      // const tokenBalance = await getWalletBalance({
+      //   address: account?.address,
+      //   client,
+      //   chain: scroll,
+      //   tokenAddress: tokenConfig.address,
+      // });
 
-      if (tokenBalance) {
-        setBalance(parseFloat(tokenBalance.displayValue).toFixed(2));
-      } else {
-        setBalance("0.00");
-      }
-    } catch {
+    //   if (tokenBalance) {
+    //     setBalance(parseFloat(tokenBalance.displayValue).toFixed(2));
+    //   } else {
+    //     setBalance("0.00");
+    //   }
+    // } catch {
       setBalance("0.00");
       toast.error(`Failed to fetch your ${tokenType} balance`);
     } finally {
@@ -103,75 +105,88 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     setAmount(balance);
   };
 
-  // Handle sending tokens
-  const handleSendFunds = () => {
-    // Haptic feedback for critical send action
-    safeHaptic("heavy");
-    const tokenConfig = TOKENS[selectedToken];
+  // TODO: Handle sending tokens
+  const handleSendFunds = async () => {
+    if (!account?.address || !user?.wallet) {
+      toast.error("Wallet not connected");
+      return;
+    }
 
-    // Get token contract
-    const tokenContract = getContract({
-      client,
-      chain: scroll,
-      address: tokenConfig.address,
-    });
+    try {
+      setIsPending(true);
+      setTxError(null);
+      
+      // Haptic feedback for critical send action
+      safeHaptic("heavy");
+    //    const tokenConfig = TOKENS[selectedToken];
 
-    // Convert amount to wei (both USDC and USDT have 6 decimals)
-    const amountInWei = parseUnits(amount, tokenConfig.decimals);
+    // // Get token contract
+    // const tokenContract = getContract({
+    //   client,
+    //   chain: scroll,
+    //   address: tokenConfig.address,
+    // });
 
-    // Construct token transfer transaction
-    const transaction = prepareContractCall({
-      contract: tokenContract,
-      method: "function transfer(address to, uint256 amount) returns (bool)",
-      params: [recipient, amountInWei],
-    });
+    // // Convert amount to wei (both USDC and USDT have 6 decimals)
+    // const amountInWei = parseUnits(amount, tokenConfig.decimals);
 
-    sendTx(transaction, {
-      onSuccess: (result) => {
-        // Clear any previous error
-        setTxError(null);
+    // // Construct token transfer transaction
+    // const transaction = prepareContractCall({
+    //   contract: tokenContract,
+    //   method: "function transfer(address to, uint256 amount) returns (bool)",
+    //   params: [recipient, amountInWei],
+    // });
 
-        // Set transaction hash for success display
-        setTxHash(result.transactionHash);
+    // sendTx(transaction, {
+    //   onSuccess: (result) => {
+    //     // Clear any previous error
+    //     setTxError(null);
 
-        // Success haptic feedback
-        safeHaptic("success");
-        toast.success(`Your ${selectedToken} has been sent successfully!`);
+        // // Set transaction hash for success display
+        // setTxHash(result.transactionHash);
 
-        // Reset form
-        setAmount("");
-        setRecipient("");
+      // Success haptic feedback
+      safeHaptic("success");
+      toast.success(`Your ${selectedToken} has been sent successfully!`);
 
-        // Refresh local token balance
-        fetchTokenBalance();
+      // Reset form
+      setAmount("");
+      setRecipient("");
 
-        // ONLY refresh global balance after confirmed transaction
-        if (refreshBalance) {
-          refreshBalance();
+      // Refresh local token balance
+      fetchTokenBalance();
+
+      // Refresh global balance after confirmed transaction
+      if (refreshBalance) {
+        refreshBalance();
+      }
+      if (refreshHoldings) {
+        refreshHoldings();
+      }
+
+    } catch (error: any) {
+      console.error("Send transaction failed:", error);
+      
+      // Clear any previous success
+      setTxHash(null);
+
+      let errorMessage = "Transaction failed";
+      if (error?.message) {
+        if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds";
+        } else if (error.message.includes("user rejected")) {
+          errorMessage = "Transaction cancelled by user";
+        } else {
+          errorMessage = error.message;
         }
-        if (refreshHoldings) {
-          refreshHoldings();
-        }
-      },
-      onError: (error: any) => {
-        // Clear any previous success
-        setTxHash(null);
+      }
 
-        let errorMessage = "Transaction failed";
-        if (error.message.includes("user rejected transaction")) {
-          errorMessage = "You rejected the transaction";
-        } else if (error.message.includes("insufficient funds")) {
-          errorMessage = "Insufficient funds for transaction";
-        }
-
-        // Set error for display
-        setTxError(errorMessage);
-
-        // Error haptic feedback
-        safeHaptic("error");
-        toast.error(errorMessage);
-      },
-    });
+      setTxError(errorMessage);
+      safeHaptic("error");
+      toast.error(errorMessage);
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const currentToken = TOKENS[selectedToken];

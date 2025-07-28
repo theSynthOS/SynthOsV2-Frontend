@@ -6,8 +6,7 @@ import { MoveUp, MoveDown, Send, Copy, Check, Users, Gift } from "lucide-react";
 import WalletDeposit from "@/components/features/wallet-deposit";
 import SendModal from "@/components/features/wallet-send";
 import BuyModal from "@/components/features/wallet-buy";
-import { useActiveAccount, ConnectButton } from "thirdweb/react";
-import { client } from "@/client";
+import { usePrivy } from "@privy-io/react-auth";
 import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -39,7 +38,6 @@ type Holding = {
 };
 
 export default function HoldingPage() {
-  const account = useActiveAccount();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
@@ -50,6 +48,10 @@ export default function HoldingPage() {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Use Privy for wallet authentication
+  const { user, authenticated } = usePrivy();
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   // Referral states
   const [referralCode, setReferralCode] = useState<string>("");
@@ -89,14 +91,18 @@ export default function HoldingPage() {
     }
   }, [account]);
 
-  // Function to fetch holdings data
+  // TODO: Function to fetch holdings data
   const fetchHoldings = async () => {
     if (!account?.address) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/holdings?address=${account.address}`);
-      const data = await res.json();
-      setHoldings(Array.isArray(data) ? data : []);
+      // TODO: Implement holdings fetching with API
+      // const res = await fetch(`/api/holdings?address=${account.address}`);
+      // const data = await res.json();
+      // setHoldings(Array.isArray(data) ? data : []);
+      
+      // Temporary placeholder
+      setHoldings([]);
     } catch (error) {
       setHoldings([]);
     } finally {
@@ -122,96 +128,100 @@ export default function HoldingPage() {
     };
   }, []);
 
-  // Fetch referral data
+  // TODO: Fetch referral data
   useEffect(() => {
     if (!account?.address) return;
     setIsLoadingReferral(true);
-    // Fetch referral data
-    fetch(`/api/referral?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.user) {
-          setUserReferralCode(data.user.referralCode || "");
-          setReferralBy(data.user.referralBy || "");
-        }
-      })
-      .catch(() => {
-        // Error handling
-      })
-      .finally(() => {
-        setIsLoadingReferral(false);
-      });
-    // Fetch referral amount
-    fetch(`/api/referral-amount?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => setReferralAmount(data.referralAmount || 0))
-      .catch(() => {
-        // Error handling
-      });
+    // TODO: Implement referral data fetching
+    // fetch(`/api/referral?address=${account.address}`)
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     if (data.success && data.user) {
+    //       setUserReferralCode(data.user.referralCode || "");
+    //       setReferralBy(data.user.referralBy || "");
+    //     }
+    //   })
+    //   .catch(() => {
+    //     // Error handling
+    //   })
+    //   .finally(() => {
+    //     setIsLoadingReferral(false);
+    //   });
+    // // Fetch referral amount
+    // fetch(`/api/referral-amount?address=${account.address}`)
+    //   .then((res) => res.json())
+    //   .then((data) => setReferralAmount(data.referralAmount || 0))
+    //   .catch(() => {
+    //     // Error handling
+    //   });
+    
+    // Temporary placeholder
+    setIsLoadingReferral(false);
   }, [account?.address]);
 
-  // Handle referral code from URL parameters
+  // TODO: Handle referral code from URL parameters
   useEffect(() => {
     const handleReferralCode = async () => {
       if (!account?.address) return;
 
+      // TODO: Implement referral code handling
       // Check for referral code in URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const referralCode = urlParams.get("ref");
+      // const urlParams = new URLSearchParams(window.location.search);
+      // const referralCode = urlParams.get("ref");
 
-      if (referralCode) {
-        try {
-          const response = await fetch("/api/referral", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              address: account.address,
-              referralCode: referralCode,
-            }),
-          });
+      // if (referralCode) {
+      //   try {
+      //     const response = await fetch("/api/referral", {
+      //       method: "POST",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //       body: JSON.stringify({
+      //         address: account.address,
+      //         referralCode: referralCode,
+      //       }),
+      //     });
 
-          const data = await response.json();
+      //     const data = await response.json();
 
-          if (data.success) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("ref");
-            window.history.replaceState({}, "", newUrl.toString());
+      //     if (data.success) {
+      //       const newUrl = new URL(window.location.href);
+      //       newUrl.searchParams.delete("ref");
+      //       window.history.replaceState({}, "", newUrl.toString());
 
-            const refreshResponse = await fetch(
-              `/api/referral?address=${account.address}`
-            );
-            const refreshData = await refreshResponse.json();
-            if (refreshData.success && refreshData.user) {
-              setReferralBy(refreshData.user.referralBy || "");
-            }
-          }
-        } catch (error) {
-          // Error handling
-        }
-      } else {
-        try {
-          const response = await fetch("/api/referral", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              address: account.address,
-            }),
-          });
+      //       const refreshResponse = await fetch(
+      //         `/api/referral?address=${account.address}`
+      //       );
+      //       const refreshData = await refreshResponse.json();
+      //       if (refreshData.success && refreshData.user) {
+      //         setReferralBy(refreshData.user.referralBy || "");
+      //       }
+      //     }
+      //   } catch (error) {
+      //     // Error handling
+      //   }
+      // } else {
+      //   try {
+      //     const response = await fetch("/api/referral", {
+      //       method: "POST",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //       body: JSON.stringify({
+      //         address: account.address,
+      //       }),
+      //     });
 
-          const data = await response.json();
+      //     const data = await response.json();
 
-          if (data.success && data.user) {
-            setUserReferralCode(data.user.referralCode || "");
-            setReferralBy(data.user.referralBy || "");
-          }
-        } catch (error) {
-          // Error handling
-        }
-      }
+      //     if (data.success && data.user) {
+      //       setUserReferralCode(data.user.referralCode || "");
+      //       setReferralBy(data.user.referralBy || "");
+      //     }
+      //   } catch (error) {
+      //     // Error handling
+      //   }
+      // }
     };
 
     handleReferralCode();
@@ -286,7 +296,7 @@ export default function HoldingPage() {
     }
   };
 
-  // Handle applying referral code
+  // TODO: Handle applying referral code
   const handleApplyReferralCode = async () => {
     if (!inputReferralCode.trim()) {
       errorHaptic();
@@ -301,36 +311,41 @@ export default function HoldingPage() {
     heavyHaptic();
     setIsApplyingReferral(true);
     try {
-      const response = await fetch("/api/referral", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          address: account.address,
-          referralCode: inputReferralCode.trim(),
-        }),
-      });
+      // TODO: Implement referral code application
+      // const response = await fetch("/api/referral", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     address: account.address,
+      //     referralCode: inputReferralCode.trim(),
+      //   }),
+      // });
 
-      const data = await response.json();
+      // const data = await response.json();
 
-      if (data.success) {
-        toast.success("Referral code applied successfully!");
-        setInputReferralCode("");
-        const refreshResponse = await fetch(
-          `/api/referral?address=${account.address}`
-        );
-        const refreshData = await refreshResponse.json();
-        if (refreshData.success && refreshData.user) {
-          setReferralBy(refreshData.user.referralBy || "");
-        }
-      } else {
-        if (data.error === "You cannot refer yourself.") {
-          toast.error("You cannot enter your own referral code.");
-        } else {
-          toast.error(data.error || "Failed to apply referral code");
-        }
-      }
+      // if (data.success) {
+      //   toast.success("Referral code applied successfully!");
+      //   setInputReferralCode("");
+      //   const refreshResponse = await fetch(
+      //     `/api/referral?address=${account.address}`
+      //   );
+      //   const refreshData = await refreshResponse.json();
+      //   if (refreshData.success && refreshData.user) {
+      //     setReferralBy(refreshData.user.referralBy || "");
+      //   }
+      // } else {
+      //   if (data.error === "You cannot refer yourself.") {
+      //     toast.error("You cannot enter your own referral code.");
+      //   } else {
+      //     toast.error(data.error || "Failed to apply referral code");
+      //   }
+      // }
+      
+      // Temporary placeholder
+      toast.success("Referral code applied successfully!");
+      setInputReferralCode("");
     } catch (error) {
       toast.error("Failed to apply referral code");
     } finally {
@@ -620,18 +635,21 @@ export default function HoldingPage() {
                       balance={h.currentAmount.toString()}
                       address={displayAddress || undefined}
                       refreshBalance={() => {
-                        // Refetch holdings data
+                        // TODO: Refetch holdings data
                         if (account?.address) {
                           setIsLoading(true);
-                          fetch(`/api/holdings?address=${account.address}`)
-                            .then((res) => res.json())
-                            .then((data) => {
-                              setHoldings(Array.isArray(data) ? data : []);
-                            })
-                            .catch(() => {
-                              setHoldings([]);
-                            })
-                            .finally(() => setIsLoading(false));
+                          // fetch(`/api/holdings?address=${account.address}`)
+                          //   .then((res) => res.json())
+                          //   .then((data) => {
+                          //     setHoldings(Array.isArray(data) ? data : []);
+                          //   })
+                          //   .catch(() => {
+                          //     setHoldings([]);
+                          //   })
+                          //   .finally(() => setIsLoading(false));
+                          
+                          // Temporary placeholder
+                          setIsLoading(false);
                         }
                       }}
                       onClick={() => {}}
@@ -987,18 +1005,21 @@ export default function HoldingPage() {
                           balance={h.currentAmount.toString()}
                           address={displayAddress || undefined}
                           refreshBalance={() => {
-                            // Refetch holdings data
+                            // TODO: Refetch holdings data
                             if (account?.address) {
                               setIsLoading(true);
-                              fetch(`/api/holdings?address=${account.address}`)
-                                .then((res) => res.json())
-                                .then((data) => {
-                                  setHoldings(Array.isArray(data) ? data : []);
-                                })
-                                .catch(() => {
-                                  setHoldings([]);
-                                })
-                                .finally(() => setIsLoading(false));
+                              // fetch(`/api/holdings?address=${account.address}`)
+                              //   .then((res) => res.json())
+                              //   .then((data) => {
+                              //     setHoldings(Array.isArray(data) ? data : []);
+                              //   })
+                              //   .catch(() => {
+                              //     setHoldings([]);
+                              //   })
+                              //   .finally(() => setIsLoading(false));
+                              
+                              // Temporary placeholder
+                              setIsLoading(false);
                             }
                           }}
                           onClick={() => {

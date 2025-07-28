@@ -2,9 +2,9 @@ import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import type { Metadata } from "next";
 import "./globals.css";
-import DynamicProviders from "@/components/providers/dynamic-providers";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import WalletProvider from "@/client";
+import ClientProviders from "@/components/providers/client-providers";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,10 +76,6 @@ export const metadata: Metadata = {
   },
 };
 
-// export const viewport = {
-//   themeColor: "#0f0b22",
-// };
-
 export default function RootLayout({
   children,
 }: {
@@ -98,8 +94,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${ttTravels.variable} antialiased h-full`}
         suppressHydrationWarning
       >
-        <DynamicProviders>{children}</DynamicProviders>
+        <WalletProvider>
+          <ClientProviders>
+            {children}
+          </ClientProviders>
+        </WalletProvider>
       </body>
     </html>
   );
 }
+
+

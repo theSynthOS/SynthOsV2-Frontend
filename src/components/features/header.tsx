@@ -8,7 +8,7 @@ import Image from "next/image";
 import SettingsPanel from "@/components/setting-panel/settings-panel";
 import HistoryPanel from "@/components/features/history-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useActiveAccount } from "thirdweb/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { usePoints } from "@/contexts/PointsContext";
 import { mediumHaptic } from "@/lib/haptic-utils";
 
@@ -19,7 +19,7 @@ export default function Header() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
   const { lastRefresh } = usePoints();
@@ -31,25 +31,29 @@ export default function Header() {
 
   useEffect(() => {
     const fetchPoints = async () => {
-      if (!account?.address) return;
+      if (!authenticated || !user?.wallet?.address) return;
       try {
         setIsLoadingPoints(true);
-        const params = new URLSearchParams();
-        if (account.address) params.append("address", account.address);
-        const res = await fetch(`/api/points?${params.toString()}`);
-        const data = await res.json();
-        if (data.user) {
-          const u = data.user;
-          setTotalPoints(
-            (u.pointsLogin || 0) +
-              (u.pointsDeposit || 0) +
-              (u.pointsFeedback || 0) +
-              (u.pointsShareX || 0) +
-              (u.pointsTestnetClaim || 0)
-          );
-        } else {
-          setTotalPoints(null);
-        }
+        // TODO: Implement points fetching with API
+        // const params = new URLSearchParams();
+        // if (user.wallet.address) params.append("address", user.wallet.address);
+        // const res = await fetch(`/api/points?${params.toString()}`);
+        // const data = await res.json();
+        // if (data.user) {
+        //   const u = data.user;
+        //   setTotalPoints(
+        //     (u.pointsLogin || 0) +
+        //       (u.pointsDeposit || 0) +
+        //       (u.pointsFeedback || 0) +
+        //       (u.pointsShareX || 0) +
+        //       (u.pointsTestnetClaim || 0)
+        //   );
+        // } else {
+        //   setTotalPoints(null);
+        // }
+        
+        // Temporary placeholder
+        setTotalPoints(0);
       } catch (e) {
         setTotalPoints(null);
       } finally {
@@ -57,7 +61,7 @@ export default function Header() {
       }
     };
     fetchPoints();
-  }, [account, lastRefresh]);
+  }, [authenticated, user?.wallet?.address, lastRefresh]);
 
   // Toggle theme between dark and light
   const toggleTheme = () => {

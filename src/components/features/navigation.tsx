@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { useActiveAccount } from "thirdweb/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,10 +13,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = useTheme();
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { lastRefresh } = usePoints();
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
+
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,22 +36,26 @@ export default function Navbar() {
       if (!account?.address) return;
       try {
         setIsLoadingPoints(true);
-        const params = new URLSearchParams();
-        if (account.address) params.append("address", account.address);
-        const res = await fetch(`/api/points?${params.toString()}`);
-        const data = await res.json();
-        if (data.user) {
-          const u = data.user;
-          setTotalPoints(
-            (u.pointsLogin || 0) +
-              (u.pointsDeposit || 0) +
-              (u.pointsFeedback || 0) +
-              (u.pointsShareX || 0) +
-              (u.pointsTestnetClaim || 0)
-          );
-        } else {
-          setTotalPoints(null);
-        }
+        // TODO: Implement points fetching with API
+        // const params = new URLSearchParams();
+        // if (account.address) params.append("address", account.address);
+        // const res = await fetch(`/api/points?${params.toString()}`);
+        // const data = await res.json();
+        // if (data.user) {
+        //   const u = data.user;
+        //   setTotalPoints(
+        //     (u.pointsLogin || 0) +
+        //       (u.pointsDeposit || 0) +
+        //       (u.pointsFeedback || 0) +
+        //       (u.pointsShareX || 0) +
+        //       (u.pointsTestnetClaim || 0)
+        //   );
+        // } else {
+        //   setTotalPoints(null);
+        // }
+        
+        // Temporary placeholder
+        setTotalPoints(0);
       } catch (e) {
         setTotalPoints(null);
       } finally {

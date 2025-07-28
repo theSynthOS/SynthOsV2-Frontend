@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flame,
   Filter,
@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import DepositModal from "./deposit-modal";
-import { useActiveAccount } from "thirdweb/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProtocolPair {
@@ -42,7 +42,7 @@ export default function TrendingProtocols({
   renderFeedbackButton,
 }: TrendingProtocolsProps) {
   const { theme } = useTheme();
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const [selectedPool, setSelectedPool] = useState<any>(null);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
   const [riskFilters, setRiskFilters] = useState({
@@ -68,6 +68,9 @@ export default function TrendingProtocols({
   const [topOpportunityIds, setTopOpportunityIds] = useState<string[]>([]);
   const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] =
     useState(false);
+
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   // Cleanup cache when wallet disconnects
   useEffect(() => {

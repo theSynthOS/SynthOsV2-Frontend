@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Copy, Check, ChevronDown } from "lucide-react";
-import { useActiveAccount } from "thirdweb/react";
-import { client } from "@/client";
+import { usePrivy } from "@privy-io/react-auth";
 import QRCode from "react-qr-code";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -16,12 +15,13 @@ interface DepositModalProps {
 type StablecoinType = "USDC" | "USDT";
 
 export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
-  const [copied, setCopied] = useState(false);
+  const { user, authenticated } = usePrivy();
   const { theme } = useTheme();
+  const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [windowHeight, setWindowHeight] = useState(0);
-  const account = useActiveAccount();
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [selectedCoin, setSelectedCoin] = useState<StablecoinType>("USDC");
   const [dropdownOpen, setDropdownOpen] = useState(false);

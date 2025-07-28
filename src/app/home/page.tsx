@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import DynamicFeatures from "@/components/home/dynamic-features";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { useActiveAccount } from "thirdweb/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
@@ -30,7 +30,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
@@ -74,12 +74,12 @@ export default function Home() {
 
   // Fetch balance when account changes
   useEffect(() => {
-    if (account?.address) {
-      fetchBalance(account.address);
+    if (authenticated && user?.wallet?.address) {
+      fetchBalance(user.wallet.address);
     } else {
       setIsLoadingBalance(false);
     }
-  }, [account]);
+  }, [authenticated, user?.wallet?.address]);
 
   // Close modal
   const closeModal = () => {
@@ -96,12 +96,12 @@ export default function Home() {
 
   // Update display address whenever account changes
   useEffect(() => {
-    if (account?.address) {
-      setDisplayAddress(account.address);
+    if (authenticated && user?.wallet?.address) {
+      setDisplayAddress(user.wallet.address);
     } else {
       setDisplayAddress(null);
     }
-  }, [account]);
+  }, [authenticated, user?.wallet?.address]);
 
   // Handle copy address to clipboard
   const handleCopyAddress = () => {
@@ -132,8 +132,8 @@ export default function Home() {
       />
       <BalanceProvider
         refreshBalance={() => {
-          if (account?.address) {
-            fetchBalance(account.address);
+          if (authenticated && user?.wallet?.address) {
+            fetchBalance(user.wallet.address);
           }
         }}
         refreshHoldings={handleRefreshHoldings}
@@ -400,8 +400,8 @@ export default function Home() {
               >
                 <DynamicFeatures
                   refreshBalance={() => {
-                    if (account?.address) {
-                      fetchBalance(account.address);
+                    if (authenticated && user?.wallet?.address) {
+                      fetchBalance(user.wallet.address);
                     }
                   }}
                 />

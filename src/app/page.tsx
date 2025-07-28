@@ -4,27 +4,25 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { useActiveAccount, ConnectButton } from "thirdweb/react";
-import { client, wallets } from "@/client";
-import { scroll } from "thirdweb/chains";
+import { usePrivy } from '@privy-io/react-auth';
 import { safeHaptic } from "@/lib/haptic-utils";
 
 export default function Home() {
   const { theme } = useTheme();
   const router = useRouter();
-  const account = useActiveAccount();
+  const { ready, authenticated, login, logout, user } = usePrivy();
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
 
   // Check authentication state on initial load
   useEffect(() => {
     const checkAndUpsertUser = async () => {
-      if (account?.address) {
-        console.log("Checking and upserting user:", account.address);
+      if (authenticated && user?.wallet?.address) {
+        console.log("Checking and upserting user:", user.wallet.address);
         try {
           await fetch("/api/points", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: account.address }),
+            body: JSON.stringify({ address: user.wallet.address }),
           });
         } catch (error) {
           console.error("Failed to save user data:", error);
@@ -35,21 +33,23 @@ export default function Home() {
       setInitialAuthChecked(true);
     };
 
-    checkAndUpsertUser();
-  }, [account, router]);
+    if (ready) {
+      checkAndUpsertUser();
+    }
+  }, [authenticated, user, router, ready]);
 
   // Handle wallet connected
   const handleWalletConnected = async () => {
     // Success haptic feedback for wallet connection
     safeHaptic("success");
     // Save user to database before redirect
-    if (account?.address) {
-      console.log("Saving user to database:", account.address);
+    if (user?.wallet?.address) {
+      console.log("Saving user to database:", user.wallet.address);
       try {
         await fetch("/api/points", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: account.address }),
+          body: JSON.stringify({ address: user.wallet.address }),
         });
       } catch (error) {
         console.error("Failed to save user data:", error);
@@ -60,8 +60,8 @@ export default function Home() {
     router.push("/home");
   };
 
-  // Show loading state if we haven't checked auth yet
-  if (!initialAuthChecked) {
+  // Wait until the Privy SDK is ready
+  if (!ready || !initialAuthChecked) {
     return (
       <div
         className={`flex items-center justify-center min-h-screen ${
@@ -136,17 +136,26 @@ export default function Home() {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="mt-2"
         >
-          <ConnectButton
-            client={client}
-            onConnect={handleWalletConnected}
-            wallets={wallets}
-            theme={theme === "dark" ? "dark" : "light"}
-            connectModal={{ size: "compact" }}
-            // accountAbstraction={{
-            //   chain: scroll,
-            //   sponsorGas: true,
-            // }}
-          />
+          {authenticated ? (
+            <div className="flex flex-col items-center space-y-4">
+              <p className={`text-sm ${theme === "dark" ? "text-white" : "text-black"}`}>
+                Connected: {user?.wallet?.address?.slice(0, 6)}...{user?.wallet?.address?.slice(-4)}
+              </p>
+              <button
+                onClick={logout}
+                className="px-6 py-3 bg-[#8266E6] hover:bg-[#7255d5] text-white rounded-lg font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={login}
+              className="px-6 py-3 bg-[#8266E6] hover:bg-[#7255d5] text-white rounded-lg font-medium transition-colors"
+            >
+              Connect Wallet
+            </button>
+          )}
         </motion.div>
       </motion.div>
     </div>

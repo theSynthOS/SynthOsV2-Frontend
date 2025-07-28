@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useActiveAccount } from "thirdweb/react";
-import { useRouter } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
+import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import { scroll } from "thirdweb/chains";
 import { lightHaptic } from "@/lib/haptic-utils";
 
@@ -54,7 +57,7 @@ export default function HistoryPanel({
   chain = "scroll",
 }: HistoryPanelProps) {
   const { theme } = useTheme();
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -63,6 +66,10 @@ export default function HistoryPanel({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedTx, setCopiedTx] = useState<string | null>(null);
+
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   useEffect(() => {
     if (!account?.address) {

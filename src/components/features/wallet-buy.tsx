@@ -1,12 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { PayEmbed, useActiveAccount } from "thirdweb/react";
-import { ToastContainer, toast } from "react-toastify";
+import { usePrivy } from "@privy-io/react-auth";
+import { toast } from "react-toastify";
 import Card from "@/components/ui/card";
-import Image from "next/image";
-import { ChevronDown } from "lucide-react";
-import { client } from "@/client";
-import { arbitrum, scroll } from "thirdweb/chains";
+import { CreditCard, ArrowRight } from "lucide-react";
 import { useBalance } from "@/contexts/BalanceContext";
 
 interface BuyModalProps {
@@ -33,11 +30,14 @@ const TOKENS = {
 };
 
 export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
-  const account = useActiveAccount();
+  const { user, authenticated } = usePrivy();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedToken, setSelectedToken] = useState<StablecoinType>("USDC");
   const { refreshBalance, refreshHoldings } = useBalance();
+
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
 
   // Set mounted state once hydration is complete
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center ">
-                <PayEmbed
+                {/* <PayEmbed
                   theme={theme === "dark" ? "dark" : "light"}
                   client={client}
                   payOptions={{
@@ -113,7 +113,7 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
                       name: `Buy Crypto with Fiat`,
                     },
                   }}
-                />
+                /> */}
               </div>
             )}
           </div>
