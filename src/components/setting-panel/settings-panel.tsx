@@ -65,7 +65,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showConnectButtonDropdown, setShowConnectButtonDropdown] = useState(false);
+  const [showConnectButtonDropdown, setShowConnectButtonDropdown] =
+    useState(false);
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
@@ -89,9 +90,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     // Force a re-render after mounting to ensure proper theme application
     const timer = setTimeout(() => {
       // This will trigger a re-render with the correct theme
-      setMounted(state => state);
+      setMounted((state) => state);
     }, 0);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -121,17 +122,20 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     try {
       // Use Privy wallet to get provider for balance fetching
       const eip1193Provider = await wallet.getEthereumProvider();
-      const { BrowserProvider, Contract, formatUnits } = await import('ethers');
+      const { BrowserProvider, Contract, formatUnits } = await import("ethers");
       const provider = new BrowserProvider(eip1193Provider);
-      
+
       // Create contract interface for ERC20 tokens
       const abi = [
         "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)"
+        "function decimals() view returns (uint8)",
       ];
 
       // Function to get token balance
-      const getTokenBalance = async (tokenAddress: string, decimals: number) => {
+      const getTokenBalance = async (
+        tokenAddress: string,
+        decimals: number
+      ) => {
         try {
           const contract = new Contract(tokenAddress, abi, provider);
           const balance = await contract.balanceOf(address);
@@ -145,7 +149,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       // Fetch both token balances
       const [usdcBalance, usdtBalance] = await Promise.all([
         getTokenBalance(TOKENS.USDC.address, TOKENS.USDC.decimals),
-        getTokenBalance(TOKENS.USDT.address, TOKENS.USDT.decimals)
+        getTokenBalance(TOKENS.USDT.address, TOKENS.USDT.decimals),
       ]);
 
       setTokenBalances({
@@ -217,9 +221,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   };
 
   // Toggle wallet details dropdown
-  const toggleWalletDetailsDropdown = () => {
-    setShowConnectButtonDropdown(!showConnectButtonDropdown);
-  };
+  // const toggleWalletDetailsDropdown = () => {
+  //   setShowConnectButtonDropdown(!showConnectButtonDropdown);
+  // };
 
   if (!isOpen) return null;
   if (!mounted) return null; // Don't render until mounted to avoid theme flashing
@@ -399,63 +403,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       {tokenBalances.USDT}
                     </span>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="w-full">
-          <button
-            onClick={toggleWalletDetailsDropdown}
-            className={`w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-black dark:text-white ${
-              showConnectButtonDropdown ? "bg-white/5" : ""
-            }`}
-          >
-            <div className="flex items-center">
-              <Wallet
-                className={`h-5 w-5 mr-3 ${
-                  theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
-                }`}
-              />
-              <span>Wallet Details</span>
-            </div>
-            <ChevronRight
-              className={`h-5 w-5 text-[#202020] dark:text-white transition-transform ${
-                showConnectButtonDropdown ? "transform rotate-90" : ""
-              }`}
-            />
-          </button>
-
-          {/* Wallet Details Dropdown Content */}
-          {showConnectButtonDropdown && (
-            <div
-              className={`mt-2 p-3 rounded-lg ${
-                theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
-              } text-black dark:text-white`}
-            >
-              {account ? (
-                  <div className="">
-                    {/* Thirdweb ConnectButton is removed, so this section is now empty */}
-                    <p className="text-sm mb-3 opacity-80">Wallet connected</p>
-                    <button
-                      onClick={handleAuth}
-                      className="w-full flex items-center justify-center p-3 rounded-lg text-red-400"
-                    >
-                      <LogOut className="h-5 w-5 mr-3" />
-                      <span>Log Out</span>
-                    </button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p className="text-sm mb-3 opacity-80">Connect your wallet to get started</p>
-                  <button
-                    onClick={login}
-                    className="w-full flex items-center justify-center p-3 rounded-lg text-black dark:text-white"
-                  >
-                    <LogIn className="h-5 w-5 mr-3" />
-                    <span>Connect Wallet</span>
-                  </button>
                 </div>
               )}
             </div>

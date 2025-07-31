@@ -34,26 +34,22 @@ export default function Header() {
       if (!authenticated || !user?.wallet?.address) return;
       try {
         setIsLoadingPoints(true);
-        // TODO: Implement points fetching with API
-        // const params = new URLSearchParams();
-        // if (user.wallet.address) params.append("address", user.wallet.address);
-        // const res = await fetch(`/api/points?${params.toString()}`);
-        // const data = await res.json();
-        // if (data.user) {
-        //   const u = data.user;
-        //   setTotalPoints(
-        //     (u.pointsLogin || 0) +
-        //       (u.pointsDeposit || 0) +
-        //       (u.pointsFeedback || 0) +
-        //       (u.pointsShareX || 0) +
-        //       (u.pointsTestnetClaim || 0)
-        //   );
-        // } else {
-        //   setTotalPoints(null);
-        // }
-        
-        // Temporary placeholder
-        setTotalPoints(0);
+        const params = new URLSearchParams();
+        if (user.wallet.address) params.append("address", user.wallet.address);
+        const res = await fetch(`/api/points?${params.toString()}`);
+        const data = await res.json();
+        if (data.user) {
+          const u = data.user;
+          setTotalPoints(
+            (u.pointsLogin || 0) +
+              (u.pointsDeposit || 0) +
+              (u.pointsFeedback || 0) +
+              (u.pointsShareX || 0) +
+              (u.pointsTestnetClaim || 0)
+          );
+        } else {
+          setTotalPoints(null);
+        }
       } catch (e) {
         setTotalPoints(null);
       } finally {
