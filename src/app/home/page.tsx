@@ -294,7 +294,7 @@ export default function Home() {
                           </span>
                         </button>
 
-                        <button
+                        {/* <button
                           onClick={() => {
                             mediumHaptic();
                             setShowModal("buy");
@@ -337,7 +337,7 @@ export default function Home() {
                           <span className="text-sm font-medium xl:hidden">
                             Buy
                           </span>
-                        </button>
+                        </button> */}
                       </div>
                     </div>
 
