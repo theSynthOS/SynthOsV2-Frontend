@@ -3,6 +3,20 @@
 import React from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { scroll } from 'viem/chains';
+import { defineChain } from 'viem';
+
+// Custom Scroll chain with local proxy endpoint to avoid CORS
+const customScrollChain = defineChain({
+  ...scroll,
+  rpcUrls: {
+    default: {
+      http: [process.env.NEXT_PUBLIC_RPC_URL || 'http://localhost:3000/api/rpc'],
+    },
+    public: {
+      http: [process.env.NEXT_PUBLIC_RPC_URL || 'http://localhost:3000/api/rpc'],
+    },
+  },
+});
 
 const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -24,8 +38,8 @@ const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
           "wallet_connect"
         ]
       },
-      "defaultChain": scroll,
-      "supportedChains": [scroll],
+      "defaultChain": customScrollChain,
+      "supportedChains": [customScrollChain],
       "loginMethods": [
         "email",
         "wallet",
