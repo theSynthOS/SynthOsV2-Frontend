@@ -56,6 +56,7 @@ export default function Home() {
     try {
       setIsLoadingBalance(true);
       const response = await fetch(`/api/balance?address=${walletAddress}`);
+      console.log(response);
       if (!response.ok) {
         throw new Error("Failed to fetch balance");
       }

@@ -5,20 +5,12 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, ExternalLink, X, Copy, Info } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
-import { usePrivy } from "@privy-io/react-auth";
-import { scroll } from "thirdweb/chains";
-import {
-  prepareTransaction,
-  sendAndConfirmTransaction,
-  sendBatchTransaction,
-  waitForReceipt,
-} from "thirdweb";
+import { usePrivy, useSendTransaction } from "@privy-io/react-auth";
+import { scroll } from "viem/chains";
 import Card from "@/components/ui/card";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { safeHaptic } from "@/lib/haptic-utils";
-
-
 
 interface DepositModalProps {
   pool: {
@@ -60,7 +52,9 @@ export default function DepositModal({
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  const { sendTransaction } = useSendTransaction();
+  const account =
+    authenticated && user?.wallet ? { address: user.wallet.address } : null;
   const [depositError, setDepositError] = useState<string | null>(null);
   const [txProgressPercent, setTxProgressPercent] = useState(0);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
@@ -808,91 +802,57 @@ export default function DepositModal({
         // Update progress after successful simulation
         setTxProgressPercent(65);
 
-        // Prepare all transactions in the correct order (only after simulation passes)
-        
-        // const transactions = orderedTxs.map((tx: any) =>
-        //   prepareTransaction({
-        //     to: tx.to,
-        //     data: tx.data,
-        //     chain: scroll,
-        //     client: client,
-        //     value: tx.value ? BigInt(tx.value) : BigInt(0),
-        //   })
-        // );
-
         // Update progress
         setTxProgressPercent(75);
 
-        // Temporary placeholder - replace with actual Privy transaction logic
-        const result = { transactionHash: "0x" + "0".repeat(64) };
-        
-        // let result: { transactionHash: string };
+        // Execute transactions using Privy's native capabilities
+        let result: { transactionHash: string };
 
-        // try {
-        //   // First try to use batch transaction (works for smart accounts)
-        //   result = await sendBatchTransaction({
-        //     transactions,
-        //     account,
-        //   });
-        // } catch (error) {
-        //   // Check if the error is because account doesn't support batch transactions
-        //   const errorMessage =
-        //     error instanceof Error ? error.message : String(error);
+        try {
+          // Execute transactions sequentially using Privy's sendTransaction
+          let lastTxResult: any = null;
 
-        //   if (errorMessage) {
-        //     // For EOAs, send transactions sequentially
-        //     let lastTxResult;
+          for (const tx of orderedTxs) {
+            // Create transaction object for Privy
+            const transaction = {
+              to: tx.to,
+              data: tx.data,
+              value: tx.value ? BigInt(tx.value) : BigInt(0),
+            };
 
-        //     for (const tx of transactions) {
-        //       lastTxResult = await sendAndConfirmTransaction({
-        //         transaction: tx,
-        //         account,
-        //       });
+            // Send transaction using Privy's sendTransaction hook
+            lastTxResult = await sendTransaction(transaction);
 
-        //       // Small delay between transactions to avoid nonce issues
-        //       if (transactions.indexOf(tx) < transactions.length - 1) {
-        //         await new Promise((resolve) => setTimeout(resolve, 500));
-        //       }
-        //     }
+            // Small delay between transactions to avoid nonce issues
+            if (orderedTxs.indexOf(tx) < orderedTxs.length - 1) {
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+          }
 
-        //     // Ensure we have a result
-        //     if (!lastTxResult) {
-        //       throw new Error("Transaction failed to execute");
-        //     }
+          // Ensure we have a result
+          if (!lastTxResult) {
+            throw new Error("Transaction failed to execute");
+          }
 
-        //     result = lastTxResult;
-        //   } else {
-        //     // If it's some other error, rethrow it
-        //     throw error;
-        //   }
-        // }
+          result = { transactionHash: lastTxResult.hash };
+        } catch (error) {
+          throw error;
+        }
 
         // Update progress after transaction execution
         setTxProgressPercent(85);
 
-        // Wait for transaction receipt and block number - keep trying until we get it
+        // Get block number from the transaction receipt
         let blockNumber: number | null = null;
 
-        // Keep retrying until we get the receipt with block number
-        // while (blockNumber === null) {
-        //   try {
-        //     const receipt = await waitForReceipt({
-        //       client: client,
-        //       chain: scroll,
-        //       transactionHash: result.transactionHash as `0x${string}`,
-        //     });
-
-        //     if (receipt && receipt.blockNumber) {
-        //       blockNumber = Number(receipt.blockNumber);
-        //     } else {
-        //       // Wait a bit before retrying if receipt doesn't have block number
-        //       await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     }
-        //   } catch (receiptError) {
-        //     // Wait a bit before retrying if receipt call fails
-        //     await new Promise((resolve) => setTimeout(resolve, 2000));
-        //   }
-        // }
+        try {
+          // For now, we'll skip getting the block number since Privy's sendTransaction doesn't return a receipt
+          // The transaction hash is sufficient for tracking
+          blockNumber = null;
+        } catch (receiptError) {
+          console.error("Error getting transaction receipt:", receiptError);
+          // Continue without block number if we can't get it
+        }
 
         // Update progress after getting receipt
         setTxProgressPercent(90);
