@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   User,
@@ -23,6 +23,7 @@ import {
   Plus,
   ChevronDown,
   Wallet,
+  RefreshCw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
@@ -71,14 +72,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     null
   );
   const [showFundsDropdown, setShowFundsDropdown] = useState(false);
-  const [tokenBalances, setTokenBalances] = useState<{
-    USDC: string;
-    USDT: string;
-  }>({
-    USDC: "0.00",
-    USDT: "0.00",
-  });
+  const [totalBalance, setTotalBalance] = useState<string>("0.00");
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  const lastFetchedAddress = useRef<string | null>(null);
 
   // Get the first wallet (embedded wallet) if available
   const wallet = wallets[0];
@@ -108,62 +104,49 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   useEffect(() => {
     if (account?.address) {
       setDisplayAddress(account.address);
-      fetchTokenBalances(account.address);
+      // Only fetch balance if we haven't fetched for this address yet
+      if (lastFetchedAddress.current !== account.address) {
+        fetchTotalBalance(account.address);
+        lastFetchedAddress.current = account.address;
+      }
     } else {
       setDisplayAddress(null);
+      setTotalBalance("0.00"); // Reset balance when no account
+      lastFetchedAddress.current = null;
     }
-  }, [account]);
+  }, [account?.address]); // Only depend on the address, not the entire account object
 
-  // Fetch token balances using Privy smart wallet
-  const fetchTokenBalances = async (address: string) => {
-    if (!address || !wallet) return;
+  // Fetch total balance like the main page
+  const fetchTotalBalance = async (address: string) => {
+    if (!address) return;
 
     setIsLoadingBalances(true);
     try {
-      // Use Privy wallet to get provider for balance fetching
-      const eip1193Provider = await wallet.getEthereumProvider();
-      const { BrowserProvider, Contract, formatUnits } = await import("ethers");
-      const provider = new BrowserProvider(eip1193Provider);
-
-      // Create contract interface for ERC20 tokens
-      const abi = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-      ];
-
-      // Function to get token balance
-      const getTokenBalance = async (
-        tokenAddress: string,
-        decimals: number
-      ) => {
-        try {
-          const contract = new Contract(tokenAddress, abi, provider);
-          const balance = await contract.balanceOf(address);
-          return parseFloat(formatUnits(balance, decimals)).toFixed(2);
-        } catch (error) {
-          console.error(`Failed to fetch balance for ${tokenAddress}:`, error);
-          return "0.00";
-        }
-      };
-
-      // Fetch both token balances
-      const [usdcBalance, usdtBalance] = await Promise.all([
-        getTokenBalance(TOKENS.USDC.address, TOKENS.USDC.decimals),
-        getTokenBalance(TOKENS.USDT.address, TOKENS.USDT.decimals),
-      ]);
-
-      setTokenBalances({
-        USDC: usdcBalance,
-        USDT: usdtBalance,
+      // Fetch total balance from the same API endpoint used by the main page
+      const response = await fetch(`/api/balance?address=${address}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        console.warn("Failed to fetch total balance, using fallback value");
+        setTotalBalance("0.00");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Total balance response:", data);
+
+      // Extract total balance from response
+      const balance = data.balance || data.total || "0.00";
+      setTotalBalance(balance);
     } catch (error) {
-      console.error("Failed to fetch token balances:", error);
-      toast.error("Failed to fetch token balances");
-      // Set fallback values
-      setTokenBalances({
-        USDC: "0.00",
-        USDT: "0.00",
-      });
+      console.error("Failed to fetch total balance:", error);
+      toast.error("Failed to fetch balance");
+      // Set fallback value
+      setTotalBalance("0.00");
     } finally {
       setIsLoadingBalances(false);
     }
@@ -215,8 +198,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Toggle funds dropdown
   const toggleFundsDropdown = () => {
     setShowFundsDropdown(!showFundsDropdown);
-    if (!showFundsDropdown && account?.address) {
-      fetchTokenBalances(account.address);
+    // Only fetch balance if dropdown is opening and we haven't fetched for this address yet
+    if (
+      !showFundsDropdown &&
+      account?.address &&
+      lastFetchedAddress.current !== account.address
+    ) {
+      fetchTotalBalance(account.address);
+      lastFetchedAddress.current = account.address;
     }
   };
 
@@ -360,51 +349,34 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
               } text-black dark:text-white`}
             >
-              {isLoadingBalances ? (
-                <div className="py-2 text-center text-sm">
-                  Loading balances...
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* USDC Balance */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 relative mr-2">
-                        <Image
-                          src={TOKENS.USDC.logoUrl}
-                          alt="USDC"
-                          width={24}
-                          height={24}
-                          className="rounded-full"
-                        />
-                      </div>
-                      <span className="text-sm font-medium">USDC</span>
-                    </div>
-                    <span className="text-sm font-medium">
-                      {tokenBalances.USDC}
-                    </span>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="text-2xl font-bold text-[#8266E6] dark:text-[#FFD659]">
+                    ${totalBalance}
                   </div>
-
-                  {/* USDT Balance */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 relative mr-2">
-                        <Image
-                          src={TOKENS.USDT.logoUrl}
-                          alt="USDT"
-                          width={24}
-                          height={24}
-                          className="rounded-full"
-                        />
-                      </div>
-                      <span className="text-sm font-medium">USDT</span>
-                    </div>
-                    <span className="text-sm font-medium">
-                      {tokenBalances.USDT}
-                    </span>
-                  </div>
+                  <button
+                    onClick={() =>
+                      account?.address && fetchTotalBalance(account.address)
+                    }
+                    disabled={isLoadingBalances}
+                    className={`p-1 rounded-full transition-colors ${
+                      isLoadingBalances
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    }`}
+                    aria-label="Refresh balance"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${
+                        isLoadingBalances ? "animate-spin" : ""
+                      }`}
+                    />
+                  </button>
                 </div>
-              )}
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {isLoadingBalances ? "Updating..." : "Total Balance"}
+                </div>
+              </div>
             </div>
           )}
         </div>

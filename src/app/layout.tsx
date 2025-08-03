@@ -5,7 +5,6 @@ import "./globals.css";
 import WalletProvider from "@/client";
 import ClientProviders from "@/components/providers/client-providers";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -82,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <meta
           name="viewport"
@@ -95,13 +94,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <WalletProvider>
-          <ClientProviders>
-            {children}
-          </ClientProviders>
+          <ClientProviders>{children}</ClientProviders>
         </WalletProvider>
       </body>
     </html>
   );
 }
-
-
