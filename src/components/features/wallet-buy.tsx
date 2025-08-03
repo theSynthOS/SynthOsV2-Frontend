@@ -30,7 +30,7 @@ const TOKENS = {
 };
 
 export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
-  const { user, authenticated, getAccessToken } = usePrivy();
+  const { user, authenticated, getAccessToken, login } = usePrivy();
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedToken, setSelectedToken] = useState<StablecoinType>("USDC");
@@ -148,6 +148,16 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
                 >
                   Connect your wallet to buy crypto
                 </p>
+                <button
+                  onClick={login}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    theme === "dark"
+                      ? "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                      : "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                  }`}
+                >
+                  Connect Wallet
+                </button>
               </div>
             ) : (
               <div className="space-y-6">

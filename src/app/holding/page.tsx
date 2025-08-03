@@ -50,7 +50,7 @@ export default function HoldingPage() {
   const isMobile = useIsMobile();
 
   // Use Privy for wallet authentication
-  const { user, authenticated } = usePrivy();
+  const { user, authenticated, login } = usePrivy();
   const account =
     authenticated && user?.wallet ? { address: user.wallet.address } : null;
   // Referral states
@@ -450,18 +450,29 @@ export default function HoldingPage() {
 
             <div className="flex flex-col items-start">
               {/* Wallet Address */}
+              
               <div
                 className={`text-sm ${
                   theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                 } flex items-center`}
               >
                 <span>
-                  {displayAddress
-                    ? formatAddress(displayAddress)
-                    : "Wallet not connected"}
+                  {account?.address && formatAddress(account.address)}
                 </span>
+                {!account?.address && (
+                  <button
+                    onClick={login}
+                    className={`mt-4 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      theme === "dark"
+                        ? "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                        : "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                    }`}
+                  >
+                    Connect Wallet
+                  </button>
+                )}
 
-                {displayAddress && (
+                {account?.address && (
                   <button
                     onClick={handleCopyAddress}
                     className={`ml-2 p-1 rounded-full transition-colors ${
@@ -583,7 +594,11 @@ export default function HoldingPage() {
                   ))}
                 </div>
               ) : filteredHoldings.length === 0 ? (
-                <div className="text-gray-400 text-center py-8">
+                <div
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   No Positions Available
                 </div>
               ) : (
@@ -663,7 +678,19 @@ export default function HoldingPage() {
                 />
               </div>
 
-              {isLoadingReferral ? (
+              {!account?.address ? (
+                <div className="w-full space-y-4">
+                  <div className="text-center py-3">
+                    <span
+                      className={`text-sm font-medium ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Please connect wallet to view referral program
+                    </span>
+                  </div>
+                </div>
+              ) : isLoadingReferral ? (
                 <div className="w-full space-y-4">
                   {/* Skeleton for Your Referral Code */}
                   <div className="space-y-2">

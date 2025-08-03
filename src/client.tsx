@@ -3,6 +3,7 @@
 import React from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { defineChain } from "viem";
+import { SmartWalletsProvider } from "@privy-io/react-auth/smart-wallets";
 
 // Custom chain definition for Scroll Mainnet
 const scrollChain = defineChain({
@@ -62,7 +63,24 @@ const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       }}
     >
-      {children}
+      <SmartWalletsProvider
+        config={{
+          paymasterContext: {
+            mode: 'SPONSORED',
+            calculateGasLimits: true,
+            expiryDuration: 300,
+            sponsorshipInfo: {
+              webhookData: {},
+              smartAccountInfo: {
+                name: 'BICONOMY',
+                version: '2.0.0'
+              }
+            }
+                },
+              }}
+            >
+        {children}
+      </SmartWalletsProvider>
     </PrivyProvider>
   );
 };

@@ -323,7 +323,7 @@ export default function WithdrawModal({
       // Execute the withdrawal payload
       try {
         if (!account) {
-          throw new Error("Wallet not connected");
+          throw new Error("No wallet connected");
         }
 
         // Extract transactions from callData

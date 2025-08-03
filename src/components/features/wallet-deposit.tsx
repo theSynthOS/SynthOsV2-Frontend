@@ -15,7 +15,7 @@ interface DepositModalProps {
 type StablecoinType = "USDC" | "USDT";
 
 export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
-  const { user, authenticated } = usePrivy();
+  const { user, authenticated, login } = usePrivy();
   const { theme } = useTheme();
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -26,6 +26,11 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const [selectedCoin, setSelectedCoin] = useState<StablecoinType>("USDC");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [tokenBalances, setTokenBalances] = useState({
+    USDC: "0.00",
+    USDT: "0.00",
+  });
+  const [isLoadingBalances, setIsLoadingBalances] = useState(false);
 
   // Set mounted state once hydration is complete and detect mobile
   useEffect(() => {
@@ -49,8 +54,36 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   useEffect(() => {
     if (account?.address) {
       setDisplayAddress(account.address);
+      fetchTokenBalances();
     }
   }, [account]);
+
+  // Function to fetch token balances from API
+  const fetchTokenBalances = async () => {
+    if (!account?.address) return;
+
+    setIsLoadingBalances(true);
+    try {
+      const response = await fetch(`/api/balance?address=${account.address}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch balance");
+      }
+      const data = await response.json();
+      
+      setTokenBalances({
+        USDC: data.usdcBalance || "0.00",
+        USDT: data.usdtBalance || "0.00",
+      });
+    } catch (error) {
+      console.error("Failed to fetch token balances:", error);
+      setTokenBalances({
+        USDC: "0.00",
+        USDT: "0.00",
+      });
+    } finally {
+      setIsLoadingBalances(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -119,7 +152,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
       >
         <Card title="Deposit Funds" onClose={onClose}>
           <div className="">
-            {!displayAddress ? (
+            {!account?.address ? (
               <div
                 className={`${
                   theme === "dark" ? "bg-gray-700" : "bg-gray-50"
@@ -132,6 +165,16 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                 >
                   Connect your wallet to get your deposit address
                 </p>
+                <button
+                  onClick={login}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    theme === "dark"
+                      ? "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                      : "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                  }`}
+                >
+                  Connect Wallet
+                </button>
               </div>
             ) : (
               <div className={`space-y-${isSmallHeight ? "3" : "4"}`}>
@@ -370,6 +413,50 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                     </button>
                   </div>
                 </div>
+
+                {/* Token Balances */}
+                {account?.address && (
+                  <div className="mb-4">
+                    <h3 className={`font-medium mb-2 ${isMobile ? "text-sm" : ""}`}>
+                      Your Balances
+                    </h3>
+                    <div className="space-y-2">
+                      {/* USDC Balance */}
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex items-center">
+                          <Image
+                            src="/usdc.png"
+                            alt="USDC"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium">USDC</span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {isLoadingBalances ? "Loading..." : tokenBalances.USDC}
+                        </span>
+                      </div>
+
+                      {/* USDT Balance */}
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex items-center">
+                          <Image
+                            src="/usdt.png"
+                            alt="USDT"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium">USDT</span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {isLoadingBalances ? "Loading..." : tokenBalances.USDT}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Network Information */}
                 <div className="pb-2">

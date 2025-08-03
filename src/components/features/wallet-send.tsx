@@ -39,7 +39,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const { theme } = useTheme();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const { user, authenticated } = usePrivy();
+  const { user, authenticated, login } = usePrivy();
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenType>("USDC");
@@ -70,15 +70,38 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     }
   }, [account, selectedToken]);
 
-  // Function to fetch token balance from API
+  // Function to fetch token balance directly from Privy API
   const fetchTokenBalance = async (tokenType: TokenType = selectedToken) => {
     if (!account?.address) return;
 
     setIsLoadingBalance(true);
     try {
-      // For now, use a placeholder balance since we're focusing on the send functionality
-      // In a real implementation, you would fetch the actual token balance from your API
-      setBalance("0.00");
+      // Get wallet ID from Privy user
+      const walletId = user?.wallet?.id || user?.wallet?.address;
+      
+      if (!walletId) {
+        console.warn("No wallet ID available");
+        setBalance("0.00");
+        return;
+      }
+
+      // Call Privy API directly
+      const response = await fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=${tokenType.toLowerCase()}&chain=scroll`, {
+        headers: {
+          "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
+          "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
+        }
+      });
+      
+      if (!response.ok) {
+        console.warn(`Privy API error: ${response.status}`);
+        setBalance("0.00");
+        return;
+      }
+      
+      const data = await response.json();
+      const balance = data.balances?.[0]?.display_values?.[tokenType.toLowerCase()] ?? "0.00";
+      setBalance(balance);
     } catch (error) {
       console.error(`Failed to fetch ${tokenType} balance:`, error);
       setBalance("0.00");
@@ -98,7 +121,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   // Handle sending tokens using Privy sendTransaction
   const handleSendFunds = async () => {
     if (!account?.address || !user?.wallet) {
-      toast.error("Wallet not connected");
+      toast.error("No wallet connected");
       return;
     }
 
@@ -211,6 +234,16 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                   >
                     Connect your wallet to send funds
                   </p>
+                  <button
+                    onClick={login}
+                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      theme === "dark"
+                        ? "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                        : "bg-[#8266E6] hover:bg-[#7255d5] text-white"
+                    }`}
+                  >
+                    Connect Wallet
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">

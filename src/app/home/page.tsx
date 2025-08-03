@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loading } from "@/components/ui/loading";
 import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
 import SendModal from "@/components/features/wallet-send";
@@ -183,7 +184,7 @@ export default function Home() {
                   <div className="relative z-10 xl:flex xl:justify-between xl:flex-row">
                     <div className="relative z-10">
                       <div className="text-sm xl:text-lg tracking-widest text-[#727272] font-light xl:font-medium mb-2">
-                        TOTAL BALANCE
+                        AVAILABLE BALANCE
                       </div>
                       <div
                         className={`py-6 xl:py-0 font-medium text-4xl xl:text-5xl leading-[100%] tracking-[-0.03em] uppercase ${

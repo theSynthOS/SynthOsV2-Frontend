@@ -58,7 +58,7 @@ interface SettingsPanelProps {
 }
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { user, logout, login } = usePrivy();
+  const { user, logout, login, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -74,10 +74,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [showFundsDropdown, setShowFundsDropdown] = useState(false);
   const [totalBalance, setTotalBalance] = useState<string>("0.00");
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  const [tokenBalances, setTokenBalances] = useState({
+    USDC: "0.00",
+    USDT: "0.00",
+  });
   const lastFetchedAddress = useRef<string | null>(null);
 
-  // Get the first wallet (embedded wallet) if available
-  const wallet = wallets[0];
+  // Get the first wallet (embedded wallet) if available, but only if authenticated
+  const wallet = authenticated ? wallets[0] : null;
   const account = wallet ? { address: wallet.address } : null;
 
   // Update the mounted state and ensure theme is properly applied
@@ -116,7 +120,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [account?.address]); // Only depend on the address, not the entire account object
 
-  // Fetch total balance like the main page
+  // Fetch total balance and token balances like the main page
   const fetchTotalBalance = async (address: string) => {
     if (!address) return;
 
@@ -133,6 +137,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       if (!response.ok) {
         console.warn("Failed to fetch total balance, using fallback value");
         setTotalBalance("0.00");
+        setTokenBalances({
+          USDC: "0.00",
+          USDT: "0.00",
+        });
         return;
       }
 
@@ -140,24 +148,33 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       console.log("Total balance response:", data);
 
       // Extract total balance from response
-      const balance = data.balance || data.total || "0.00";
+      const balance = data.totalUsdBalance || data.balance || data.total || "0.00";
       setTotalBalance(balance);
+
+      // Extract token balances
+      setTokenBalances({
+        USDC: data.usdcBalance || "0.00",
+        USDT: data.usdtBalance || "0.00",
+      });
     } catch (error) {
       console.error("Failed to fetch total balance:", error);
       toast.error("Failed to fetch balance");
-      // Set fallback value
+      // Set fallback values
       setTotalBalance("0.00");
+      setTokenBalances({
+        USDC: "0.00",
+        USDT: "0.00",
+      });
     } finally {
       setIsLoadingBalances(false);
     }
   };
 
   const handleAuth = async () => {
-    if (user && wallet) {
+    if (authenticated && user && wallet) {
       setDisplayAddress(null);
       await logout();
       onClose();
-      window.location.href = "/";
     } else {
       handleGoBack();
     }
@@ -240,7 +257,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <h2
             className={`text-lg truncate font-semibold text-black dark:text-white`}
           >
-            {displayAddress ? formatAddress(displayAddress) : "Not connected"}
+            {displayAddress ? formatAddress(displayAddress) : "No wallet connected"}
           </h2>
           {displayAddress && (
             <div className="flex items-center mt-1">
@@ -304,20 +321,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <span>Send</span>
         </button>
 
-        {/* Buy */}
-        <button
-          onClick={() => handleOpenModal("buy")}
-          className={`w-full flex items-center p-3 border border-white/60 ${
-            theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#FDFDFF]"
-          } rounded-lg hover:bg-opacity-80 transition-colors text-black dark:text-white`}
-        >
-          <Plus
-            className={`h-5 w-5 mr-3 ${
-              theme === "dark" ? "text-[#FFD659]" : "text-[#8266E6]"
-            }`}
-          />
-          <span>Buy</span>
-        </button>
 
         {/* View Funds with Dropdown */}
         <div className="w-full">
@@ -349,34 +352,74 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 theme === "dark" ? "bg-[#FFFFFF]/5" : "bg-[#F9F9F9]"
               } text-black dark:text-white`}
             >
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="text-2xl font-bold text-[#8266E6] dark:text-[#FFD659]">
-                    ${totalBalance}
+              {isLoadingBalances ? (
+                <div className="py-2 text-center text-sm">
+                  Loading balances...
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* USDC Balance */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 relative mr-2">
+                        <Image
+                          src={TOKENS.USDC.logoUrl}
+                          alt="USDC"
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">USDC</span>
+                    </div>
+                    <span className="text-sm font-medium">
+                      {tokenBalances.USDC}
+                    </span>
                   </div>
-                  <button
-                    onClick={() =>
-                      account?.address && fetchTotalBalance(account.address)
-                    }
-                    disabled={isLoadingBalances}
-                    className={`p-1 rounded-full transition-colors ${
-                      isLoadingBalances
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    }`}
-                    aria-label="Refresh balance"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${
-                        isLoadingBalances ? "animate-spin" : ""
+
+                  {/* USDT Balance */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 relative mr-2">
+                        <Image
+                          src={TOKENS.USDT.logoUrl}
+                          alt="USDT"
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <span className="text-sm font-medium">USDT</span>
+                    </div>
+                    <span className="text-sm font-medium">
+                      {tokenBalances.USDT}
+                    </span>
+                  </div>
+
+                  {/* Refresh Button */}
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() =>
+                        account?.address && fetchTotalBalance(account.address)
+                      }
+                      disabled={isLoadingBalances}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-colors ${
+                        isLoadingBalances
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                       }`}
-                    />
-                  </button>
+                      aria-label="Refresh balance"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${
+                          isLoadingBalances ? "animate-spin" : ""
+                        }`}
+                      />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {isLoadingBalances ? "Updating..." : "Total Balance"}
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -393,7 +436,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
           </button>
         ) : (
-          <></>
+          <button
+            onClick={login}
+            className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-lg text-[#8266E6] dark:text-[#FFD659]"
+          >
+            <div className="flex items-center">
+              <LogIn className="h-5 w-5 mr-3" />
+              <span>Connect Wallet</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[#202020] dark:text-white" />
+          </button>
         )}
       </div>
 

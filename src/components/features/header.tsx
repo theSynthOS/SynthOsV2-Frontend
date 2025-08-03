@@ -24,6 +24,9 @@ export default function Header() {
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
   const { lastRefresh } = usePoints();
 
+  // Get wallet address from Privy user
+  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
     setMounted(true);
@@ -100,7 +103,16 @@ export default function Header() {
         {/* Points Rectangle - only show on XL screens */}
         <div className="hidden xl:flex items-center ml-2">
           <div className="flex items-center justify-center w-28 h-12 px-4 rounded-lg border-2 border-[#8266E6] bg-white dark:bg-[#1E1E1E] shadow-sm">
-            {isLoadingPoints || totalPoints === null ? (
+            {!account?.address ? (
+              <>
+                <span className="text-lg font-bold text-[#8266E6] dark:text-[#FFD659] mr-2">
+                  0
+                </span>
+                <span className="text-xs font-semibold text-[#8266E6]">
+                  Pts
+                </span>
+              </>
+            ) : isLoadingPoints || totalPoints === null ? (
               <div className="flex items-center w-full">
                 <Skeleton className="w-16 h-6 rounded mr-2 bg-gray-300 dark:bg-gray-700" />
                 <span className="text-xs font-semibold text-[#8266E6]">

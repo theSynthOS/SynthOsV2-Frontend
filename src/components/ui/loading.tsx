@@ -37,9 +37,7 @@ export function Loading({ message = "logging in", className = "" }: LoadingProps
           className={`text-lg font-medium tracking-wide ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
-          style={{
-            fontFamily: "var(--font-tt-travels), sans-serif",
-          }}
+          
         >
           {message}
         </motion.p>

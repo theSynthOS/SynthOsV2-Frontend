@@ -114,7 +114,20 @@ export default function Navbar() {
             }`}
           >
             <Award className="h-8 w-8 text-[#8266E6]" />
-            {isLoadingPoints || totalPoints === null ? (
+            {!account?.address ? (
+              <>
+                <span
+                  className={`text-lg font-bold mt-2 ${
+                    theme === "dark" ? "text-purple-300" : "text-[#573faf]"
+                  }`}
+                >
+                  0
+                </span>
+                <span className="text-sm font-semibold text-[#8266E6]">
+                  Pts
+                </span>
+              </>
+            ) : isLoadingPoints || totalPoints === null ? (
               <div className="flex flex-col items-center mt-2 w-full">
                 <Skeleton
                   className={`w-12 h-6 rounded mb-2 ${

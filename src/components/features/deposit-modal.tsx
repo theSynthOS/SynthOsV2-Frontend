@@ -741,7 +741,7 @@ export default function DepositModal({
       // Execute the deposit payload
       try {
         if (!account) {
-          throw new Error("Wallet not connected");
+          throw new Error("No wallet connected");
         }
 
         // Extract transactions from callData

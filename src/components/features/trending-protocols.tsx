@@ -775,9 +775,11 @@ export default function TrendingProtocols({
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              {isLoadingTopOpportunities ||
-              (topOpportunityIds.length > 0 &&
-                aiRecommendedProtocols.length === 0)
+              {!account?.address
+                ? "No wallet connected"
+                : isLoadingTopOpportunities ||
+                  (topOpportunityIds.length > 0 &&
+                    aiRecommendedProtocols.length === 0)
                 ? "Loading personalized recommendations..."
                 : topOpportunityIds.length === 0
                 ? "Analysis is still in progress"

@@ -18,7 +18,7 @@ export default function Home() {
   // Show loading while redirecting
   return (
     <div className="flex flex-col min-h-screen">
-      <Loading message="loading app" className="flex-1" />
+      <Loading message="Fetching Yields..." className="flex-1" />
     </div>
   );
 }
