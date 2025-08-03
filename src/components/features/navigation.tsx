@@ -170,7 +170,7 @@ export default function Navbar() {
                 : "text-gray-400"
             }`}
           >
-            Holdings
+            Positions
           </span>
         </Link>
       </div>

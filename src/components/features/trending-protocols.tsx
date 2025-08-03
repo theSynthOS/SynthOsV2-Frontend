@@ -175,7 +175,7 @@ export default function TrendingProtocols({
   useEffect(() => {
     const fetchInvestorProfile = async () => {
       if (!account?.address) {
-        setInvestorProfile("Error fetching investor profile");
+        setInvestorProfile("No wallet connected");
         return;
       }
 

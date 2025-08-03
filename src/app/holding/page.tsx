@@ -406,7 +406,7 @@ export default function HoldingPage() {
                     theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
                   }`}
                 >
-                  Total Holding Value
+                  Total Position Value
                 </span>
                 <div className="my-2">
                   {isLoading && account?.address ? (
@@ -501,7 +501,7 @@ export default function HoldingPage() {
                     theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
                   }`}
                 >
-                  YOUR HOLDINGS
+                  YOUR POSITIONS
                 </span>
 
                 <div
@@ -584,7 +584,7 @@ export default function HoldingPage() {
                 </div>
               ) : filteredHoldings.length === 0 ? (
                 <div className="text-gray-400 text-center py-8">
-                  No Holdings Available
+                  No Positions Available
                 </div>
               ) : (
                 filteredHoldings.slice(0, 1).map((h, idx) => {
@@ -858,7 +858,7 @@ export default function HoldingPage() {
             {/* Modal Content */}
             <div className="relative z-[999] w-full max-w-4xl max-h-[90vh]">
               <Card
-                title="All Holdings"
+                title="All Positions"
                 onClose={() => {
                   mediumHaptic();
                   setShowViewAllModal(false);
@@ -943,14 +943,14 @@ export default function HoldingPage() {
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        No Holdings Available
+                        No Positions Available
                       </div>
                       <div
                         className={`text-sm ${
                           theme === "dark" ? "text-gray-500" : "text-gray-400"
                         }`}
                       >
-                        Start investing to see your holdings here
+                        Start investing to see your positions here
                       </div>
                     </div>
                   ) : (
@@ -1015,7 +1015,7 @@ export default function HoldingPage() {
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Total Holdings: {filteredHoldings.length}
+                      Total Positions: {filteredHoldings.length}
                     </div>
                     <button
                       onClick={() => {
