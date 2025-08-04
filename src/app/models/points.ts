@@ -109,14 +109,15 @@ export async function applyReferralCode(
   const referrer = await UserPoints.findOne({ referralCode });
   if (!referrer) throw new Error("Invalid referral code");
 
-  // Prevent self-referral
+  // Prevent self-referral (check this BEFORE checking if user already has referral)
   if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
     throw new Error("You cannot refer yourself.");
   }
 
-  // Check if user already has a referral
+  // Check if user already has a referral (only check if it's not a self-referral)
   const user = await UserPoints.findOne({ address: userAddress });
-  if (user?.referralBy) throw new Error("User already has a referral");
+  if (user?.referralBy && user.referralBy.trim() !== "")
+    throw new Error("User already has a referral");
 
   // Update user with referral
   const updatedUser = await UserPoints.findOneAndUpdate(
@@ -173,14 +174,15 @@ export async function applyAndIncrementReferral(
   const referrer = await UserPoints.findOne({ referralCode });
   if (!referrer) throw new Error("Invalid referral code");
 
-  // 2. Prevent self-referral
+  // 2. Prevent self-referral (check this BEFORE checking if user already has referral)
   if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
     throw new Error("You cannot refer yourself.");
   }
 
-  // 3. Check if user already has a referral
+  // 3. Check if user already has a referral (only check if it's not a self-referral)
   const user = await UserPoints.findOne({ address: userAddress });
-  if (user?.referralBy) throw new Error("User already has a referral");
+  if (user?.referralBy && user.referralBy.trim() !== "")
+    throw new Error("User already has a referral");
 
   // 4. Update current user's referralBy
   await UserPoints.updateOne(

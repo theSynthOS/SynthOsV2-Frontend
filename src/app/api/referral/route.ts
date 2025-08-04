@@ -13,7 +13,14 @@ export async function POST(request: NextRequest) {
   await dbConnect();
   const { address, referralCode } = await request.json();
 
-  if (!address || !referralCode) {
+  console.log("Received referral request:", { address, referralCode });
+
+  if (
+    !address ||
+    !referralCode ||
+    address.trim() === "" ||
+    referralCode.trim() === ""
+  ) {
     return NextResponse.json(
       { success: false, error: "Address and referral code required" },
       { status: 400 }

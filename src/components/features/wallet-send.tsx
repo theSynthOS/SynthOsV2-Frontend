@@ -52,28 +52,33 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [isPending, setIsPending] = useState(false);
 
   const { sendTransaction } = useSendTransaction();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
 
   // Use display address from context
-  const account = authenticated && displayAddress ? { address: displayAddress } : null;
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Toggle between USDC and USDT
   const toggleToken = () => {
     const newToken = selectedToken === "USDC" ? "USDT" : "USDC";
     setSelectedToken(newToken);
     setAmount("");
-    fetchTokenBalance(newToken);
+    // Update balance display for the new token without re-fetching
+    if (account?.address) {
+      fetchTokenBalance();
+    }
   };
 
-  // Fetch token balance when account or selected token changes
+  // Fetch token balance when account changes (like settings panel)
   useEffect(() => {
     if (account?.address) {
-      fetchTokenBalance(selectedToken);
+      fetchTokenBalance();
     }
-  }, [account, selectedToken]);
+  }, [account?.address]); // Only depend on address, not selectedToken
 
-  // Function to fetch token balance directly from Privy API
-  const fetchTokenBalance = async (tokenType: TokenType = selectedToken) => {
+  // Function to fetch token balance using the same API as settings panel
+  const fetchTokenBalance = async () => {
     if (!account?.address) return;
 
     setIsLoadingBalance(true);
@@ -86,27 +91,31 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         return;
       }
 
-      // Call Privy API directly
-      const response = await fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=${tokenType.toLowerCase()}&chain=scroll`, {
+      // Fetch balance from the same API endpoint used by the settings panel
+      const response = await fetch(`/api/balance?address=${account.address}`, {
+        method: "GET",
         headers: {
-          "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
-          "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
-        }
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (!response.ok) {
-        console.warn(`Privy API error: ${response.status}`);
+        console.warn("Failed to fetch balance, using fallback value");
         setBalance("0.00");
         return;
       }
-      
+
       const data = await response.json();
-      const balance = data.balances?.[0]?.display_values?.[tokenType.toLowerCase()] ?? "0.00";
-      setBalance(balance);
+      console.log("Balance response:", data);
+
+      // Extract the specific token balance based on current selectedToken
+      const tokenBalance =
+        selectedToken === "USDC" ? data.usdcBalance : data.usdtBalance;
+      setBalance(tokenBalance || "0.00");
     } catch (error) {
-      console.error(`Failed to fetch ${tokenType} balance:`, error);
+      console.error(`Failed to fetch ${selectedToken} balance:`, error);
       setBalance("0.00");
-      toast.error(`Failed to fetch your ${tokenType} balance`);
+      toast.error(`Failed to fetch your ${selectedToken} balance`);
     } finally {
       setIsLoadingBalance(false);
     }
@@ -139,7 +148,12 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       let result;
       if (smartWalletClient && isSmartWalletActive) {
         // Use smart wallet client
-        result = await sendTokenTransaction(smartWalletClient, selectedToken, recipient, amount);
+        result = await sendTokenTransaction(
+          smartWalletClient,
+          selectedToken,
+          recipient,
+          amount
+        );
       } else {
         // Fallback to regular sendTransaction
         const tokenConfig = TOKENS[selectedToken];
@@ -147,7 +161,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         const transferData = `0xa9059cbb${recipient
           .slice(2)
           .padStart(64, "0")}${amountInWei.toString(16).padStart(64, "0")}`;
-        
+
         result = await sendTransaction({
           chainId: 534352, // Scroll Mainnet chain ID
           to: tokenConfig.address,

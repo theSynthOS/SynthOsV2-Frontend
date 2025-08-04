@@ -32,12 +32,12 @@ export async function GET(req: Request) {
     }
     // Checksum the address to ensure it's properly formatted
     const checksummedAddress = getAddress(address);
-    const user = await getUserPoints(checksummedAddress);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+
+    // Use upsertUserPoints instead of getUserPoints to create user if not exists
+    const user = await upsertUserPoints(checksummedAddress);
     return NextResponse.json({ user });
   } catch (error) {
+    console.error("GET /api/points error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to process points" },
       { status: 500 }
