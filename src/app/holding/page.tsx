@@ -284,17 +284,30 @@ export default function HoldingPage() {
   };
 
   const handleApplyReferralCode = async () => {
+    console.log("handleApplyReferralCode called");
+    console.log("inputReferralCode:", inputReferralCode);
+    console.log("account:", account);
+    console.log("displayAddress:", displayAddress);
+    console.log("authenticated:", authenticated);
+
     if (!inputReferralCode.trim()) {
+      console.log("No referral code entered");
       errorHaptic();
       return;
     }
     if (!account?.address) {
+      console.log("No account address available");
       toast.error("Please connect your wallet");
       return;
     }
     heavyHaptic();
     setIsApplyingReferral(true);
     try {
+      console.log("Making API request with:", {
+        address: account.address,
+        referralCode: inputReferralCode.trim(),
+      });
+
       const response = await fetch("/api/referral", {
         method: "POST",
         headers: {
@@ -306,6 +319,8 @@ export default function HoldingPage() {
         }),
       });
       const data = await response.json();
+      console.log("API response:", data);
+
       if (data.success) {
         toast.success("Referral code applied successfully!");
         setInputReferralCode("");
@@ -324,6 +339,7 @@ export default function HoldingPage() {
         }
       }
     } catch (error) {
+      console.error("Error in handleApplyReferralCode:", error);
       toast.error("Failed to apply referral code");
     } finally {
       setIsApplyingReferral(false);
