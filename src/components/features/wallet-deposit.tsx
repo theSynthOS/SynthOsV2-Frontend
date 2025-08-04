@@ -6,6 +6,8 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import Card from "@/components/ui/card";
 import { mediumHaptic, copyHaptic } from "@/lib/haptic-utils";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { getWalletId } from "@/lib/smart-wallet-utils";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -17,12 +19,14 @@ type StablecoinType = "USDC" | "USDT";
 export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
   const { user, authenticated, login } = usePrivy();
   const { theme } = useTheme();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [windowHeight, setWindowHeight] = useState(0);
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
-  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
   const [selectedCoin, setSelectedCoin] = useState<StablecoinType>("USDC");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,40 +54,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
     };
   }, []);
 
-  // Determine which address to display - use ThirdWeb account
-  useEffect(() => {
-    if (account?.address) {
-      setDisplayAddress(account.address);
-      fetchTokenBalances();
-    }
-  }, [account]);
-
-  // Function to fetch token balances from API
-  const fetchTokenBalances = async () => {
-    if (!account?.address) return;
-
-    setIsLoadingBalances(true);
-    try {
-      const response = await fetch(`/api/balance?address=${account.address}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch balance");
-      }
-      const data = await response.json();
-      
-      setTokenBalances({
-        USDC: data.usdcBalance || "0.00",
-        USDT: data.usdtBalance || "0.00",
-      });
-    } catch (error) {
-      console.error("Failed to fetch token balances:", error);
-      setTokenBalances({
-        USDC: "0.00",
-        USDT: "0.00",
-      });
-    } finally {
-      setIsLoadingBalances(false);
-    }
-  };
+  // Display address is now managed by the context
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -105,8 +76,8 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
 
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal close
-    if (displayAddress) {
-      navigator.clipboard.writeText(displayAddress);
+    if (account?.address) {
+      navigator.clipboard.writeText(account.address);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
@@ -414,50 +385,7 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
                   </div>
                 </div>
 
-                {/* Token Balances */}
-                {account?.address && (
-                  <div className="mb-4">
-                    <h3 className={`font-medium mb-2 ${isMobile ? "text-sm" : ""}`}>
-                      Your Balances
-                    </h3>
-                    <div className="space-y-2">
-                      {/* USDC Balance */}
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex items-center">
-                          <Image
-                            src="/usdc.png"
-                            alt="USDC"
-                            width={20}
-                            height={20}
-                            className="mr-2"
-                          />
-                          <span className="text-sm font-medium">USDC</span>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {isLoadingBalances ? "Loading..." : tokenBalances.USDC}
-                        </span>
-                      </div>
-
-                      {/* USDT Balance */}
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex items-center">
-                          <Image
-                            src="/usdt.png"
-                            alt="USDT"
-                            width={20}
-                            height={20}
-                            className="mr-2"
-                          />
-                          <span className="text-sm font-medium">USDT</span>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {isLoadingBalances ? "Loading..." : tokenBalances.USDT}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
+                
                 {/* Network Information */}
                 <div className="pb-2">
                   <h3

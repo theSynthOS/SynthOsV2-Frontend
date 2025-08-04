@@ -9,6 +9,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { safeHaptic, mediumHaptic, heavyHaptic } from "@/lib/haptic-utils";
 import { useBalance } from "@/contexts/BalanceContext";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { sendTokenTransaction, getWalletId } from "@/lib/smart-wallet-utils";
 
 interface SendModalProps {
   isOpen: boolean;
@@ -50,10 +52,10 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [isPending, setIsPending] = useState(false);
 
   const { sendTransaction } = useSendTransaction();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
 
-  // Get wallet address from Privy user
-  const account =
-    authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Toggle between USDC and USDT
   const toggleToken = () => {
@@ -76,9 +78,8 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
     setIsLoadingBalance(true);
     try {
-      // Get wallet ID from Privy user
-      const walletId = user?.wallet?.id || user?.wallet?.address;
-      
+      // Use wallet ID from utility function
+      const walletId = getWalletId(user);
       if (!walletId) {
         console.warn("No wallet ID available");
         setBalance("0.00");
@@ -132,24 +133,29 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       // Haptic feedback for critical send action
       safeHaptic("heavy");
 
-      const tokenConfig = TOKENS[selectedToken];
+      // Use smart wallet client for transaction if available, otherwise use regular sendTransaction
+      console.log("Using smart wallet for transaction");
 
-      // Convert amount to wei (both USDC and USDT have 6 decimals)
-      const amountInWei = parseUnits(amount, tokenConfig.decimals);
-
-      // Create the transaction data for ERC20 transfer
-      const transferData = `0xa9059cbb${recipient
-        .slice(2)
-        .padStart(64, "0")}${amountInWei.toString(16).padStart(64, "0")}`;
-
-      // Send transaction using Privy's sendTransaction
-      const result = await sendTransaction({
-        chainId: 534352, // Scroll Mainnet chain ID
-        to: tokenConfig.address,
-        value: BigInt(0), // No ETH value for token transfers
-        gasLimit: BigInt(100000),
-        data: transferData as `0x${string}`,
-      });
+      let result;
+      if (smartWalletClient && isSmartWalletActive) {
+        // Use smart wallet client
+        result = await sendTokenTransaction(smartWalletClient, selectedToken, recipient, amount);
+      } else {
+        // Fallback to regular sendTransaction
+        const tokenConfig = TOKENS[selectedToken];
+        const amountInWei = parseUnits(amount, tokenConfig.decimals);
+        const transferData = `0xa9059cbb${recipient
+          .slice(2)
+          .padStart(64, "0")}${amountInWei.toString(16).padStart(64, "0")}`;
+        
+        result = await sendTransaction({
+          chainId: 534352, // Scroll Mainnet chain ID
+          to: tokenConfig.address,
+          value: BigInt(0), // No ETH value for token transfers
+          gasLimit: BigInt(100000),
+          data: transferData as `0x${string}`,
+        });
+      }
 
       // Clear any previous error
       setTxError(null);

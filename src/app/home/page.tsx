@@ -20,6 +20,7 @@ import { BalanceProvider } from "@/contexts/BalanceContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { mediumHaptic } from "@/lib/haptic-utils";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 export default function Home() {
   const router = useRouter();
@@ -29,12 +30,15 @@ export default function Home() {
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
+
+  // Use display address from context
+  const walletAddress = displayAddress;
 
   // Check URL parameters for modal to open
   useEffect(() => {
@@ -76,12 +80,12 @@ export default function Home() {
 
   // Fetch balance when account changes
   useEffect(() => {
-    if (authenticated && user?.wallet?.address) {
-      fetchBalance(user.wallet.address);
+    if (authenticated && walletAddress) {
+      fetchBalance(walletAddress);
     } else {
       setIsLoadingBalance(false);
     }
-  }, [authenticated, user?.wallet?.address]);
+  }, [authenticated, walletAddress]);
 
   // Close modal
   const closeModal = () => {
@@ -96,14 +100,7 @@ export default function Home() {
     )}`;
   };
 
-  // Update display address whenever account changes
-  useEffect(() => {
-    if (authenticated && user?.wallet?.address) {
-      setDisplayAddress(user.wallet.address);
-    } else {
-      setDisplayAddress(null);
-    }
-  }, [authenticated, user?.wallet?.address]);
+  // Display address is now managed by the context
 
   // Handle copy address to clipboard
   const handleCopyAddress = () => {
@@ -134,8 +131,8 @@ export default function Home() {
       />
       <BalanceProvider
         refreshBalance={() => {
-          if (authenticated && user?.wallet?.address) {
-            fetchBalance(user.wallet.address);
+          if (authenticated && walletAddress) {
+            fetchBalance(walletAddress);
           }
         }}
         refreshHoldings={handleRefreshHoldings}
@@ -402,8 +399,8 @@ export default function Home() {
               >
                 <DynamicFeatures
                   refreshBalance={() => {
-                    if (authenticated && user?.wallet?.address) {
-                      fetchBalance(user.wallet.address);
+                    if (authenticated && walletAddress) {
+                      fetchBalance(walletAddress);
                     }
                   }}
                 />

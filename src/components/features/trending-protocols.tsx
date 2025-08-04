@@ -17,6 +17,7 @@ import { useRef } from "react";
 import DepositModal from "./deposit-modal";
 import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 interface ProtocolPair {
   id: string;
@@ -43,6 +44,7 @@ export default function TrendingProtocols({
 }: TrendingProtocolsProps) {
   const { theme } = useTheme();
   const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [selectedPool, setSelectedPool] = useState<any>(null);
   const [investorProfile, setInvestorProfile] = useState<string | null>(null);
   const [riskFilters, setRiskFilters] = useState({
@@ -69,8 +71,8 @@ export default function TrendingProtocols({
   const [isLoadingTopOpportunities, setIsLoadingTopOpportunities] =
     useState(false);
 
-  // Get wallet address from Privy user
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Cleanup cache when wallet disconnects
   useEffect(() => {

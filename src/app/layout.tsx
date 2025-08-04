@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import WalletProvider from "@/client";
 import ClientProviders from "@/components/providers/client-providers";
+import { SmartWalletProvider } from "@/contexts/SmartWalletContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,7 +95,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <WalletProvider>
-          <ClientProviders>{children}</ClientProviders>
+          <SmartWalletProvider>
+            <ClientProviders>{children}</ClientProviders>
+          </SmartWalletProvider>
         </WalletProvider>
       </body>
     </html>

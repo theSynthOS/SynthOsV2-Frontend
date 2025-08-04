@@ -12,6 +12,7 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import {
   safeHaptic,
   copyHaptic,
@@ -40,7 +41,7 @@ type Holding = {
 export default function HoldingPage() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+
   const router = useRouter();
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
@@ -51,8 +52,10 @@ export default function HoldingPage() {
 
   // Use Privy for wallet authentication
   const { user, authenticated, login } = usePrivy();
-  const account =
-    authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
+  
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
   // Referral states
   const [referralCode, setReferralCode] = useState<string>("");
   const [userReferralCode, setUserReferralCode] = useState<string>("");
@@ -82,14 +85,7 @@ export default function HoldingPage() {
     setMounted(true);
   }, []);
 
-  // Update display address whenever account changes
-  useEffect(() => {
-    if (account?.address) {
-      setDisplayAddress(account.address);
-    } else {
-      setDisplayAddress(null);
-    }
-  }, [account]);
+  // Display address is now managed by the context
 
   // TODO: Function to fetch holdings data
   const fetchHoldings = async () => {

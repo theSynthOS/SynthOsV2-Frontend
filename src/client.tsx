@@ -76,9 +76,9 @@ const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
                 version: '2.0.0'
               }
             }
-                },
-              }}
-            >
+          }
+        }}
+      >
         {children}
       </SmartWalletsProvider>
     </PrivyProvider>

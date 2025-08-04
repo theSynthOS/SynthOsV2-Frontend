@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePoints } from "@/contexts/PointsContext";
 import { mediumHaptic } from "@/lib/haptic-utils";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 export default function Header() {
   const router = useRouter();
@@ -20,12 +21,13 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
   const { lastRefresh } = usePoints();
 
-  // Get wallet address from Privy user
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
@@ -34,11 +36,11 @@ export default function Header() {
 
   useEffect(() => {
     const fetchPoints = async () => {
-      if (!authenticated || !user?.wallet?.address) return;
+      if (!authenticated || !account?.address) return;
       try {
         setIsLoadingPoints(true);
         const params = new URLSearchParams();
-        if (user.wallet.address) params.append("address", user.wallet.address);
+        if (account.address) params.append("address", account.address);
         const res = await fetch(`/api/points?${params.toString()}`);
         const data = await res.json();
         if (data.user) {
@@ -60,7 +62,7 @@ export default function Header() {
       }
     };
     fetchPoints();
-  }, [authenticated, user?.wallet?.address, lastRefresh]);
+  }, [authenticated, account?.address, lastRefresh]);
 
   // Toggle theme between dark and light
   const toggleTheme = () => {

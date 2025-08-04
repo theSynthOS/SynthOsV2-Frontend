@@ -33,6 +33,8 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { getWalletId } from "@/lib/smart-wallet-utils";
 
 // Token details for Scroll Mainnet
 const TOKENS = {
@@ -62,8 +64,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { wallets } = useWallets();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [mounted, setMounted] = useState(false);
-  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showConnectButtonDropdown, setShowConnectButtonDropdown] =
@@ -80,9 +82,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   });
   const lastFetchedAddress = useRef<string | null>(null);
 
-  // Get the first wallet (embedded wallet) if available, but only if authenticated
-  const wallet = authenticated ? wallets[0] : null;
-  const account = wallet ? { address: wallet.address } : null;
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Update the mounted state and ensure theme is properly applied
   useEffect(() => {
@@ -104,60 +105,61 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     )}`;
   };
 
-  // Update display address whenever account changes
+  // Update balance whenever account changes
   useEffect(() => {
     if (account?.address) {
-      setDisplayAddress(account.address);
       // Only fetch balance if we haven't fetched for this address yet
       if (lastFetchedAddress.current !== account.address) {
         fetchTotalBalance(account.address);
         lastFetchedAddress.current = account.address;
       }
     } else {
-      setDisplayAddress(null);
       setTotalBalance("0.00"); // Reset balance when no account
       lastFetchedAddress.current = null;
     }
   }, [account?.address]); // Only depend on the address, not the entire account object
 
-  // Fetch total balance and token balances like the main page
+  // Fetch total balance and token balances directly from Privy API
   const fetchTotalBalance = async (address: string) => {
-    if (!address) return;
+    const walletId = getWalletId(user);
+    if (!address || !walletId) return;
 
     setIsLoadingBalances(true);
     try {
-      // Fetch total balance from the same API endpoint used by the main page
-      const response = await fetch(`/api/balance?address=${address}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Call Privy API directly for both USDC and USDT
+      const [usdcResponse, usdtResponse] = await Promise.all([
+        fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdc&chain=scroll`, {
+          headers: {
+            "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
+            "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
+          }
+        }),
+        fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdt&chain=scroll`, {
+          headers: {
+            "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
+            "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
+          }
+        })
+      ]);
 
-      if (!response.ok) {
-        console.warn("Failed to fetch total balance, using fallback value");
-        setTotalBalance("0.00");
-        setTokenBalances({
-          USDC: "0.00",
-          USDT: "0.00",
-        });
-        return;
-      }
+      const [usdcData, usdtData] = await Promise.all([
+        usdcResponse.json(),
+        usdtResponse.json()
+      ]);
 
-      const data = await response.json();
-      console.log("Total balance response:", data);
+      const usdcBalance = usdcData.balances?.[0]?.display_values?.usdc ?? "0.00";
+      const usdtBalance = usdtData.balances?.[0]?.display_values?.usdt ?? "0.00";
 
-      // Extract total balance from response
-      const balance = data.totalUsdBalance || data.balance || data.total || "0.00";
-      setTotalBalance(balance);
+      // Calculate total USD balance
+      const totalUsdBalance = (parseFloat(usdcBalance) + parseFloat(usdtBalance)).toFixed(2);
 
-      // Extract token balances
+      setTotalBalance(totalUsdBalance);
       setTokenBalances({
-        USDC: data.usdcBalance || "0.00",
-        USDT: data.usdtBalance || "0.00",
+        USDC: usdcBalance,
+        USDT: usdtBalance,
       });
     } catch (error) {
-      console.error("Failed to fetch total balance:", error);
+      console.error("Failed to fetch Privy balance:", error);
       toast.error("Failed to fetch balance");
       // Set fallback values
       setTotalBalance("0.00");
@@ -171,8 +173,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   };
 
   const handleAuth = async () => {
-    if (authenticated && user && wallet) {
-      setDisplayAddress(null);
+    if (authenticated && user && account) {
       await logout();
       onClose();
     } else {

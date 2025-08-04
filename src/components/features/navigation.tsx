@@ -8,18 +8,20 @@ import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = useTheme();
   const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { lastRefresh } = usePoints();
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
 
-  // Get wallet address from Privy user
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  // Use display address from context
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   useEffect(() => {
     const handleScroll = () => {
