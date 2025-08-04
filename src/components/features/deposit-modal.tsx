@@ -751,7 +751,9 @@ export default function DepositModal({
             " We are experiencing high investment volumes, please try again later."
           );
           // Invalid response format: expected callData array
+        
         }
+        console.log(responseData);
 
         const transactionData = responseData.callData;
 
@@ -798,6 +800,7 @@ export default function DepositModal({
           );
           // Pre-execution simulation failed: ${errorMessage}
         }
+
 
         // Update progress after successful simulation
         setTxProgressPercent(65);
@@ -941,6 +944,7 @@ export default function DepositModal({
       setDepositError(
         "We are experiencing high investment volumes, please try again later."
       );
+      console.log(error);
       setTxProgressPercent(0);
       setSimulationStatus(null); // Clear simulation status on error
       // Reset submission state to allow retrying
