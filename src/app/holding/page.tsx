@@ -97,8 +97,6 @@ export default function HoldingPage() {
       const res = await fetch(`/api/holdings?address=${account.address}`);
       const data = await res.json();
       setHoldings(Array.isArray(data) ? data : []);
-
-      setHoldings([]);
     } catch (error) {
       setHoldings([]);
     } finally {
@@ -214,6 +212,7 @@ export default function HoldingPage() {
     handleReferralCode();
   }, [account?.address]);
   // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
+
   const filteredHoldings = holdings.filter((h) => {
     // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
     const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-5;
