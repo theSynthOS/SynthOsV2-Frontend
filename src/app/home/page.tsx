@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { History } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import DynamicFeatures from "@/components/home/dynamic-features";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
@@ -22,23 +22,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { mediumHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
-export default function Home() {
-  const router = useRouter();
+// Component that handles search params
+function SearchParamsHandler({
+  setShowModal,
+}: {
+  setShowModal: (modal: "deposit" | "send" | "buy" | null) => void;
+}) {
   const searchParams = useSearchParams();
-  const { theme } = useTheme();
-  const { refreshPoints } = usePoints();
-  const [balance, setBalance] = useState<string>("0.00");
-  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const { user, authenticated } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
-  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
-    null
-  );
-
-  // Use display address from context
-  const walletAddress = displayAddress;
 
   // Check URL parameters for modal to open
   useEffect(() => {
@@ -55,7 +45,28 @@ export default function Home() {
       url.searchParams.delete("modal");
       window.history.replaceState({}, "", url);
     }
-  }, [searchParams]);
+  }, [searchParams, setShowModal]);
+
+  return null;
+}
+
+function HomeContent() {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const { refreshPoints } = usePoints();
+  const [balance, setBalance] = useState<string>("0.00");
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
+  const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
+    null
+  );
+
+  // Use display address from context
+  const walletAddress = displayAddress;
 
   const fetchBalance = async (walletAddress: string) => {
     try {
@@ -124,6 +135,9 @@ export default function Home() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler setShowModal={setShowModal} />
+      </Suspense>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -443,5 +457,13 @@ export default function Home() {
         </motion.div>
       </BalanceProvider>
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <HomeContent />
+    </Suspense>
   );
 }
