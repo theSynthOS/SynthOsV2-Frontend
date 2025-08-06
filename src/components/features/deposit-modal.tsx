@@ -11,6 +11,7 @@ import Card from "@/components/ui/card";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { safeHaptic } from "@/lib/haptic-utils";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 interface DepositModalProps {
   pool: {
@@ -52,9 +53,11 @@ export default function DepositModal({
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
   const { sendTransaction } = useSendTransaction();
   const account =
-    authenticated && user?.wallet ? { address: user.wallet.address } : null;
+    authenticated && displayAddress ? { address: displayAddress } : null;
   const [depositError, setDepositError] = useState<string | null>(null);
   const [txProgressPercent, setTxProgressPercent] = useState(0);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
@@ -441,6 +444,7 @@ export default function DepositModal({
         return call;
       });
 
+      console.log("transactionCalls", transactionCalls);
       const requestBody = {
         method: "tenderly_simulateBundle",
         params: [
@@ -751,7 +755,6 @@ export default function DepositModal({
             " We are experiencing high investment volumes, please try again later."
           );
           // Invalid response format: expected callData array
-        
         }
         console.log(responseData);
 
@@ -786,6 +789,7 @@ export default function DepositModal({
 
         // Simulate the transaction bundle with Tenderly RPC
         try {
+          console.log("account", account);
           const simulationResult = await simulateTransactionBundle(
             orderedTxs,
             account
@@ -800,7 +804,6 @@ export default function DepositModal({
           );
           // Pre-execution simulation failed: ${errorMessage}
         }
-
 
         // Update progress after successful simulation
         setTxProgressPercent(65);
