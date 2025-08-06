@@ -12,10 +12,12 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
-    "@privy-io/react-auth": "^2.20.0",
+    "@privy-io/react-auth": "^2.21.0",
     "@radix-ui/react-toast": "^1.2.13",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
+    "@zerodev/ecdsa-validator": "^5.4.9",
+    "@zerodev/sdk": "^5.4.41",
     "circular-draggable-progress-bar": "^1.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -53,32 +53,15 @@ const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         loginMethods: ["email", "wallet", "google", "discord", "apple"],
         embeddedWallets: {
           requireUserPasswordOnCreate: false,
-          showWalletUIs: true,
-          ethereum: {
-            createOnLogin: "users-without-wallets",
-          },
+          showWalletUIs: false,
+          createOnLogin: "users-without-wallets",
         },
         mfa: {
           noPromptOnMfaRequired: false,
         },
       }}
     >
-      <SmartWalletsProvider
-        config={{
-          paymasterContext: {
-            mode: 'SPONSORED',
-            calculateGasLimits: true,
-            expiryDuration: 300,
-            sponsorshipInfo: {
-              webhookData: {},
-              smartAccountInfo: {
-                name: 'BICONOMY',
-                version: '2.0.0'
-              }
-            }
-          }
-        }}
-      >
+      <SmartWalletsProvider>
         {children}
       </SmartWalletsProvider>
     </PrivyProvider>

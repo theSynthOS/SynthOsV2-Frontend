@@ -943,10 +943,10 @@
   resolved "https://registry.npmjs.org/@privy-io/ethereum/-/ethereum-0.0.2.tgz"
   integrity sha512-FnJ1dzgg/tij4jLeKHLlZM9uNk4WN+iIOkc8CG0FZKUQxqXH60Fs/dMF6Xbndd5CQkUO8LUU7FLom/405VKXpQ==
 
-"@privy-io/js-sdk-core@0.53.0":
-  version "0.53.0"
-  resolved "https://registry.npmjs.org/@privy-io/js-sdk-core/-/js-sdk-core-0.53.0.tgz"
-  integrity sha512-xiSpY8ItvSpLdsZ4Q1Pwc6gq0vmMbjcROyutQvfb3wCrpDoUah+law9E8vtSTbsesDhPxVz1LQcpwchE8x+B5A==
+"@privy-io/js-sdk-core@0.53.1":
+  version "0.53.1"
+  resolved "https://registry.yarnpkg.com/@privy-io/js-sdk-core/-/js-sdk-core-0.53.1.tgz#c82c84631f5287adf7178f7e1ce328260f4e4e98"
+  integrity sha512-+ZrUeHQtQkYkF64gw7hJRALHMfLvXyqKZ5xu80M6pQOD/IiLM5gLdVBLJm9uCb0dZg3dKOS/R//Ww8A5NwEkHg==
   dependencies:
     "@ethersproject/abstract-signer" "^5.7.0"
     "@ethersproject/bignumber" "^5.7.0"
@@ -956,7 +956,7 @@
     "@ethersproject/units" "^5.7.0"
     "@privy-io/api-base" "1.5.2"
     "@privy-io/chains" "0.0.2"
-    "@privy-io/public-api" "2.40.1"
+    "@privy-io/public-api" "2.41.0"
     canonicalize "^2.0.0"
     eventemitter3 "^5.0.1"
     fetch-retry "^6.0.0"
@@ -966,10 +966,10 @@
     set-cookie-parser "^2.6.0"
     uuid ">=8 <10"
 
-"@privy-io/public-api@2.40.1":
-  version "2.40.1"
-  resolved "https://registry.npmjs.org/@privy-io/public-api/-/public-api-2.40.1.tgz"
-  integrity sha512-NzUKE2kDAV2nlb+iUyxrelv9qqpojjvfl99Z3sLmREyPsFb3keTGKVpfjyHzPwmCK/qDddOD/bXkgvVFktIW8g==
+"@privy-io/public-api@2.41.0":
+  version "2.41.0"
+  resolved "https://registry.yarnpkg.com/@privy-io/public-api/-/public-api-2.41.0.tgz#9c54a831f1ed6ef4c143724c414a0776462fe42f"
+  integrity sha512-IByl1pdy9vhVLd2KSY1E1yVMmo4pD4KpYzIcGNr7VljN3zS1SZA4KGYrjF3AP2mT5FkzpAyxcqox7h87jhnWow==
   dependencies:
     "@privy-io/api-base" "1.5.2"
     bs58 "^5.0.0"
@@ -977,10 +977,10 @@
     viem "^2"
     zod "^3.24.3"
 
-"@privy-io/react-auth@^2.20.0":
-  version "2.20.0"
-  resolved "https://registry.npmjs.org/@privy-io/react-auth/-/react-auth-2.20.0.tgz"
-  integrity sha512-raFIEC2VLPFVnPoo8uTgU9EhCLz47Hi0B2ZfRwNQ8jxaXkz5jXGcxF5CFxYDQ3t6leZQ+sHuW7VIBugEN0S06g==
+"@privy-io/react-auth@^2.21.0":
+  version "2.21.0"
+  resolved "https://registry.yarnpkg.com/@privy-io/react-auth/-/react-auth-2.21.0.tgz#fa7c12930f339010a64e6e4f77c27c34e81bc58a"
+  integrity sha512-5h4ZVzcVuJyFs1NiRuQha3BoS0FA2TI8VKh9z/mwWsuO3CTqMzI/2L3xY3K87f1AjyOsHZ8QpR7S1r+9+QHcCA==
   dependencies:
     "@base-org/account" "^1.1.0"
     "@coinbase/wallet-sdk" "4.3.2"
@@ -992,8 +992,8 @@
     "@privy-io/api-base" "1.5.2"
     "@privy-io/chains" "0.0.2"
     "@privy-io/ethereum" "0.0.2"
-    "@privy-io/js-sdk-core" "0.53.0"
-    "@privy-io/public-api" "2.40.1"
+    "@privy-io/js-sdk-core" "0.53.1"
+    "@privy-io/public-api" "2.41.0"
     "@reown/appkit" "^1.7.11"
     "@scure/base" "^1.2.5"
     "@simplewebauthn/browser" "^9.0.1"
@@ -2682,6 +2682,18 @@
   dependencies:
     "@walletconnect/window-getters" "^1.0.1"
     tslib "1.14.1"
+
+"@zerodev/ecdsa-validator@^5.4.9":
+  version "5.4.9"
+  resolved "https://registry.yarnpkg.com/@zerodev/ecdsa-validator/-/ecdsa-validator-5.4.9.tgz#106226ac90f52f780f146037a4f1e32f6ccbe3a6"
+  integrity sha512-9NVE8/sQIKRo42UOoYKkNdmmHJY8VlT4t+2MHD2ipLg21cpbY9fS17TGZh61+Bl3qlqc8pP23I6f89z9im7kuA==
+
+"@zerodev/sdk@^5.4.41":
+  version "5.4.41"
+  resolved "https://registry.yarnpkg.com/@zerodev/sdk/-/sdk-5.4.41.tgz#5aa4d48806756f31b1127690468cfd2041679020"
+  integrity sha512-YNXLYq4PXdC8u6NVzKNDnN42MKnXignehs0eAgyTb1Er57C4ueClR3ShR64QQ0oCL20NRtzMt/dJ+Yi+sVXndA==
+  dependencies:
+    semver "^7.6.0"
 
 abitype@1.0.8, abitype@^1.0.6, abitype@^1.0.8:
   version "1.0.8"
@@ -4869,7 +4881,7 @@ secure-password-utilities@^0.2.1:
   resolved "https://registry.npmjs.org/secure-password-utilities/-/secure-password-utilities-0.2.1.tgz"
   integrity sha512-znUg8ae3cpuAaogiFBhP82gD2daVkSz4Qv/L7OWjB7wWvfbCdeqqQuJkm2/IvhKQPOV0T739YPR6rb7vs0uWaw==
 
-semver@7.7.2, semver@^7.3.8, semver@^7.7.1:
+semver@7.7.2, semver@^7.3.8, semver@^7.6.0, semver@^7.7.1:
   version "7.7.2"
   resolved "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz"
   integrity sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==
