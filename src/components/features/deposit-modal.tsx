@@ -5,13 +5,14 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, ExternalLink, X, Copy, Info } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
-import { usePrivy, useSendTransaction } from "@privy-io/react-auth";
+import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth";
 import { scroll } from "viem/chains";
 import Card from "@/components/ui/card";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { safeHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { ethers } from "ethers";
 
 interface DepositModalProps {
   pool: {
@@ -53,9 +54,8 @@ export default function DepositModal({
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+  const { displayAddress, smartWalletClient, isSmartWalletActive, wallets } =
     useSmartWallet();
-  const { sendTransaction } = useSendTransaction();
   const account =
     authenticated && displayAddress ? { address: displayAddress } : null;
   const [depositError, setDepositError] = useState<string | null>(null);
@@ -444,7 +444,6 @@ export default function DepositModal({
         return call;
       });
 
-      console.log("transactionCalls", transactionCalls);
       const requestBody = {
         method: "tenderly_simulateBundle",
         params: [
@@ -756,7 +755,6 @@ export default function DepositModal({
           );
           // Invalid response format: expected callData array
         }
-        console.log(responseData);
 
         const transactionData = responseData.callData;
 
@@ -789,7 +787,6 @@ export default function DepositModal({
 
         // Simulate the transaction bundle with Tenderly RPC
         try {
-          console.log("account", account);
           const simulationResult = await simulateTransactionBundle(
             orderedTxs,
             account
@@ -817,30 +814,27 @@ export default function DepositModal({
         try {
           // Execute transactions sequentially using Privy's sendTransaction
           let lastTxResult: any = null;
+          let calls: any = [];
 
           for (const tx of orderedTxs) {
             // Create transaction object for Privy
-            const transaction = {
+            calls.push({
               to: tx.to,
               data: tx.data,
               value: tx.value ? BigInt(tx.value) : BigInt(0),
-            };
-
-            // Send transaction using Privy's sendTransaction hook
-            lastTxResult = await sendTransaction(transaction);
-
-            // Small delay between transactions to avoid nonce issues
-            if (orderedTxs.indexOf(tx) < orderedTxs.length - 1) {
-              await new Promise((resolve) => setTimeout(resolve, 500));
-            }
+            });
           }
+
+          lastTxResult = await smartWalletClient.sendTransaction({
+            calls,
+          });
 
           // Ensure we have a result
           if (!lastTxResult) {
             throw new Error("Transaction failed to execute");
           }
 
-          result = { transactionHash: lastTxResult.hash };
+          result = { transactionHash: lastTxResult };
         } catch (error) {
           throw error;
         }
@@ -849,15 +843,17 @@ export default function DepositModal({
         setTxProgressPercent(85);
 
         // Get block number from the transaction receipt
-        let blockNumber: number | null = null;
+        let blockNumber: number | undefined = undefined;
 
         try {
-          // For now, we'll skip getting the block number since Privy's sendTransaction doesn't return a receipt
-          // The transaction hash is sufficient for tracking
-          blockNumber = null;
+          const provider = await wallets[0].getEthereumProvider();
+          const ethersProvider = new ethers.BrowserProvider(provider);
+          const receipt = await ethersProvider.getTransactionReceipt(
+            result.transactionHash
+          );
+          blockNumber = receipt?.blockNumber;
         } catch (receiptError) {
           console.error("Error getting transaction receipt:", receiptError);
-          // Continue without block number if we can't get it
         }
 
         // Update progress after getting receipt
