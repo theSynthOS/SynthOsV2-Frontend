@@ -1,8 +1,14 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
-import { useSmartWallets } from '@privy-io/react-auth/smart-wallets';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 
 interface SmartWalletContextType {
   smartWalletAddress: string | null;
@@ -11,9 +17,12 @@ interface SmartWalletContextType {
   isSmartWalletActive: boolean;
   smartWalletClient: any;
   isLoading: boolean;
+  wallets: any;
 }
 
-const SmartWalletContext = createContext<SmartWalletContextType | undefined>(undefined);
+const SmartWalletContext = createContext<SmartWalletContextType | undefined>(
+  undefined
+);
 
 interface SmartWalletProviderProps {
   children: ReactNode;
@@ -21,14 +30,17 @@ interface SmartWalletProviderProps {
 
 export function SmartWalletProvider({ children }: SmartWalletProviderProps) {
   const { user, authenticated } = usePrivy();
+  const { wallets } = useWallets();
   const { client: smartWalletClient } = useSmartWallets();
   const [isLoading, setIsLoading] = useState(true);
 
   // Get smart wallet address from linkedAccounts, fallback to embedded wallet
-  const smartAccount = user?.linkedAccounts?.find(acc => acc.type === 'smart_wallet');
+  const smartAccount = user?.linkedAccounts?.find(
+    (acc) => acc.type === "smart_wallet"
+  );
   const smartWalletAddress = smartAccount?.address || null;
   const embeddedWalletAddress = user?.wallet?.address || null;
-  
+
   // Display address - prefer smart wallet, fallback to embedded
   const displayAddress = smartWalletAddress || embeddedWalletAddress;
   const isSmartWalletActive = !!smartWalletAddress;
@@ -36,7 +48,7 @@ export function SmartWalletProvider({ children }: SmartWalletProviderProps) {
   // Initialize smart wallet immediately after login
   useEffect(() => {
     if (authenticated && smartWalletClient && !smartWalletAddress) {
-      console.log('Smart wallet will be automatically initialized by Privy');
+      console.log("Smart wallet will be automatically initialized by Privy");
     }
     setIsLoading(false);
   }, [authenticated, smartWalletClient, smartWalletAddress]);
@@ -47,7 +59,8 @@ export function SmartWalletProvider({ children }: SmartWalletProviderProps) {
     displayAddress,
     isSmartWalletActive,
     smartWalletClient,
-    isLoading
+    isLoading,
+    wallets,
   };
 
   return (
@@ -60,7 +73,7 @@ export function SmartWalletProvider({ children }: SmartWalletProviderProps) {
 export function useSmartWallet() {
   const context = useContext(SmartWalletContext);
   if (context === undefined) {
-    throw new Error('useSmartWallet must be used within a SmartWalletProvider');
+    throw new Error("useSmartWallet must be used within a SmartWalletProvider");
   }
   return context;
-} 
+}
