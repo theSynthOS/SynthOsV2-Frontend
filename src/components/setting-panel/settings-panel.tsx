@@ -64,7 +64,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { wallets } = useWallets();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
   const [mounted, setMounted] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -83,7 +84,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const lastFetchedAddress = useRef<string | null>(null);
 
   // Use display address from context
-  const account = authenticated && displayAddress ? { address: displayAddress } : null;
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Update the mounted state and ensure theme is properly applied
   useEffect(() => {
@@ -126,32 +128,62 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setIsLoadingBalances(true);
     try {
+      // Debug environment variables
+      console.log("Privy App ID:", process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+      console.log(
+        "Privy App Secret exists:",
+        !!process.env.NEXT_PUBLIC_PRIVY_APP_SECRET
+      );
+      console.log("Wallet ID:", walletId);
+
       // Call Privy API directly for both USDC and USDT
       const [usdcResponse, usdtResponse] = await Promise.all([
-        fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdc&chain=scroll`, {
-          headers: {
-            "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
-            "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
+        fetch(
+          `https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdc&chain=scroll`,
+          {
+            headers: {
+              Authorization: `Basic ${btoa(
+                `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`
+              )}`,
+              "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
+            },
           }
-        }),
-        fetch(`https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdt&chain=scroll`, {
-          headers: {
-            "Authorization": `Basic ${btoa(`${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`)}`,
-            "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""
+        ),
+        fetch(
+          `https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdt&chain=scroll`,
+          {
+            headers: {
+              Authorization: `Basic ${btoa(
+                `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`
+              )}`,
+              "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
+            },
           }
-        })
+        ),
       ]);
+
+      // Log response status for debugging
+      console.log("USDC Response status:", usdcResponse.status);
+      console.log("USDT Response status:", usdtResponse.status);
 
       const [usdcData, usdtData] = await Promise.all([
         usdcResponse.json(),
-        usdtResponse.json()
+        usdtResponse.json(),
       ]);
 
-      const usdcBalance = usdcData.balances?.[0]?.display_values?.usdc ?? "0.00";
-      const usdtBalance = usdtData.balances?.[0]?.display_values?.usdt ?? "0.00";
+      // Log response data for debugging
+      console.log("USDC Response data:", usdcData);
+      console.log("USDT Response data:", usdtData);
+
+      const usdcBalance =
+        usdcData.balances?.[0]?.display_values?.usdc ?? "0.00";
+      const usdtBalance =
+        usdtData.balances?.[0]?.display_values?.usdt ?? "0.00";
 
       // Calculate total USD balance
-      const totalUsdBalance = (parseFloat(usdcBalance) + parseFloat(usdtBalance)).toFixed(2);
+      const totalUsdBalance = (
+        parseFloat(usdcBalance) + parseFloat(usdtBalance)
+      ).toFixed(2);
 
       setTotalBalance(totalUsdBalance);
       setTokenBalances({
@@ -258,7 +290,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <h2
             className={`text-lg truncate font-semibold text-black dark:text-white`}
           >
-            {displayAddress ? formatAddress(displayAddress) : "No wallet connected"}
+            {displayAddress
+              ? formatAddress(displayAddress)
+              : "No wallet connected"}
           </h2>
           {displayAddress && (
             <div className="flex items-center mt-1">
@@ -321,7 +355,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           />
           <span>Send</span>
         </button>
-
 
         {/* View Funds with Dropdown */}
         <div className="w-full">

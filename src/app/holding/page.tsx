@@ -52,10 +52,12 @@ export default function HoldingPage() {
 
   // Use Privy for wallet authentication
   const { user, authenticated, login } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
-  
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
+
   // Use display address from context
-  const account = authenticated && displayAddress ? { address: displayAddress } : null;
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
   // Referral states
   const [referralCode, setReferralCode] = useState<string>("");
   const [userReferralCode, setUserReferralCode] = useState<string>("");
@@ -187,15 +189,15 @@ export default function HoldingPage() {
         }
       } else {
         try {
-          const response = await fetch("/api/referral", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              address: account.address,
-            }),
-          });
+          const response = await fetch(
+            `/api/referral?address=${account.address}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           const data = await response.json();
 
@@ -282,33 +284,48 @@ export default function HoldingPage() {
   };
 
   const handleApplyReferralCode = async () => {
+    console.log("handleApplyReferralCode called");
+    console.log("inputReferralCode:", inputReferralCode);
+    console.log("account:", account);
+    console.log("displayAddress:", displayAddress);
+    console.log("authenticated:", authenticated);
+
     if (!inputReferralCode.trim()) {
+      console.log("No referral code entered");
       errorHaptic();
       return;
     }
-    if (!user?.wallet?.address) {
+    if (!account?.address) {
+      console.log("No account address available");
       toast.error("Please connect your wallet");
       return;
     }
     heavyHaptic();
     setIsApplyingReferral(true);
     try {
+      console.log("Making API request with:", {
+        address: account.address,
+        referralCode: inputReferralCode.trim(),
+      });
+
       const response = await fetch("/api/referral", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          address: user.wallet.address,
+          address: account.address,
           referralCode: inputReferralCode.trim(),
         }),
       });
       const data = await response.json();
+      console.log("API response:", data);
+
       if (data.success) {
         toast.success("Referral code applied successfully!");
         setInputReferralCode("");
         const refreshResponse = await fetch(
-          `/api/referral?address=${user.wallet.address}`
+          `/api/referral?address=${account.address}`
         );
         const refreshData = await refreshResponse.json();
         if (refreshData.success && refreshData.user) {
@@ -322,6 +339,7 @@ export default function HoldingPage() {
         }
       }
     } catch (error) {
+      console.error("Error in handleApplyReferralCode:", error);
       toast.error("Failed to apply referral code");
     } finally {
       setIsApplyingReferral(false);
@@ -446,7 +464,7 @@ export default function HoldingPage() {
 
             <div className="flex flex-col items-start">
               {/* Wallet Address */}
-              
+
               <div
                 className={`text-sm ${
                   theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"

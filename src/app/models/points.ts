@@ -46,9 +46,13 @@ function generateReferralCode(): string {
 
 // Upsert user: if not exists, create with 50 login points; if exists, do not increase login points
 export async function upsertUserPoints(address: string, email?: string) {
+  console.log("upsertUserPoints called with:", { address, email });
   await dbConnect();
   let user = await UserPoints.findOne({ address });
+  console.log("Existing user found:", user);
+
   if (!user) {
+    console.log("Creating new user");
     // Generate a unique referral code
     let referralCode;
     let isUnique = false;
@@ -74,8 +78,10 @@ export async function upsertUserPoints(address: string, email?: string) {
       referralStatus: 0,
       referralAmount: 0,
     });
+    console.log("New user created:", user);
   } else {
     if (!user.referralCode) {
+      console.log("User exists but no referral code, generating one");
       let referralCode;
       let isUnique = false;
       while (!isUnique) {
@@ -91,6 +97,7 @@ export async function upsertUserPoints(address: string, email?: string) {
         { referralCode: referralCode },
         { new: true }
       );
+      console.log("User updated with referral code:", user);
     }
   }
   return user;
@@ -109,14 +116,15 @@ export async function applyReferralCode(
   const referrer = await UserPoints.findOne({ referralCode });
   if (!referrer) throw new Error("Invalid referral code");
 
-  // Prevent self-referral
+  // Prevent self-referral (check this BEFORE checking if user already has referral)
   if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
     throw new Error("You cannot refer yourself.");
   }
 
-  // Check if user already has a referral
+  // Check if user already has a referral (only check if it's not a self-referral)
   const user = await UserPoints.findOne({ address: userAddress });
-  if (user?.referralBy) throw new Error("User already has a referral");
+  if (user?.referralBy && user.referralBy.trim() !== "")
+    throw new Error("User already has a referral");
 
   // Update user with referral
   const updatedUser = await UserPoints.findOneAndUpdate(
@@ -167,30 +175,51 @@ export async function applyAndIncrementReferral(
   userAddress: string,
   referralCode: string
 ) {
+  console.log("applyAndIncrementReferral called with:", {
+    userAddress,
+    referralCode,
+  });
   await dbConnect();
 
   // 1. Find the referrer
   const referrer = await UserPoints.findOne({ referralCode });
+  console.log("Found referrer:", referrer);
   if (!referrer) throw new Error("Invalid referral code");
 
-  // 2. Prevent self-referral
+  // 2. Prevent self-referral (check this BEFORE checking if user already has referral)
   if (referrer.address.toLowerCase() === userAddress.toLowerCase()) {
+    console.log("Self-referral detected");
     throw new Error("You cannot refer yourself.");
   }
 
-  // 3. Check if user already has a referral
-  const user = await UserPoints.findOne({ address: userAddress });
-  if (user?.referralBy) throw new Error("User already has a referral");
+  // 3. Check if user already has a referral (only check if it's not a self-referral)
+  let user = await UserPoints.findOne({ address: userAddress });
+  console.log("Found user:", user);
+
+  // If user doesn't exist, create them first
+  if (!user) {
+    console.log("User doesn't exist, creating them first");
+    user = await upsertUserPoints(userAddress);
+    console.log("User created:", user);
+  }
+
+  if (user?.referralBy && user.referralBy.trim() !== "") {
+    console.log("User already has referral:", user.referralBy);
+    throw new Error("User already has a referral");
+  }
 
   // 4. Update current user's referralBy
+  console.log("Updating user referralBy to:", referralCode);
   await UserPoints.updateOne(
     { address: userAddress },
     { referralBy: referralCode }
   );
 
   // 5. Increment referrer's referralAmount
+  console.log("Incrementing referrer's referralAmount");
   await UserPoints.updateOne({ referralCode }, { $inc: { referralAmount: 1 } });
 
+  console.log("applyAndIncrementReferral completed successfully");
   return true;
 }
 

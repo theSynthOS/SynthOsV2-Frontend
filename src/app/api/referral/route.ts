@@ -11,9 +11,21 @@ import dbConnect from "../../lib/mongodb";
 // Check if referral code exists and is valid
 export async function POST(request: NextRequest) {
   await dbConnect();
-  const { address, referralCode } = await request.json();
+  const body = await request.json();
+  console.log("Raw request body:", body);
 
-  if (!address || !referralCode) {
+  const { address, referralCode } = body;
+  console.log("Extracted values:", { address, referralCode });
+  console.log("Address type:", typeof address);
+  console.log("ReferralCode type:", typeof referralCode);
+
+  if (
+    !address ||
+    !referralCode ||
+    address.trim() === "" ||
+    referralCode.trim() === ""
+  ) {
+    console.log("Validation failed - missing or empty values");
     return NextResponse.json(
       { success: false, error: "Address and referral code required" },
       { status: 400 }
