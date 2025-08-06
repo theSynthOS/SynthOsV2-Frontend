@@ -17,8 +17,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { safeHaptic } from "@/lib/haptic-utils";
 import { X, CheckCircle, ExternalLink } from "lucide-react";
-
-
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { ethers } from "ethers";
 
 interface WithdrawModalProps {
   pool: {
@@ -53,7 +53,11 @@ export default function WithdrawModal({
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  const { displayAddress, smartWalletClient, wallets } = useSmartWallet();
+
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
+
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
   const [withdrawIds, setWithdrawIds] = useState<string[]>([]);
@@ -375,91 +379,63 @@ export default function WithdrawModal({
           // Pre-execution simulation failed: ${errorMessage}
         }
 
-        // Update progress after successful simulation
-        setTxProgressPercent(55);
-
-        // TODO: Transaction handling will be implemented separately with Privy
-        // Prepare all transactions in the correct order (only after simulation passes)
-        // const transactions = orderedTxs.map((tx: any) =>
-        //   prepareTransaction({
-        //     to: tx.to,
-        //     data: tx.data,
-        //     chain: scroll,
-        //     client: client,
-        //     value: tx.value ? BigInt(tx.value) : BigInt(0),
-        //   })
-        // );
-
         // Update progress
         setTxProgressPercent(60);
 
-        // Temporary placeholder - replace with actual Privy transaction logic
-        const result = { transactionHash: "0x" + "0".repeat(64) };
+        let result: { transactionHash: string };
 
         // Update progress
         setTxProgressPercent(75);
 
-        // try {
-        //   // First try to use batch transaction (works for smart accounts)
-        //   result = await sendBatchTransaction({
-        //     transactions,
-        //     account,
-        //   });
-        // } catch (error) {
-        //   // Check if the error is because account doesn't support batch transactions
-        //   const errorMessage =
-        //     error instanceof Error ? error.message : String(error);
+        try {
+          // Execute transactions sequentially using Privy's sendTransaction
+          let lastTxResult: any = null;
+          let calls: any = [];
 
-        //   if (errorMessage) {
-        //     // For EOAs, send transactions sequentially
-        //     let lastTxResult;
+          for (const tx of orderedTxs) {
+            // Create transaction object for Privy
+            calls.push({
+              to: tx.to,
+              data: tx.data,
+              value: tx.value ? BigInt(tx.value) : BigInt(0),
+            });
+          }
 
-        //     for (const tx of transactions) {
-        //       lastTxResult = await sendAndConfirmTransaction({
-        //         transaction: tx,
-        //         account,
-        //       });
+          lastTxResult = await smartWalletClient.sendTransaction({
+            calls,
+          });
 
-        //       // Small delay between transactions to avoid nonce issues
-        //       if (transactions.indexOf(tx) < transactions.length - 1) {
-        //         await new Promise((resolve) => setTimeout(resolve, 500));
-        //       }
-        //     }
+          // Ensure we have a result
+          if (!lastTxResult) {
+            throw new Error("Transaction failed to execute");
+          }
 
-        //     // Ensure we have a result
-        //     if (!lastTxResult) {
-        //       throw new Error("Transaction failed to execute");
-        //     }
-
-        //     result = lastTxResult;
-        //   } else {
-        //     // If it's some other error, rethrow it
-        //     throw error;
-        //   }
-        // }
+          result = { transactionHash: lastTxResult };
+        } catch (error) {
+          throw error;
+        }
 
         // Update progress to complete
-        setTxProgressPercent(95);
+        setTxProgressPercent(85);
 
         // Handle success
         setTxHash(result.transactionHash);
 
-        // TODO: Receipt handling will be implemented separately with Privy
-        // Get transaction receipt to obtain block number
-        let blockNumber: number | null = 1; // Temporary placeholder
-        // try {
-        //   const receipt = await waitForReceipt({
-        //     client: client,
-        //     chain: scroll,
-        //     transactionHash: result.transactionHash as `0x${string}`,
-        //   });
+        // Get block number from the transaction receipt
+        let blockNumber: number | undefined = undefined;
 
-        //   if (receipt && receipt.blockNumber) {
-        //     blockNumber = Number(receipt.blockNumber);
-        //   }
-        // } catch (receiptError) {
-        //   // Continue without block number
-        // }
+        try {
+          const provider = await wallets[0].getEthereumProvider();
+          const ethersProvider = new ethers.BrowserProvider(provider);
+          const receipt = await ethersProvider.getTransactionReceipt(
+            result.transactionHash
+          );
+          blockNumber = receipt?.blockNumber;
+        } catch (receiptError) {
+          console.error("Error getting transaction receipt:", receiptError);
+        }
+
+        setTxProgressPercent(90);
 
         // Update withdrawal record in database with transaction details
         // Use the local withdrawalIds variable instead of state (which updates asynchronously)
