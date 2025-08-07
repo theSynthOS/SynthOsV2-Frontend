@@ -44,6 +44,10 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenType>("USDC");
+  const [lastBalanceData, setLastBalanceData] = useState<{
+    usdc: string;
+    usdt: string;
+  } | null>(null);
   const { refreshBalance, refreshHoldings } = useBalance();
 
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -63,18 +67,94 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     const newToken = selectedToken === "USDC" ? "USDT" : "USDC";
     setSelectedToken(newToken);
     setAmount("");
-    // Update balance display for the new token without re-fetching
-    if (account?.address) {
-      fetchTokenBalance();
-    }
+    // The useEffect will automatically update the balance for the new token
   };
 
   // Fetch token balance when account changes (like settings panel)
   useEffect(() => {
     if (account?.address) {
+      // Clear cached data for new account
+      setLastBalanceData(null);
       fetchTokenBalance();
     }
   }, [account?.address]); // Only depend on address, not selectedToken
+
+  // Update balance display when selectedToken changes
+  useEffect(() => {
+    if (account?.address) {
+      // If we have cached data, use it immediately for instant switching
+      if (lastBalanceData) {
+        const cachedBalance =
+          selectedToken === "USDC"
+            ? lastBalanceData.usdc
+            : lastBalanceData.usdt;
+        setBalance(cachedBalance || "0.00");
+      } else {
+        // Otherwise fetch the data
+        fetchTokenBalanceForToken(selectedToken);
+      }
+    }
+  }, [selectedToken, account?.address, lastBalanceData]);
+
+  // Function to fetch token balance for a specific token
+  const fetchTokenBalanceForToken = async (tokenType: TokenType) => {
+    if (!account?.address) return;
+
+    // If we have cached data, use it immediately
+    if (lastBalanceData) {
+      const cachedBalance =
+        tokenType === "USDC" ? lastBalanceData.usdc : lastBalanceData.usdt;
+      setBalance(cachedBalance || "0.00");
+      return;
+    }
+
+    setIsLoadingBalance(true);
+    try {
+      // Use wallet ID from utility function
+      const walletId = getWalletId(user);
+      if (!walletId) {
+        console.warn("No wallet ID available");
+        setBalance("0.00");
+        return;
+      }
+
+      // Fetch balance from the same API endpoint used by the settings panel
+      const response = await fetch(`/api/balance?address=${account.address}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Failed to fetch balance, using fallback value");
+        setBalance("0.00");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Balance response:", data);
+
+      // Cache the balance data
+      setLastBalanceData({
+        usdc: data.usdcBalance || "0.00",
+        usdt: data.usdtBalance || "0.00",
+      });
+
+      // Extract the specific token balance based on the provided tokenType
+      const tokenBalance =
+        tokenType === "USDC" ? data.usdcBalance : data.usdtBalance;
+      setBalance(tokenBalance || "0.00");
+    } catch (error) {
+      console.error(`Failed to fetch ${tokenType} balance:`, error);
+      setBalance("0.00");
+      toast.error(`Failed to fetch your ${tokenType} balance`, {
+        description: "Please try again or check your network connection",
+      });
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
 
   // Function to fetch token balance using the same API as settings panel
   const fetchTokenBalance = async () => {
@@ -107,6 +187,12 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       const data = await response.json();
       console.log("Balance response:", data);
 
+      // Cache the balance data
+      setLastBalanceData({
+        usdc: data.usdcBalance || "0.00",
+        usdt: data.usdtBalance || "0.00",
+      });
+
       // Extract the specific token balance based on current selectedToken
       const tokenBalance =
         selectedToken === "USDC" ? data.usdcBalance : data.usdtBalance;
@@ -115,7 +201,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       console.error(`Failed to fetch ${selectedToken} balance:`, error);
       setBalance("0.00");
       toast.error(`Failed to fetch your ${selectedToken} balance`, {
-        description: "Please try again or check your network connection"
+        description: "Please try again or check your network connection",
       });
     } finally {
       setIsLoadingBalance(false);
@@ -133,7 +219,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const handleSendFunds = async () => {
     if (!account?.address || !user?.wallet) {
       toast.error("No wallet connected", {
-        description: "Please connect your wallet to send funds"
+        description: "Please connect your wallet to send funds",
       });
       return;
     }
@@ -183,7 +269,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       // Success haptic feedback
       safeHaptic("success");
       toast.success(`Your ${selectedToken} has been sent successfully!`, {
-        description: "Transaction has been submitted to the network"
+        description: "Transaction has been submitted to the network",
       });
 
       // Reset form
@@ -225,7 +311,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       setTxError(errorMessage);
       safeHaptic("error");
       toast.error(errorMessage, {
-        description: errorDescription
+        description: errorDescription,
       });
     } finally {
       setIsPending(false);
@@ -255,9 +341,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
             <div className="max-h-[60vh]">
               {!account ? (
                 <div
-                  className={`${
-                     "bg-transparent"
-                  } rounded-lg p-4 text-center`}
+                  className={`${"bg-transparent"} rounded-lg p-4 text-center`}
                 >
                   <p
                     className={`${

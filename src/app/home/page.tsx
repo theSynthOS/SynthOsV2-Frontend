@@ -77,8 +77,8 @@ function HomeContent() {
       }
       const data = await response.json();
       setBalance(data.totalUsdBalance || "0.00");
-      // Refresh points after balance update
-      refreshPoints();
+      // Only refresh points when balance actually changes significantly
+      // refreshPoints();
       return data.totalUsdBalance || "0.00";
     } catch (error) {
       setBalance("0.00");

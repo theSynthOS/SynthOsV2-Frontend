@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
@@ -68,23 +68,34 @@ export default function HistoryPanel({
   const [error, setError] = useState<string | null>(null);
   const [copiedTx, setCopiedTx] = useState<string | null>(null);
 
-  // Get wallet address from Privy user
-  const account = authenticated && user?.wallet ? { address: user.wallet.address } : null;
+  // Memoize the wallet address to prevent unnecessary re-renders
+  const walletAddress = useMemo(() => {
+    return authenticated && user?.wallet ? user.wallet.address : null;
+  }, [authenticated, user?.wallet?.address]);
+
+  // Add a ref to track if a request is in progress
+  const isFetchingRef = React.useRef(false);
 
   useEffect(() => {
-    if (!account?.address) {
+    if (!walletAddress) {
       setTransactions([]);
       setMetadata(null);
       setIsLoading(false);
       return;
     }
 
+    // Prevent multiple simultaneous requests
+    if (isFetchingRef.current) {
+      return;
+    }
+
     const fetchTransactions = async () => {
+      isFetchingRef.current = true;
       setIsLoading(true);
       setError(null);
       try {
         const response = await fetch(
-          `/api/transactions?address=${account.address}`
+          `/api/transactions?address=${walletAddress}`
         );
         const data = await response.json();
 
@@ -101,13 +112,14 @@ export default function HistoryPanel({
         setTransactions([]);
       } finally {
         setIsLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
     if (isOpen) {
       fetchTransactions();
     }
-  }, [account, isOpen]);
+  }, [walletAddress, isOpen]);
 
   const handleGoBack = () => {
     setIsExiting(true);
@@ -154,7 +166,7 @@ export default function HistoryPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-hidden pb-28">
-        {!account ? (
+        {!walletAddress ? (
           <div className="h-full flex items-center justify-center px-4">
             <p
               className={`text-center ${

@@ -32,7 +32,6 @@ import { useTheme } from "next-themes";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import Image from "next/image";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
-import { getWalletId } from "@/lib/smart-wallet-utils";
 import { toast } from "sonner";
 
 // Token details for Scroll Mainnet
@@ -120,64 +119,36 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [account?.address]); // Only depend on the address, not the entire account object
 
-  // Fetch total balance and token balances directly from Privy API
+  // Fetch total balance and token balances using the same API as wallet-send
   const fetchTotalBalance = async (address: string) => {
-    const walletId = getWalletId(user);
-    if (!address || !walletId) return;
+    if (!address) return;
 
     setIsLoadingBalances(true);
     try {
-      // Debug environment variables
-      console.log("Privy App ID:", process.env.NEXT_PUBLIC_PRIVY_APP_ID);
-      console.log(
-        "Privy App Secret exists:",
-        !!process.env.NEXT_PUBLIC_PRIVY_APP_SECRET
-      );
-      console.log("Wallet ID:", walletId);
+      // Use the same API endpoint as wallet-send component
+      const response = await fetch(`/api/balance?address=${address}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      // Call Privy API directly for both USDC and USDT
-      const [usdcResponse, usdtResponse] = await Promise.all([
-        fetch(
-          `https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdc&chain=scroll`,
-          {
-            headers: {
-              Authorization: `Basic ${btoa(
-                `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`
-              )}`,
-              "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-            },
-          }
-        ),
-        fetch(
-          `https://api.privy.io/v1/wallets/${walletId}/balance?asset=usdt&chain=scroll`,
-          {
-            headers: {
-              Authorization: `Basic ${btoa(
-                `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET}`
-              )}`,
-              "privy-app-id": process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-            },
-          }
-        ),
-      ]);
+      if (!response.ok) {
+        console.warn("Failed to fetch balance, using fallback value");
+        setTotalBalance("0.00");
+        setTokenBalances({
+          USDC: "0.00",
+          USDT: "0.00",
+        });
+        return;
+      }
 
-      // Log response status for debugging
-      console.log("USDC Response status:", usdcResponse.status);
-      console.log("USDT Response status:", usdtResponse.status);
+      const data = await response.json();
+      console.log("Balance response:", data);
 
-      const [usdcData, usdtData] = await Promise.all([
-        usdcResponse.json(),
-        usdtResponse.json(),
-      ]);
-
-      // Log response data for debugging
-      console.log("USDC Response data:", usdcData);
-      console.log("USDT Response data:", usdtData);
-
-      const usdcBalance =
-        usdcData.balances?.[0]?.display_values?.usdc ?? "0.00";
-      const usdtBalance =
-        usdtData.balances?.[0]?.display_values?.usdt ?? "0.00";
+      // Extract balances from the API response
+      const usdcBalance = data.usdcBalance || "0.00";
+      const usdtBalance = data.usdtBalance || "0.00";
 
       // Calculate total USD balance
       const totalUsdBalance = (
@@ -190,9 +161,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         USDT: usdtBalance,
       });
     } catch (error) {
-      console.error("Failed to fetch Privy balance:", error);
+      console.error("Failed to fetch balance:", error);
       toast.error("Failed to Fetch Balance", {
-        description: "Unable to retrieve your current balance. Please try again."
+        description:
+          "Unable to retrieve your current balance. Please try again.",
       });
       // Set fallback values
       setTotalBalance("0.00");
@@ -231,7 +203,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
           toast.info("Address Copied", {
-            description: "Wallet address has been copied to clipboard"
+            description: "Wallet address has been copied to clipboard",
           });
         })
         .catch(() => {});
