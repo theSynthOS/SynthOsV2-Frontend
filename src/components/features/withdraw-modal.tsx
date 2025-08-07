@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
 import { scroll } from "thirdweb/chains";
@@ -13,10 +13,9 @@ import {
 } from "thirdweb";
 import Card from "@/components/ui/card";
 import Image from "next/image";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { safeHaptic } from "@/lib/haptic-utils";
-import { X, CheckCircle, ExternalLink } from "lucide-react";
+import { X } from "lucide-react";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import { ethers } from "ethers";
 
@@ -47,20 +46,20 @@ export default function WithdrawModal({
   const [amount, setAmount] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedToken, setSelectedToken] = useState<"USDC" | "USDT">("USDC");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [txHash, setTxHash] = useState<string>("");
   const [txProgressPercent, setTxProgressPercent] = useState(0);
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
   const { displayAddress, smartWalletClient, wallets } = useSmartWallet();
-
-  const account =
-    authenticated && displayAddress ? { address: displayAddress } : null;
-
+  const [modalClosedDuringProcessingRef, setModalClosedDuringProcessingRef] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
   const [withdrawIds, setWithdrawIds] = useState<string[]>([]);
+  const [processingPoolId, setProcessingPoolId] = useState<string | null>(null);
+  const isProcessingRef = useRef(false);
+
+  const account = authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Tenderly RPC bundled simulation function
   const simulateTransactionBundle = async (
@@ -205,37 +204,51 @@ export default function WithdrawModal({
     setMounted(true);
   }, []);
 
-  // Reset form when modal opens
+  // Reset form when modal opens with a different pool
   useEffect(() => {
     if (pool) {
-      setAmount("");
-      setSelectedToken("USDC");
-      setWithdrawError(null);
-      setShowSuccessModal(false);
-      setTxHash("");
-      setTxProgressPercent(0);
-      setSimulationStatus(null);
-      setWithdrawIds([]);
+      // Only reset state if this is a different pool than the one being processed
+      if (!processingPoolId || processingPoolId !== pool.protocol_pair_id) {
+        setAmount("");
+        setSelectedToken("USDC");
+        setWithdrawError(null);
+        setTxHash("");
+        setTxProgressPercent(0);
+        setSimulationStatus(null);
+        setWithdrawIds([]);
+        isProcessingRef.current = false;
+        setModalClosedDuringProcessingRef(false);
+      }
     }
-  }, [pool]);
+  }, [pool, processingPoolId]);
 
   // Handle modal close
   const handleClose = () => {
-    if (!isSubmitting && !showSuccessModal) {
-      setAmount("");
-      setSelectedToken("USDC");
-      setWithdrawError(null);
-      setTxHash("");
-      setTxProgressPercent(0);
-      setSimulationStatus(null);
-      setWithdrawIds([]);
+    if (isSubmitting) {
+      // Mark that modal was closed during processing
+      setModalClosedDuringProcessingRef(true);
+      // Show a toast notification that transaction is still processing
+      toast.info("Transaction in Progress", {
+        description: "Your withdrawal is still processing in the background. You'll be notified when it completes."
+      });
+    }
+    if (!isSubmitting) {
+      // Only reset if not currently processing
+      if (!isProcessingRef.current) {
+        setAmount("");
+        setSelectedToken("USDC");
+        setWithdrawError(null);
+        setTxHash("");
+        setTxProgressPercent(0);
+        setSimulationStatus(null);
+        setWithdrawIds([]);
+      }
     }
     onClose();
   };
 
   // Handle closing success modal and reset all values
   const handleCloseAll = () => {
-    setShowSuccessModal(false);
     setAmount("");
     setSelectedToken("USDC");
     setWithdrawError(null);
@@ -266,18 +279,29 @@ export default function WithdrawModal({
 
     // Check if the amount is valid
     if (!amount || parseFloat(amount) <= 0) {
-      toast.error("Invalid Amount");
+      toast.error("Invalid Amount", {
+        description: "Please enter a valid withdrawal amount"
+      });
       return;
     }
 
     // Check if amount exceeds balance
-
     if (parseFloat(amount) > parseFloat(balance)) {
-      toast.error("Insufficient Balance");
+      toast.error("Insufficient Balance", {
+        description: "Withdrawal amount exceeds available balance"
+      });
       return;
     }
 
     setIsSubmitting(true);
+    isProcessingRef.current = true;
+    if (pool?.protocol_pair_id) {
+      setProcessingPoolId(pool.protocol_pair_id);
+    }
+
+    const toastId = toast.loading("Preparing Withdrawal", {
+      description: "Preparing your withdrawal request..."
+    });
 
     try {
       // Update progress - start progress animation
@@ -326,7 +350,7 @@ export default function WithdrawModal({
 
       // Execute the withdrawal payload
       try {
-        if (!account) {
+        if (!authenticated || !displayAddress) {
           throw new Error("No wallet connected");
         }
 
@@ -335,7 +359,6 @@ export default function WithdrawModal({
           throw new Error(
             " We are experiencing high investment volumes, please try again later."
           );
-          // Invalid response format: expected callData array
         }
 
         const transactionData = responseData.callData;
@@ -366,17 +389,32 @@ export default function WithdrawModal({
 
         // Simulate the transaction bundle with Tenderly RPC
         try {
+          if (!modalClosedDuringProcessingRef) {
+            setSimulationStatus("Simulating transactions...");
+          }
+          toast.loading("Simulating Transaction", {
+            id: toastId,
+            description: "Validating your withdrawal request..."
+          });
+
           const simulationResult = await simulateTransactionBundle(
             orderedTxs,
-            account
+            { address: displayAddress }
           );
+
+          if (!modalClosedDuringProcessingRef) {
+            setSimulationStatus("✅ All transactions validated successfully");
+          }
+          toast.loading("Processing Transaction", {
+            id: toastId,
+            description: "Confirming withdrawal..."
+          });
         } catch (simulationError) {
           const errorMessage =
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
           throw new Error(errorMessage);
-          // Pre-execution simulation failed: ${errorMessage}
         }
 
         // Update progress
@@ -384,16 +422,12 @@ export default function WithdrawModal({
 
         let result: { transactionHash: string };
 
-        // Update progress
-        setTxProgressPercent(75);
-
         try {
           // Execute transactions sequentially using Privy's sendTransaction
           let lastTxResult: any = null;
           let calls: any = [];
 
           for (const tx of orderedTxs) {
-            // Create transaction object for Privy
             calls.push({
               to: tx.to,
               data: tx.data,
@@ -405,12 +439,16 @@ export default function WithdrawModal({
             calls,
           });
 
-          // Ensure we have a result
           if (!lastTxResult) {
             throw new Error("Transaction failed to execute");
           }
 
           result = { transactionHash: lastTxResult };
+
+          toast.loading("Transaction Submitted", {
+            id: toastId,
+            description: "Your withdrawal request has been submitted to the network"
+          });
         } catch (error) {
           throw error;
         }
@@ -487,36 +525,63 @@ export default function WithdrawModal({
         }
 
         setTxProgressPercent(100);
-        // Handle success
-        setShowSuccessModal(true);
+
+        // After successful withdrawal
+        isProcessingRef.current = false;
+        setProcessingPoolId(null);
 
         // Success haptic feedback
         safeHaptic("success");
+
+        // Show success toast and close modal
+        toast.success("Withdrawal Successful", {
+          id: toastId,
+          description: `Successfully withdrew ${amount} ${selectedToken}`,
+          duration: 5000,
+          action: {
+            label: "View Transaction",
+            onClick: () => window.open(`https://scrollscan.com/tx/${result.transactionHash}`, '_blank')
+          }
+        });
+
+        // Close modal and refresh balance
+        onClose();
+        if (refreshBalance) {
+          setTimeout(() => {
+            refreshBalance();
+          }, 1000);
+        }
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
         // Show user-friendly error message
         let errorMessage = "Transaction failed";
+        let errorDescription = "Please try again or contact support";
+
         if (error instanceof Error) {
           const errorString = error.message;
           if (errorString.includes("rejected transaction")) {
-            errorMessage = "You rejected the transaction";
+            errorMessage = "Transaction Cancelled";
+            errorDescription = "You rejected the transaction";
           } else if (errorString.includes("insufficient funds")) {
-            errorMessage = "Insufficient funds for transaction";
+            errorMessage = "Insufficient Funds";
+            errorDescription = "You don't have enough funds for this transaction";
           } else if (
             errorString.includes("0xe273b446") ||
             errorString.includes("AbiErrorSignatureNotFoundError")
           ) {
-            errorMessage =
-              "Withdrawal amount too high. Try withdrawing a slightly smaller amount";
+            errorMessage = "Amount Too High";
+            errorDescription = "Try withdrawing a slightly smaller amount";
           } else if (
             errorString.includes("network") ||
             errorString.includes("connect")
           ) {
-            errorMessage = "Network connection issue";
+            errorMessage = "Network Error";
+            errorDescription = "Please check your internet connection";
           } else {
             errorMessage = errorString.split(".")[0];
+            errorDescription = "An unexpected error occurred";
           }
         }
 
@@ -524,20 +589,29 @@ export default function WithdrawModal({
         setTxProgressPercent(0);
         setSimulationStatus(null); // Clear simulation status on error
 
-        toast.error(errorMessage);
+        toast.error(errorMessage, {
+          id: toastId,
+          description: errorDescription
+        });
       }
     } catch (error) {
       let errorMessage = "Failed to process withdrawal";
+      let errorDescription = "Please try again later";
+
       if (error instanceof Error) {
         const errorString = error.message;
         if (errorString.includes("404")) {
-          errorMessage = "Withdrawal service unavailable";
+          errorMessage = "Service Unavailable";
+          errorDescription = "Withdrawal service is currently unavailable";
         } else if (errorString.includes("400")) {
-          errorMessage = "Invalid withdrawal request";
+          errorMessage = "Invalid Request";
+          errorDescription = "Please check your withdrawal details";
         } else if (errorString.includes("500")) {
-          errorMessage = "Server error occurred";
+          errorMessage = "Server Error";
+          errorDescription = "An internal server error occurred";
         } else {
           errorMessage = errorString;
+          errorDescription = "An unexpected error occurred";
         }
       }
 
@@ -545,9 +619,17 @@ export default function WithdrawModal({
       setTxProgressPercent(0);
       setSimulationStatus(null); // Clear simulation status on error
 
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        id: toastId,
+        description: errorDescription
+      });
     } finally {
       setIsSubmitting(false);
+      setModalClosedDuringProcessingRef(false);
+      if (!modalClosedDuringProcessingRef) {
+        isProcessingRef.current = false;
+        setProcessingPoolId(null);
+      }
     }
   };
 
@@ -565,320 +647,244 @@ export default function WithdrawModal({
   };
 
   return (
-    <>
-      {/* Main Withdraw Modal */}
-      {!showSuccessModal ? (
-        <div
-          className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
-          onClick={(e) => e.target === e.currentTarget && handleClose()}
-        >
-          <Card
-            title={`Withdraw ${pool?.name} ${pool?.pair_or_vault_name}`}
-            onClose={handleClose}
-            className="max-h-[90vh] w-full max-w-md"
-          >
-            <div className="flex flex-col space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
-              {/* Token Selection Section */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-3 ${
-                    theme === "dark" ? "text-gray-200" : "text-gray-700"
-                  }`}
-                >
-                  Withdraw as:
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedToken("USDC")}
-                    disabled={isSubmitting}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                      selectedToken === "USDC"
-                        ? theme === "dark"
-                          ? "border-purple-500 bg-purple-500/20 text-white"
-                          : "border-purple-500 bg-purple-50 text-purple-700"
-                        : theme === "dark"
-                        ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
-                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                    } ${
-                      isSubmitting
-                        ? "cursor-not-allowed opacity-50"
-                        : "cursor-pointer"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Image
-                        src="/usdc.png"
-                        alt="USDC"
-                        width={24}
-                        height={24}
-                      />
-                      <span className="font-medium">USDC</span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedToken("USDT")}
-                    disabled={isSubmitting}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                      selectedToken === "USDT"
-                        ? theme === "dark"
-                          ? "border-purple-500 bg-purple-500/20 text-white"
-                          : "border-purple-500 bg-purple-50 text-purple-700"
-                        : theme === "dark"
-                        ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
-                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                    } ${
-                      isSubmitting
-                        ? "cursor-not-allowed opacity-50"
-                        : "cursor-pointer"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Image
-                        src="/usdt.png"
-                        alt="USDT"
-                        width={24}
-                        height={24}
-                      />
-                      <span className="font-medium">USDT</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Amount Input Section */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-3 ${
-                    theme === "dark" ? "text-gray-200" : "text-gray-700"
-                  }`}
-                >
-                  Amount to withdraw:
-                </label>
-                <input
-                  id="withdrawAmount"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className={`w-full px-4 py-3 rounded-lg border text-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
-                  } focus:outline-none focus:ring-2 focus:ring-purple-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                  disabled={isSubmitting}
-                />
-                <div className="flex justify-end items-center my-2">
-                  <div className="flex items-center space-x-2">
-                    <span
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      Balance: ${parseFloat(balance).toFixed(2)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAmount(balance)}
-                      disabled={isSubmitting || !balance}
-                      className={`text-xs px-2 py-1 rounded ${
-                        isSubmitting || !balance
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : theme === "dark"
-                          ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
-                          : "bg-gray-100 text-blue-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      MAX
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Withdraw Button - Fixed at the bottom */}
-            <div className=" flex justify-center pt-2">
+    <div
+      className="fixed inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-hidden"
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
+    >
+      <Card
+        title={`Withdraw ${pool?.name} ${pool?.pair_or_vault_name}`}
+        onClose={handleClose}
+        className="max-h-[90vh] w-full max-w-md"
+      >
+        <div className="flex flex-col space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] pb-4">
+          {/* Token Selection Section */}
+          <div>
+            <label
+              className={`block text-sm font-medium mb-3 ${
+                theme === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}
+            >
+              Withdraw as:
+            </label>
+            <div className="grid grid-cols-2 gap-3">
               <button
-                className={`w-full py-3 rounded-lg relative ${
+                type="button"
+                onClick={() => setSelectedToken("USDC")}
+                disabled={isSubmitting}
+                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                  selectedToken === "USDC"
+                    ? theme === "dark"
+                      ? "border-purple-500 bg-purple-500/20 text-white"
+                      : "border-purple-500 bg-purple-50 text-purple-700"
+                    : theme === "dark"
+                    ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                } ${
                   isSubmitting
-                    ? "bg-gray-300 text-gray-500"
-                    : parseFloat(amount || "0") > 0
-                    ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
-                    : "bg-gray-300 text-gray-500"
-                } transition-colors duration-200`}
-                disabled={!amount || parseFloat(amount) <= 0 || isSubmitting}
-                onClick={handleConfirmWithdraw}
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
               >
-                {isSubmitting ? (
-                  <>
-                    <span className="opacity-0">Withdraw</span>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="h-5 w-5 border-2 border-gray-500 border-t-gray-700 rounded-full animate-spin mr-2"></div>
-                      <span className="text-gray-700">Processing...</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    Withdraw
-                    <svg
-                      className="inline-block ml-2 w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                      />
-                    </svg>
-                  </>
-                )}
+                <div className="flex items-center justify-center space-x-2">
+                  <Image
+                    src="/usdc.png"
+                    alt="USDC"
+                    width={24}
+                    height={24}
+                  />
+                  <span className="font-medium">USDC</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedToken("USDT")}
+                disabled={isSubmitting}
+                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                  selectedToken === "USDT"
+                    ? theme === "dark"
+                      ? "border-purple-500 bg-purple-500/20 text-white"
+                      : "border-purple-500 bg-purple-50 text-purple-700"
+                    : theme === "dark"
+                    ? "border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                } ${
+                  isSubmitting
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <Image
+                    src="/usdt.png"
+                    alt="USDT"
+                    width={24}
+                    height={24}
+                  />
+                  <span className="font-medium">USDT</span>
+                </div>
               </button>
             </div>
+          </div>
 
-            {/* Transaction Progress */}
-            {isSubmitting && (
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${txProgressPercent}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
-                  {simulationStatus ||
-                    (txProgressPercent < 100
-                      ? "Processing withdrawal..."
-                      : "Withdrawal complete!")}
-                </div>
-              </div>
-            )}
-
-            {/* Simulation Status (when not submitting) */}
-            {!isSubmitting && simulationStatus && (
-              <div className="mt-4">
-                <div className="text-xs text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg py-2 px-3">
-                  {simulationStatus}
-                </div>
-              </div>
-            )}
-
-            {/* Error Banner - Super simple design with formatted message */}
-            {withdrawError && (
-              <div
-                className={`mt-4 rounded-lg p-3 ${
-                  theme === "dark" ? "bg-red-900/40" : "bg-red-100"
-                } relative`}
-              >
-                <div className="pr-6">
-                  <p
-                    className={`text-sm ${
-                      theme === "dark" ? "text-red-100" : "text-red-800"
-                    } break-words`}
-                  >
-                    <span className="font-bold">Error:</span>{" "}
-                    {formatErrorMessage(withdrawError)}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setWithdrawError(null)}
-                  className={`absolute top-2 right-2 rounded-full p-1 ${
-                    theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+          {/* Amount Input Section */}
+          <div>
+            <label
+              className={`block text-sm font-medium mb-3 ${
+                theme === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}
+            >
+              Amount to withdraw:
+            </label>
+            <input
+              id="withdrawAmount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className={`w-full px-4 py-3 rounded-lg border text-lg ${
+                theme === "dark"
+                  ? "bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+              } focus:outline-none focus:ring-2 focus:ring-purple-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-end items-center my-2">
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-red-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  Balance: ${parseFloat(balance).toFixed(2)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAmount(balance)}
+                  disabled={isSubmitting || !balance}
+                  className={`text-xs px-2 py-1 rounded ${
+                    isSubmitting || !balance
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : theme === "dark"
+                      ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                      : "bg-gray-100 text-blue-600 hover:bg-gray-200"
+                  }`}
+                >
+                  MAX
                 </button>
               </div>
-            )}
-          </Card>
-        </div>
-      ) : (
-        /* Success Modal */
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={(e) => e.target === e.currentTarget && handleCloseAll()}
-        >
-          <Card
-            title="Withdrawal Successful!"
-            onClose={handleCloseAll}
-            className="w-full max-w-md text-center"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-                <CheckCircle className="w-12 h-12 text-purple-500" />
-              </div>
-
-              <div className="mb-6">
-                <p className="text-lg mb-1">You've withdrawn</p>
-                <p className="text-3xl font-bold text-purple-500">
-                  ${parseFloat(amount).toFixed(2)} {selectedToken}
-                </p>
-                <p className="text-sm mt-2 opacity-80">from {pool.name}</p>
-              </div>
-
-              <div
-                className={`w-full ${
-                  theme === "dark"
-                    ? "bg-white/5 border-white/60"
-                    : "bg-gray-100"
-                } p-4 rounded-lg mb-6 border`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="opacity-70">Withdrawn as</span>
-                  <div className="flex items-center space-x-2">
-                    <Image
-                      src={selectedToken === "USDC" ? "/usdc.png" : "/usdt.png"}
-                      alt={selectedToken}
-                      width={20}
-                      height={20}
-                    />
-                    <span className="font-semibold">{selectedToken}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transaction Link */}
-              {txHash && (
-                <a
-                  href={`https://scrollscan.com/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`flex items-center justify-center w-full ${
-                    theme === "dark"
-                      ? "bg-white/10 hover:bg-gray-600"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  } py-3 px-4 rounded-lg mb-4 transition-colors`}
-                >
-                  <span className="mr-2">View Transaction</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              )}
-
-              <button
-                onClick={handleCloseAll}
-                className="w-full bg-[#8266E6] hover:bg-[#3C229C] text-white font-semibold py-3 rounded-lg transition-colors"
-              >
-                Done
-              </button>
             </div>
-          </Card>
+          </div>
         </div>
-      )}
-    </>
+
+        {/* Withdraw Button - Fixed at the bottom */}
+        <div className="flex justify-center pt-2">
+          <button
+            className={`w-full py-3 rounded-lg relative ${
+              isSubmitting
+                ? "bg-gray-300 text-gray-500"
+                : parseFloat(amount || "0") > 0
+                ? "bg-[#8266E6] text-white hover:bg-[#3C229C]"
+                : "bg-gray-300 text-gray-500"
+            } transition-colors duration-200`}
+            disabled={!amount || parseFloat(amount) <= 0 || isSubmitting}
+            onClick={handleConfirmWithdraw}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="opacity-0">Withdraw</span>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-5 w-5 border-2 border-gray-500 border-t-gray-700 rounded-full animate-spin mr-2"></div>
+                  <span className="text-gray-700">Processing...</span>
+                </div>
+              </>
+            ) : (
+              <>
+                Withdraw
+                <svg
+                  className="inline-block ml-2 w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Transaction Progress */}
+        {isSubmitting && (
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-purple-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${txProgressPercent}%` }}
+              ></div>
+            </div>
+            <div className="text-xs mt-1 text-right text-gray-500 dark:text-gray-400">
+              {simulationStatus ||
+                (txProgressPercent < 100
+                  ? "Processing withdrawal..."
+                  : "Withdrawal complete!")}
+            </div>
+          </div>
+        )}
+
+        {/* Simulation Status */}
+        {!isSubmitting && simulationStatus && (
+          <div className="mt-4">
+            <div className="text-xs text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg py-2 px-3">
+              {simulationStatus}
+            </div>
+          </div>
+        )}
+
+        {/* Error Banner */}
+        {withdrawError && (
+          <div
+            className={`mt-4 rounded-lg p-3 ${
+              theme === "dark" ? "bg-red-900/40" : "bg-red-100"
+            } relative`}
+          >
+            <div className="pr-6">
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-red-100" : "text-red-800"
+                } break-words`}
+              >
+                <span className="font-bold">Error:</span>{" "}
+                {formatErrorMessage(withdrawError)}
+              </p>
+            </div>
+            <button
+              onClick={() => setWithdrawError(null)}
+              className={`absolute top-2 right-2 rounded-full p-1 ${
+                theme === "dark" ? "hover:bg-red-800" : "hover:bg-red-200"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-red-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

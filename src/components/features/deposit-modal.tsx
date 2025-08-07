@@ -8,8 +8,7 @@ import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Pro
 import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth";
 import { scroll } from "viem/chains";
 import Card from "@/components/ui/card";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { safeHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import { ethers } from "ethers";
@@ -232,19 +231,21 @@ export default function DepositModal({
     }
   }, [maxBalance, pool, sliderValue]);
 
-  // Handle modal close and reset values
+  // Handle modal close
   const handleClose = () => {
-    // If submitting, mark that modal was closed during processing but don't reset state
-    if (isSubmitting) {
-      // Just mark that the modal was closed during processing
+    // Only show "in progress" toast if transaction is still processing
+    const isTransactionInProgress = isSubmitting && !showSuccessModal && txProgressPercent < 100;
+
+    if (isTransactionInProgress) {
+      // Mark that the modal was closed during processing
       modalClosedDuringProcessingRef.current = true;
 
       // Show a toast notification that transaction is still processing
-      toast.success("Your deposit is still processing in the background.", {
-        autoClose: 5000,
+      toast.info("Transaction in Progress", {
+        description: "Your deposit is still processing in the background"
       });
     } else if (!showSuccessModal) {
-      // Only reset values if not showing success modal and not submitting
+      // Only reset values if not showing success modal and not processing
       setAmount("0");
       lastCalculatedAmountRef.current = "0";
       setSliderValue(0);
@@ -535,20 +536,6 @@ export default function DepositModal({
       // Set transaction hash
       setTxHash(txHash);
 
-      // Immediately fetch balance after transaction success
-      // This ensures we get the latest balance as soon as possible
-      await fetchBalance();
-
-      // Set up a timeout for a second fetch attempt
-      setTimeout(async () => {
-        await fetchBalance();
-
-        // Third attempt after another delay
-        setTimeout(async () => {
-          await fetchBalance();
-        }, 3000);
-      }, 1500);
-
       // Update deposit tracking state
       if (pool?.protocol_pair_id) {
         const poolId = pool.protocol_pair_id;
@@ -566,11 +553,37 @@ export default function DepositModal({
       if (!modalClosedDuringProcessingRef.current) {
         setShowSuccessModal(true);
       } else {
-        toast.success(`$${amount} deposited into ${pool?.name}`);
+        // Then show the success toast
+        toast.success("Deposit Successful", {
+          description: `$${amount} deposited into ${pool?.name}`,
+          duration: 5000,
+          action: {
+            label: "View Transaction",
+            onClick: () => window.open(`https://scrollscan.com/tx/${txHash}`, '_blank')
+          }
+        });
       }
 
       // Success haptic feedback
       safeHaptic("success");
+
+      // Immediately refresh balance and positions
+      await fetchBalance();
+      
+      // Additional refresh attempts to ensure positions update
+      setTimeout(async () => {
+        await fetchBalance();
+        if (refreshBalance) {
+          refreshBalance();
+        }
+      }, 1000);
+
+      setTimeout(async () => {
+        await fetchBalance();
+        if (refreshBalance) {
+          refreshBalance();
+        }
+      }, 3000);
 
       // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {
@@ -608,7 +621,9 @@ export default function DepositModal({
           })
           .then((data) => {
             if (data.success && data.pointsAdded > 0) {
-              toast.success(`Referral bonus: +${data.pointsAdded} points!`);
+              toast.success("Referral Bonus", {
+                description: `You earned ${data.pointsAdded} points!`
+              });
             }
           })
           .catch(() => {});
@@ -638,7 +653,9 @@ export default function DepositModal({
     } catch (error) {
       // Error haptic feedback
       safeHaptic("error");
-      toast.error("Deposit failed");
+      toast.error("Deposit Failed", {
+        description: "There was an error processing your deposit"
+      });
     }
   };
 
@@ -647,7 +664,6 @@ export default function DepositModal({
     // Haptic feedback for critical financial action
     safeHaptic("heavy");
     // Get the current amount value from our ref for consistent access
-    // This ensures we use the most recent amount calculation, even if state hasn't updated yet
     const depositAmount = lastCalculatedAmountRef.current || amount;
 
     // Store the final submitted amount for success screen
@@ -666,37 +682,43 @@ export default function DepositModal({
     if (parseFloat(depositAmount) <= 0) {
       // Error haptic feedback for validation
       safeHaptic("error");
-      toast.error("Please enter a valid deposit amount");
+      toast.error("Invalid Amount", {
+        description: "Please enter a valid deposit amount"
+      });
       return;
     }
 
     // Check if minimum deposits data is still loading
     if (isLoadingMinimumDeposits) {
-      toast.error("Loading deposit requirements, please wait...");
+      toast.error("Loading Requirements", {
+        description: "Please wait while we load deposit requirements"
+      });
       return;
     }
 
     // Dynamic minimum deposit validation
     const minDepositAmount = getMinimumDepositAmount();
     if (parseFloat(depositAmount) < minDepositAmount) {
-      toast.error(
-        `Minimum deposit amount for this pool is $${minDepositAmount}`
-      );
+      toast.error("Minimum Deposit Required", {
+        description: `Minimum deposit amount for this pool is $${minDepositAmount}`
+      });
       return;
     }
 
     // Check if deposit amount exceeds balance
     if (parseFloat(depositAmount) > maxBalance) {
-      toast.error("Deposit amount exceeds available balance");
+      toast.error("Insufficient Balance", {
+        description: "Deposit amount exceeds available balance"
+      });
       return;
     }
 
     // Check for reasonable maximum (optional safety check)
     const MAX_DEPOSIT_AMOUNT = 1000000; // $1M maximum
     if (parseFloat(depositAmount) > MAX_DEPOSIT_AMOUNT) {
-      toast.error(
-        `Maximum deposit amount is $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`
-      );
+      toast.error("Maximum Deposit Exceeded", {
+        description: `Maximum deposit amount is $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`
+      });
       return;
     }
 
@@ -710,6 +732,10 @@ export default function DepositModal({
     }
 
     let depositId: string | null = null;
+
+    const toastId = toast.loading("Preparing Deposit", {
+      description: "Preparing your deposit request..."
+    });
 
     try {
       // Update progress - start progress animation
@@ -741,6 +767,11 @@ export default function DepositModal({
       // Update progress
       setTxProgressPercent(50);
 
+      toast.loading("Preparing Transaction", {
+        id: toastId,
+        description: "Setting up your deposit transaction..."
+      });
+
       // Execute the deposit payload
       try {
         if (!account) {
@@ -748,12 +779,10 @@ export default function DepositModal({
         }
 
         // Extract transactions from callData
-
         if (!responseData || !Array.isArray(responseData.callData)) {
           throw new Error(
-            " We are experiencing high investment volumes, please try again later."
+            "We are experiencing high investment volumes, please try again later."
           );
-          // Invalid response format: expected callData array
         }
 
         const transactionData = responseData.callData;
@@ -787,19 +816,26 @@ export default function DepositModal({
 
         // Simulate the transaction bundle with Tenderly RPC
         try {
+          toast.loading("Validating Transaction", {
+            id: toastId,
+            description: "Validating your deposit request..."
+          });
+
           const simulationResult = await simulateTransactionBundle(
             orderedTxs,
             account
           );
+
+          toast.loading("Confirming Deposit", {
+            id: toastId,
+            description: "Confirming deposit..."
+          });
         } catch (simulationError) {
           const errorMessage =
             simulationError instanceof Error
               ? simulationError.message
               : String(simulationError);
-          throw new Error(
-            "We are experiencing high investment volumes, please try again later."
-          );
-          // Pre-execution simulation failed: ${errorMessage}
+          throw new Error(errorMessage);
         }
 
         // Update progress after successful simulation
@@ -817,13 +853,17 @@ export default function DepositModal({
           let calls: any = [];
 
           for (const tx of orderedTxs) {
-            // Create transaction object for Privy
             calls.push({
               to: tx.to,
               data: tx.data,
               value: tx.value ? BigInt(tx.value) : BigInt(0),
             });
           }
+
+          toast.loading("Processing Transaction", {
+            id: toastId,
+            description: "Executing your deposit..."
+          });
 
           lastTxResult = await smartWalletClient.sendTransaction({
             calls,
@@ -835,6 +875,11 @@ export default function DepositModal({
           }
 
           result = { transactionHash: lastTxResult };
+
+          toast.loading("Transaction Submitted", {
+            id: toastId,
+            description: "Your deposit has been submitted to the network..."
+          });
         } catch (error) {
           throw error;
         }
@@ -860,7 +905,6 @@ export default function DepositModal({
         setTxProgressPercent(90);
 
         // Update deposit record in database with transaction details
-        // Only proceed once we have valid transaction hash and block number
         try {
           const updateResponse = await fetch("/api/update-deposit-tx", {
             method: "POST",
@@ -879,13 +923,22 @@ export default function DepositModal({
           }
         } catch (updateError) {
           console.error("Error updating deposit transaction:", updateError);
-          // Continue with success flow even if update fails
         }
 
-        await handleTransactionSuccess(result.transactionHash, depositAmount);
+        // Clear the loading toast before showing success
+        toast.dismiss(toastId);
+
+        // Convert amount to string, handling both number and string cases
+        const amountString = String(depositAmount);
+        await handleTransactionSuccess(result.transactionHash, amountString);
 
         // Update progress to complete
         setTxProgressPercent(100);
+
+        // Refresh balance and positions immediately
+        if (refreshBalance) {
+          refreshBalance();
+        }
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -991,7 +1044,9 @@ export default function DepositModal({
         setShowSuccessModal(true);
       } else {
         // For failed deposits, show an error toast
-        toast.error("Previous Deposit Failed");
+        toast.error("Previous Deposit Failed", {
+          description: "The previous deposit attempt was unsuccessful"
+        });
 
         // Clear the failed deposit status
         setCompletedDeposits((prev) => {
@@ -1001,7 +1056,7 @@ export default function DepositModal({
         });
       }
     }
-  }, [pool, completedDeposits, toast]);
+  }, [pool, completedDeposits]);
 
   // If theme isn't loaded yet or no pool selected, return nothing
   if (!mounted || !pool) return null;

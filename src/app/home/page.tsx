@@ -17,8 +17,7 @@ import WalletDeposit from "@/components/features/wallet-deposit";
 import HoldingPage from "@/app/holding/page";
 import HistoryPanel from "@/components/features/history-panel";
 import { BalanceProvider } from "@/contexts/BalanceContext";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { mediumHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
@@ -138,11 +137,6 @@ function HomeContent() {
       <Suspense fallback={null}>
         <SearchParamsHandler setShowModal={setShowModal} />
       </Suspense>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme={theme === "dark" ? "dark" : "light"}
-      />
       <BalanceProvider
         refreshBalance={() => {
           if (authenticated && walletAddress) {

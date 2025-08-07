@@ -31,10 +31,9 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import Image from "next/image";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import { getWalletId } from "@/lib/smart-wallet-utils";
+import { toast } from "sonner";
 
 // Token details for Scroll Mainnet
 const TOKENS = {
@@ -192,7 +191,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       });
     } catch (error) {
       console.error("Failed to fetch Privy balance:", error);
-      toast.error("Failed to fetch balance");
+      toast.error("Failed to Fetch Balance", {
+        description: "Unable to retrieve your current balance. Please try again."
+      });
       // Set fallback values
       setTotalBalance("0.00");
       setTokenBalances({
@@ -229,7 +230,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
-          toast.info("Wallet address copied to clipboard");
+          toast.info("Address Copied", {
+            description: "Wallet address has been copied to clipboard"
+          });
         })
         .catch(() => {});
     }

@@ -5,8 +5,7 @@ import Card from "@/components/ui/card";
 import Image from "next/image";
 import { parseUnits, formatUnits } from "viem";
 import { ChevronDown } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { safeHaptic, mediumHaptic, heavyHaptic } from "@/lib/haptic-utils";
 import { useBalance } from "@/contexts/BalanceContext";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
@@ -115,7 +114,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     } catch (error) {
       console.error(`Failed to fetch ${selectedToken} balance:`, error);
       setBalance("0.00");
-      toast.error(`Failed to fetch your ${selectedToken} balance`);
+      toast.error(`Failed to fetch your ${selectedToken} balance`, {
+        description: "Please try again or check your network connection"
+      });
     } finally {
       setIsLoadingBalance(false);
     }
@@ -131,7 +132,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   // Handle sending tokens using Privy sendTransaction
   const handleSendFunds = async () => {
     if (!account?.address || !user?.wallet) {
-      toast.error("No wallet connected");
+      toast.error("No wallet connected", {
+        description: "Please connect your wallet to send funds"
+      });
       return;
     }
 
@@ -179,7 +182,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
       // Success haptic feedback
       safeHaptic("success");
-      toast.success(`Your ${selectedToken} has been sent successfully!`);
+      toast.success(`Your ${selectedToken} has been sent successfully!`, {
+        description: "Transaction has been submitted to the network"
+      });
 
       // Reset form
       setAmount("");
@@ -202,19 +207,26 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       setTxHash(null);
 
       let errorMessage = "Transaction failed";
+      let errorDescription = "Please try again or contact support";
+
       if (error?.message) {
         if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds";
+          errorDescription = "Please check your balance and try again";
         } else if (error.message.includes("user rejected")) {
           errorMessage = "Transaction cancelled by user";
+          errorDescription = "You cancelled the transaction";
         } else {
           errorMessage = error.message;
+          errorDescription = "An unexpected error occurred";
         }
       }
 
       setTxError(errorMessage);
       safeHaptic("error");
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        description: errorDescription
+      });
     } finally {
       setIsPending(false);
     }
@@ -244,12 +256,12 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
               {!account ? (
                 <div
                   className={`${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+                     "bg-transparent"
                   } rounded-lg p-4 text-center`}
                 >
                   <p
                     className={`${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      theme === "dark" ? "text-gray-400" : "text-gray-800"
                     } mb-4`}
                   >
                     Connect your wallet to send funds

@@ -126,12 +126,12 @@ export default function WalletDeposit({ isOpen, onClose }: DepositModalProps) {
             {!account?.address ? (
               <div
                 className={`${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+                 "bg-transparent"
                 } rounded-lg ${contentPadding} text-center`}
               >
                 <p
                   className={`${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    theme === "dark" ? "text-gray-400" : "text-gray-800"
                   } ${isMobile ? "text-sm mb-3" : "mb-4"}`}
                 >
                   Connect your wallet to get your deposit address

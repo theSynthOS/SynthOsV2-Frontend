@@ -195,7 +195,7 @@ export const RadialProgressBar: React.FC<RadialProgressBarProps> = ({
             ${
               selectedPercentage === 25
                 ? "bg-[#8266E6] text-white "
-                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-[#3C229C]"
+                : "dark:bg-white/5 bg-[#070219]/5 dark:text-white text-black hover:bg-purple-200"
             }
           `}
         >

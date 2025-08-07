@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import Card from "@/components/ui/card";
 import { CreditCard, ArrowRight, ExternalLink } from "lucide-react";
 import { useBalance } from "@/contexts/BalanceContext";
@@ -48,7 +48,9 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
 
   const handleBuyCrypto = async (provider: "moonpay" | "transak" | "ramp") => {
     if (!account?.address) {
-      toast.error("Please connect your wallet first");
+      toast.error("Wallet Not Connected", {
+        description: "Please connect your wallet to buy crypto"
+      });
       return;
     }
 
@@ -90,7 +92,9 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
       // Open the on-ramp provider in a new window
       window.open(onrampUrl, "_blank", "width=500,height=700");
 
-      toast.success(`Opening ${provider} to buy ${selectedToken}`);
+      toast.success("Opening Purchase Interface", {
+        description: `Opening ${provider} to buy ${selectedToken}`
+      });
 
       // Set up a listener for when the user returns (optional)
       const checkBalance = () => {
@@ -107,7 +111,9 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
       checkBalance();
     } catch (error) {
       console.error("Error opening on-ramp:", error);
-      toast.error("Failed to open purchase interface");
+      toast.error("Purchase Interface Failed", {
+        description: "Failed to open the purchase interface. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }

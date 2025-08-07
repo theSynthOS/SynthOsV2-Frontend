@@ -8,6 +8,7 @@ import { PointsProvider } from "@/contexts/PointsContext";
 import Header from "@/components/features/header";
 import Navbar from "@/components/features/navigation";
 import { ThemeBackground } from "@/components/ui/theme-background";
+import { Toaster } from "@/components/toast-sonner";
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -30,7 +31,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   };
 
   return (
-    <ThemeProvider attribute="class">
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <PointsProvider>
         <ThemeBackground className="min-h-screen">
           {/* Only show header on non-landing pages */}
@@ -52,6 +53,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
               <Navbar />
             </div>
           )}
+          <Toaster />
         </ThemeBackground>
       </PointsProvider>
     </ThemeProvider>

@@ -10,8 +10,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useTheme } from "next-themes";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import {
   safeHaptic,
@@ -274,7 +273,7 @@ export default function HoldingPage() {
           setTimeout(() => setCopied(false), 2000);
           // Copy action haptic feedback
           safeHaptic("copy");
-          toast.info("Wallet address copied to clipboard");
+          toast("Wallet address copied to clipboard");
         })
         .catch((err) => {
           // Error handling
@@ -296,7 +295,9 @@ export default function HoldingPage() {
     }
     if (!account?.address) {
       console.log("No account address available");
-      toast.error("Please connect your wallet");
+      toast.error("Please connect your wallet", {
+        description: "You need to connect your wallet to use referral codes"
+      });
       return;
     }
     heavyHaptic();
@@ -321,7 +322,9 @@ export default function HoldingPage() {
       console.log("API response:", data);
 
       if (data.success) {
-        toast.success("Referral code applied successfully!");
+        toast.success("Referral code applied successfully!", {
+          description: "You can now earn rewards through referrals"
+        });
         setInputReferralCode("");
         const refreshResponse = await fetch(
           `/api/referral?address=${account.address}`
@@ -332,14 +335,20 @@ export default function HoldingPage() {
         }
       } else {
         if (data.error === "You cannot refer yourself.") {
-          toast.error("You cannot enter your own referral code.");
+          toast.error("You cannot enter your own referral code", {
+            description: "Please use someone else's referral code"
+          });
         } else {
-          toast.error(data.error || "Failed to apply referral code");
+          toast.error(data.error || "Failed to apply referral code", {
+            description: "Please try again or Invalid referral code"
+          });
         }
       }
     } catch (error) {
       console.error("Error in handleApplyReferralCode:", error);
-      toast.error("Failed to apply referral code");
+      toast.error("Failed to apply referral code", {
+        description: "Please try again or contact support if the issue persists"
+      });
     } finally {
       setIsApplyingReferral(false);
     }
@@ -353,7 +362,9 @@ export default function HoldingPage() {
           setReferralCopied(true);
           setTimeout(() => setReferralCopied(false), 2000);
           safeHaptic("copy");
-          toast.info("Your referral code has been copied to clipboard");
+          toast.info("Your referral code has been copied to clipboard", {
+            description: "Share it with friends to earn rewards"
+          });
         })
         .catch((err) => {
           // Error handling
