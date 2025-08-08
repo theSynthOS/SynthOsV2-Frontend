@@ -36,12 +36,12 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
         <ThemeBackground className="min-h-screen">
           {/* Only show header on non-landing pages */}
           {!isLandingPage && (
-            <div className="fixed top-0 left-0 right-0 z-50">
+            <div className="z-50">
               <Header />
             </div>
           )}
 
-          <main className={`${!isLandingPage ? "pt-16 pb-24" : ""}`}>
+          <main className={`${!isLandingPage ? "pb-24" : ""}`}>
             {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
             {children}
             {/* </PullToRefresh> */}
