@@ -5,9 +5,10 @@ import { useState, useEffect, useRef } from "react";
 import { CheckCircle, ExternalLink, X, Copy, Info } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadialProgressBar } from "@/components/circular-progress-bar/Radial-Progress-Bar";
-import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth";
-import { scroll } from "viem/chains";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { scroll } from "thirdweb/chains";
 import Card from "@/components/ui/card";
+import Image from "next/image";
 import { toast } from "sonner";
 import { safeHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
@@ -570,13 +571,7 @@ export default function DepositModal({
       // Immediately refresh balance and positions
       await fetchBalance();
       
-      // Additional refresh attempts to ensure positions update
-      setTimeout(async () => {
-        await fetchBalance();
-        if (refreshBalance) {
-          refreshBalance();
-        }
-      }, 1000);
+
 
       setTimeout(async () => {
         await fetchBalance();
@@ -844,7 +839,6 @@ export default function DepositModal({
         // Update progress
         setTxProgressPercent(75);
 
-        // Execute transactions using Privy's native capabilities
         let result: { transactionHash: string };
 
         try {
@@ -865,9 +859,34 @@ export default function DepositModal({
             description: "Executing your deposit..."
           });
 
-          lastTxResult = await smartWalletClient.sendTransaction({
-            calls,
-          });
+          // Check if using smart wallet or EOA
+          if (isSmartWalletActive && smartWalletClient) {
+            // For smart wallet, use batch transaction
+            lastTxResult = await smartWalletClient.sendTransaction({
+              calls,
+            });
+          } else if (wallets?.[0]) {
+            const embeddedWallet = wallets[0];
+            // For EOA, send transactions sequentially
+            for (const tx of orderedTxs) {
+              const provider = await embeddedWallet.getEthereumProvider();
+              const ethersProvider = new ethers.BrowserProvider(provider);
+              const signer = await ethersProvider.getSigner();
+              
+              lastTxResult = await signer.sendTransaction({
+                to: tx.to,
+                data: tx.data,
+                value: tx.value ? BigInt(tx.value) : BigInt(0),
+              });
+
+              // Small delay between transactions
+              if (orderedTxs.indexOf(tx) < orderedTxs.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+              }
+            }
+          } else {
+            throw new Error("No wallet available");
+          }
 
           // Ensure we have a result
           if (!lastTxResult) {
@@ -963,6 +982,9 @@ export default function DepositModal({
           }
         }
 
+        // Clear any existing toasts
+        toast.dismiss(toastId);
+
         // Set the error message for the banner
         setDepositError(errorMessage);
         setTxProgressPercent(0);
@@ -992,6 +1014,9 @@ export default function DepositModal({
         }
       }
     } catch (error) {
+      // Clear any existing toasts
+      toast.dismiss(toastId);
+
       // Set the error message for the banner
       setDepositError(
         "We are experiencing high investment volumes, please try again later."

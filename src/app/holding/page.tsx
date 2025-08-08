@@ -415,7 +415,7 @@ export default function HoldingPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mt-[10px]"
+          className="mt-[10px] lg:mt-0"
         >
           <div
             className={`${
