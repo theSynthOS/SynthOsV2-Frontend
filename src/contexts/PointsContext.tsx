@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 
 interface PointsContextType {
   refreshPoints: () => void;
@@ -12,9 +18,16 @@ const PointsContext = createContext<PointsContextType>({
 
 export function PointsProvider({ children }: { children: React.ReactNode }) {
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const lastRefreshTimeRef = useRef(Date.now());
+  const minRefreshInterval = 5000; // Minimum 5 seconds between refreshes
 
   const refreshPoints = useCallback(() => {
-    setLastRefresh(Date.now());
+    const now = Date.now();
+    // Only update if enough time has passed since last refresh
+    if (now - lastRefreshTimeRef.current > minRefreshInterval) {
+      lastRefreshTimeRef.current = now;
+      setLastRefresh(now);
+    }
   }, []);
 
   return (

@@ -21,13 +21,15 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
+  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+    useSmartWallet();
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
   const { lastRefresh } = usePoints();
 
   // Use display address from context
-  const account = authenticated && displayAddress ? { address: displayAddress } : null;
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Set mounted to true on initial load to enable theme rendering
   useEffect(() => {
@@ -61,7 +63,13 @@ export default function Header() {
         setIsLoadingPoints(false);
       }
     };
-    fetchPoints();
+
+    // Add debouncing to prevent rapid successive calls
+    const timeoutId = setTimeout(() => {
+      fetchPoints();
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [authenticated, account?.address, lastRefresh]);
 
   // Toggle theme between dark and light

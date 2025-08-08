@@ -26,25 +26,30 @@ export function ThemeBackground({
     return <div className={`${className} min-h-screen`}>{children}</div>;
   }
 
-  // For dark theme, use a simple gradient
-  if (theme === "dark") {
-    return (
+  return (
+    <div className={`${className} min-h-screen relative`}>
+      {/* Dark theme background - always present but conditionally visible */}
       <div
-        className={`${className}`}
+        className={`absolute inset-0 transition-opacity duration-300 ${
+          theme === "dark" ? "opacity-100" : "opacity-0"
+        }`}
         style={{
           background:
             "linear-gradient( to bottom left, #0C0C0C66, #0C0C0C66), #0C0C0C",
         }}
-      >
-        {children}
-      </div>
-    );
-  }
+      />
 
-  // For light theme, use the BackgroundGradientAnimation component
-  return (
-    <BackgroundGradientAnimation className={className}>
-      {children}
-    </BackgroundGradientAnimation>
+      {/* Light theme background - always present but conditionally visible */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${
+          theme === "light" ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <BackgroundGradientAnimation className="h-full" />
+      </div>
+
+      {/* Content - always on top */}
+      <div className="relative z-10 h-full">{children}</div>
+    </div>
   );
 }
