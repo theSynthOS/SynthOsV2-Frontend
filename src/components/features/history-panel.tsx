@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { scroll } from "thirdweb/chains";
 import { lightHaptic } from "@/lib/haptic-utils";
+import { useSmartWallet } from "@/contexts/SmartWalletContext";
 
 interface HistoryPanelProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export default function HistoryPanel({
 }: HistoryPanelProps) {
   const { theme } = useTheme();
   const { user, authenticated } = usePrivy();
+  const { displayAddress } = useSmartWallet();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -70,8 +72,8 @@ export default function HistoryPanel({
 
   // Memoize the wallet address to prevent unnecessary re-renders
   const walletAddress = useMemo(() => {
-    return authenticated && user?.wallet ? user.wallet.address : null;
-  }, [authenticated, user?.wallet?.address]);
+    return authenticated && displayAddress ? displayAddress : null;
+  }, [authenticated, displayAddress]);
 
   // Add a ref to track if a request is in progress
   const isFetchingRef = React.useRef(false);
@@ -98,7 +100,6 @@ export default function HistoryPanel({
           `/api/transactions?address=${walletAddress}`
         );
         const data = await response.json();
-
         if (data.transactions && data.metadata) {
           setTransactions(data.transactions);
           setMetadata(data.metadata);
