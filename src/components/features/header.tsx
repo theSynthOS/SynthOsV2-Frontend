@@ -12,6 +12,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { usePoints } from "@/contexts/PointsContext";
 import { mediumHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { createPortal } from "react-dom";
 
 export default function Header() {
   const router = useRouter();
@@ -201,16 +202,40 @@ export default function Header() {
       </div>
 
       {/* Settings panel */}
-      <SettingsPanel
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {isSettingsOpen && (
+        typeof document !== "undefined"
+          ? createPortal(
+              <SettingsPanel
+                isOpen={true}
+                onClose={() => setIsSettingsOpen(false)}
+              />, 
+              document.body
+            )
+          : (
+              <SettingsPanel
+                isOpen={true}
+                onClose={() => setIsSettingsOpen(false)}
+              />
+            )
+      )}
 
       {/* History panel */}
-      <HistoryPanel
-        isOpen={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
-      />
+      {isHistoryOpen && (
+        typeof document !== "undefined"
+          ? createPortal(
+              <HistoryPanel
+                isOpen={true}
+                onClose={() => setIsHistoryOpen(false)}
+              />, 
+              document.body
+            )
+          : (
+              <HistoryPanel
+                isOpen={true}
+                onClose={() => setIsHistoryOpen(false)}
+              />
+            )
+      )}
     </div>
   );
 }
