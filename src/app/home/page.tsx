@@ -129,7 +129,9 @@ function HomeContent() {
   };
 
   const handleRefreshHoldings = () => {
-    // Refresh holdings
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("refreshHoldings"));
+    }
   };
 
   return (

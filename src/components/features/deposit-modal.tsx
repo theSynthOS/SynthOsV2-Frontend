@@ -568,17 +568,16 @@ export default function DepositModal({
       // Success haptic feedback
       safeHaptic("success");
 
-      // Immediately refresh balance and positions
+      // Trigger global holdings refresh
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refreshHoldings"));
+      }
+
+      // Refresh balance once
       await fetchBalance();
-      
-
-
-      setTimeout(async () => {
-        await fetchBalance();
-        if (refreshBalance) {
-          refreshBalance();
-        }
-      }, 3000);
+      if (refreshBalance) {
+        refreshBalance();
+      }
 
       // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {

@@ -536,7 +536,7 @@ export default function WithdrawModal({
         // Show success toast and close modal
         toast.success("Withdrawal Successful", {
           id: toastId,
-          description: `Successfully withdrew ${amount} ${selectedToken}`,
+          description: `Successfully withdrawn ${amount} ${selectedToken}`,
           duration: 5000,
           action: {
             label: "View Transaction",
