@@ -164,7 +164,7 @@ function HomeContent() {
                 <div
                   className={`${
                     theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-[#FFFFFFA6]"
-                  } rounded-t-2xl px-4 xl:px-6 pt-6 w-full text-center xl:text-left relative overflow-hidden xl:mt-[45px] min-h-[140px]`}
+                  } rounded-t-2xl px-4 xl:px-6 pt-6 w-full text-center xl:text-left relative overflow-hidden min-h-[140px]`}
                 >
                   {/* Logo at the back, inside the card */}
                   <img
@@ -420,7 +420,7 @@ function HomeContent() {
 
             {/* Holding Page Content - Only visible on xl screens */}
             <div
-              className={`hidden xl:flex flex-col xl:w-2/6 xl:pr-5 xl:mt-[45px]
+              className={`hidden xl:flex flex-col xl:w-2/6 xl:pr-5
             }`}
             >
               <HoldingPage />
