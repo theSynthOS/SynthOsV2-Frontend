@@ -93,7 +93,7 @@ export default function HoldingPage() {
     if (!account?.address) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/holdings?address=${account.address}`);
+      const res = await fetch(`/api/holdings?address=${account.address}`); //@note this should be accounts/holdings
       const data = await res.json();
       setHoldings(Array.isArray(data) ? data : []);
     } catch (error) {

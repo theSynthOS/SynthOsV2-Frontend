@@ -532,7 +532,11 @@ export default function DepositModal({
   };
 
   // Handle confirmation of transaction success
-  const handleTransactionSuccess = async (txHash: string, amount: string) => {
+  const handleTransactionSuccess = async (
+    txHash: string,
+    amount: string,
+    actualSenderAddress: string | null
+  ) => {
     try {
       // Set transaction hash
       setTxHash(txHash);
@@ -580,12 +584,21 @@ export default function DepositModal({
         }
       }, 3000);
 
+      // Notify holdings to refresh for the actual sender address
+      try {
+        if (actualSenderAddress) {
+          window.dispatchEvent(
+            new CustomEvent("refreshHoldings", { detail: { address: actualSenderAddress } })
+          );
+        }
+      } catch {}
+
       // Add 10 points for deposit only if amount >= 10
       if (parseFloat(amount) >= 10) {
         fetch("/api/points/deposit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address }),
+          body: JSON.stringify({ address: actualSenderAddress }),
         })
           .then((res) => {
             return res.json();
@@ -593,7 +606,7 @@ export default function DepositModal({
           .then((data) => {
             // Fetch updated points
             return fetch(
-              `/api/points?address=${encodeURIComponent(address ?? "")}`
+              `/api/points?address=${encodeURIComponent(actualSenderAddress ?? "")}`
             );
           })
           .then((res) => {
@@ -607,7 +620,7 @@ export default function DepositModal({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: address,
+            address: actualSenderAddress,
             amount: amount,
           }),
         })
@@ -632,7 +645,7 @@ export default function DepositModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            address: address,
+            address: actualSenderAddress,
             hash: txHash,
             amount: amount,
             type: "deposit",
@@ -727,6 +740,8 @@ export default function DepositModal({
     }
 
     let depositId: string | null = null;
+    // Determine and track the actual sender address (EOA or smart wallet)
+    let senderAddress: string | null = address || null;
 
     const toastId = toast.loading("Preparing Deposit", {
       description: "Preparing your deposit request..."
@@ -736,13 +751,27 @@ export default function DepositModal({
       // Update progress - start progress animation
       setTxProgressPercent(10);
 
-      const response = await fetch("/api/deposit", {
+      // Resolve actual sender before creating the deposit on backend
+      try {
+        if (isSmartWalletActive && smartWalletClient) {
+          senderAddress = address || null;
+        } else if (wallets?.[0]) {
+          const provider = await wallets[0].getEthereumProvider();
+          const ethersProvider = new ethers.BrowserProvider(provider);
+          const signer = await ethersProvider.getSigner();
+          senderAddress = await signer.getAddress();
+        }
+      } catch {
+        senderAddress = address || null;
+      }
+
+      const response = await fetch("/api/deposit", { //@note look at this 1st
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_address: address,
+          user_address: senderAddress,
           protocol_pair_id: pool?.protocol_pair_id,
           amount: depositAmount,
         }),
@@ -866,7 +895,7 @@ export default function DepositModal({
               calls,
             });
           } else if (wallets?.[0]) {
-            const embeddedWallet = wallets[0];
+            const embeddedWallet = wallets[0]; //@note why are u doing wallet[0] why not wallets[1] or wallets[2]
             // For EOA, send transactions sequentially
             for (const tx of orderedTxs) {
               const provider = await embeddedWallet.getEthereumProvider();
@@ -925,7 +954,7 @@ export default function DepositModal({
 
         // Update deposit record in database with transaction details
         try {
-          const updateResponse = await fetch("/api/update-deposit-tx", {
+          const updateResponse = await fetch("/api/update-deposit-tx", { //@note look at this 2nd
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -949,7 +978,7 @@ export default function DepositModal({
 
         // Convert amount to string, handling both number and string cases
         const amountString = String(depositAmount);
-        await handleTransactionSuccess(result.transactionHash, amountString);
+        await handleTransactionSuccess(result.transactionHash, amountString, senderAddress);
 
         // Update progress to complete
         setTxProgressPercent(100);
@@ -994,7 +1023,7 @@ export default function DepositModal({
         isProcessingRef.current = false;
 
         // Store the failed deposit in our state
-        if (pool?.protocol_pair_id) {
+        if (pool?.protocol_pair_id) { //@audit-info what is this why is it storing the failed deposit in our state
           const poolId = pool.protocol_pair_id;
           setCompletedDeposits((prev) => ({
             ...prev,
@@ -1029,7 +1058,7 @@ export default function DepositModal({
       isProcessingRef.current = false;
 
       // Store the failed deposit in our state
-      if (pool?.protocol_pair_id) {
+      if (pool?.protocol_pair_id) { //@audit-info what is this why is it storing the failed deposit in our state
         const poolId = pool.protocol_pair_id;
         setCompletedDeposits((prev) => ({
           ...prev,
