@@ -235,7 +235,8 @@ export default function DepositModal({
   // Handle modal close
   const handleClose = () => {
     // Only show "in progress" toast if transaction is still processing
-    const isTransactionInProgress = isSubmitting && !showSuccessModal && txProgressPercent < 100;
+    const isTransactionInProgress =
+      isSubmitting && !showSuccessModal && txProgressPercent < 100;
 
     if (isTransactionInProgress) {
       // Mark that the modal was closed during processing
@@ -243,7 +244,7 @@ export default function DepositModal({
 
       // Show a toast notification that transaction is still processing
       toast.info("Transaction in Progress", {
-        description: "Your deposit is still processing in the background"
+        description: "Your deposit is still processing in the background",
       });
     } else if (!showSuccessModal) {
       // Only reset values if not showing success modal and not processing
@@ -560,8 +561,9 @@ export default function DepositModal({
           duration: 5000,
           action: {
             label: "View Transaction",
-            onClick: () => window.open(`https://scrollscan.com/tx/${txHash}`, '_blank')
-          }
+            onClick: () =>
+              window.open(`https://scrollscan.com/tx/${txHash}`, "_blank"),
+          },
         });
       }
 
@@ -616,7 +618,7 @@ export default function DepositModal({
           .then((data) => {
             if (data.success && data.pointsAdded > 0) {
               toast.success("Referral Bonus", {
-                description: `You earned ${data.pointsAdded} points!`
+                description: `You earned ${data.pointsAdded} points!`,
               });
             }
           })
@@ -648,7 +650,7 @@ export default function DepositModal({
       // Error haptic feedback
       safeHaptic("error");
       toast.error("Deposit Failed", {
-        description: "There was an error processing your deposit"
+        description: "There was an error processing your deposit",
       });
     }
   };
@@ -677,7 +679,7 @@ export default function DepositModal({
       // Error haptic feedback for validation
       safeHaptic("error");
       toast.error("Invalid Amount", {
-        description: "Please enter a valid deposit amount"
+        description: "Please enter a valid deposit amount",
       });
       return;
     }
@@ -685,7 +687,7 @@ export default function DepositModal({
     // Check if minimum deposits data is still loading
     if (isLoadingMinimumDeposits) {
       toast.error("Loading Requirements", {
-        description: "Please wait while we load deposit requirements"
+        description: "Please wait while we load deposit requirements",
       });
       return;
     }
@@ -694,7 +696,7 @@ export default function DepositModal({
     const minDepositAmount = getMinimumDepositAmount();
     if (parseFloat(depositAmount) < minDepositAmount) {
       toast.error("Minimum Deposit Required", {
-        description: `Minimum deposit amount for this pool is $${minDepositAmount}`
+        description: `Minimum deposit amount for this pool is $${minDepositAmount}`,
       });
       return;
     }
@@ -702,7 +704,7 @@ export default function DepositModal({
     // Check if deposit amount exceeds balance
     if (parseFloat(depositAmount) > maxBalance) {
       toast.error("Insufficient Balance", {
-        description: "Deposit amount exceeds available balance"
+        description: "Deposit amount exceeds available balance",
       });
       return;
     }
@@ -711,7 +713,7 @@ export default function DepositModal({
     const MAX_DEPOSIT_AMOUNT = 1000000; // $1M maximum
     if (parseFloat(depositAmount) > MAX_DEPOSIT_AMOUNT) {
       toast.error("Maximum Deposit Exceeded", {
-        description: `Maximum deposit amount is $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`
+        description: `Maximum deposit amount is $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`,
       });
       return;
     }
@@ -728,7 +730,7 @@ export default function DepositModal({
     let depositId: string | null = null;
 
     const toastId = toast.loading("Preparing Deposit", {
-      description: "Preparing your deposit request..."
+      description: "Preparing your deposit request...",
     });
 
     try {
@@ -763,7 +765,7 @@ export default function DepositModal({
 
       toast.loading("Preparing Transaction", {
         id: toastId,
-        description: "Setting up your deposit transaction..."
+        description: "Setting up your deposit transaction...",
       });
 
       // Execute the deposit payload
@@ -812,7 +814,7 @@ export default function DepositModal({
         try {
           toast.loading("Validating Transaction", {
             id: toastId,
-            description: "Validating your deposit request..."
+            description: "Validating your deposit request...",
           });
 
           const simulationResult = await simulateTransactionBundle(
@@ -822,7 +824,7 @@ export default function DepositModal({
 
           toast.loading("Confirming Deposit", {
             id: toastId,
-            description: "Confirming deposit..."
+            description: "Confirming deposit...",
           });
         } catch (simulationError) {
           const errorMessage =
@@ -855,7 +857,7 @@ export default function DepositModal({
 
           toast.loading("Processing Transaction", {
             id: toastId,
-            description: "Executing your deposit..."
+            description: "Executing your deposit...",
           });
 
           // Check if using smart wallet or EOA
@@ -871,7 +873,7 @@ export default function DepositModal({
               const provider = await embeddedWallet.getEthereumProvider();
               const ethersProvider = new ethers.BrowserProvider(provider);
               const signer = await ethersProvider.getSigner();
-              
+
               lastTxResult = await signer.sendTransaction({
                 to: tx.to,
                 data: tx.data,
@@ -892,11 +894,14 @@ export default function DepositModal({
             throw new Error("Transaction failed to execute");
           }
 
-          result = { transactionHash: lastTxResult };
+          // Normalize transaction hash across wallet types
+          const maybeHash = (lastTxResult &&
+            (lastTxResult.hash || lastTxResult)) as string;
+          result = { transactionHash: maybeHash };
 
           toast.loading("Transaction Submitted", {
             id: toastId,
-            description: "Your deposit has been submitted to the network..."
+            description: "Your deposit has been submitted to the network...",
           });
         } catch (error) {
           throw error;
@@ -1069,7 +1074,7 @@ export default function DepositModal({
       } else {
         // For failed deposits, show an error toast
         toast.error("Previous Deposit Failed", {
-          description: "The previous deposit attempt was unsuccessful"
+          description: "The previous deposit attempt was unsuccessful",
         });
 
         // Clear the failed deposit status

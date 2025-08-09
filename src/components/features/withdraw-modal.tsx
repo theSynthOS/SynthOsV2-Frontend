@@ -52,14 +52,16 @@ export default function WithdrawModal({
   const [mounted, setMounted] = useState(false);
   const { user, authenticated } = usePrivy();
   const { displayAddress, smartWalletClient, wallets } = useSmartWallet();
-  const [modalClosedDuringProcessingRef, setModalClosedDuringProcessingRef] = useState(false);
+  const [modalClosedDuringProcessingRef, setModalClosedDuringProcessingRef] =
+    useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<string | null>(null);
   const [withdrawIds, setWithdrawIds] = useState<string[]>([]);
   const [processingPoolId, setProcessingPoolId] = useState<string | null>(null);
   const isProcessingRef = useRef(false);
 
-  const account = authenticated && displayAddress ? { address: displayAddress } : null;
+  const account =
+    authenticated && displayAddress ? { address: displayAddress } : null;
 
   // Tenderly RPC bundled simulation function
   const simulateTransactionBundle = async (
@@ -229,7 +231,8 @@ export default function WithdrawModal({
       setModalClosedDuringProcessingRef(true);
       // Show a toast notification that transaction is still processing
       toast.info("Transaction in Progress", {
-        description: "Your withdrawal is still processing in the background. You'll be notified when it completes."
+        description:
+          "Your withdrawal is still processing in the background. You'll be notified when it completes.",
       });
     }
     if (!isSubmitting) {
@@ -280,7 +283,7 @@ export default function WithdrawModal({
     // Check if the amount is valid
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Invalid Amount", {
-        description: "Please enter a valid withdrawal amount"
+        description: "Please enter a valid withdrawal amount",
       });
       return;
     }
@@ -288,7 +291,7 @@ export default function WithdrawModal({
     // Check if amount exceeds balance
     if (parseFloat(amount) > parseFloat(balance)) {
       toast.error("Insufficient Balance", {
-        description: "Withdrawal amount exceeds available balance"
+        description: "Withdrawal amount exceeds available balance",
       });
       return;
     }
@@ -300,7 +303,7 @@ export default function WithdrawModal({
     }
 
     const toastId = toast.loading("Preparing Withdrawal", {
-      description: "Preparing your withdrawal request..."
+      description: "Preparing your withdrawal request...",
     });
 
     try {
@@ -394,20 +397,19 @@ export default function WithdrawModal({
           }
           toast.loading("Simulating Transaction", {
             id: toastId,
-            description: "Validating your withdrawal request..."
+            description: "Validating your withdrawal request...",
           });
 
-          const simulationResult = await simulateTransactionBundle(
-            orderedTxs,
-            { address: displayAddress }
-          );
+          const simulationResult = await simulateTransactionBundle(orderedTxs, {
+            address: displayAddress,
+          });
 
           if (!modalClosedDuringProcessingRef) {
             setSimulationStatus("✅ All transactions validated successfully");
           }
           toast.loading("Processing Transaction", {
             id: toastId,
-            description: "Confirming withdrawal..."
+            description: "Confirming withdrawal...",
           });
         } catch (simulationError) {
           const errorMessage =
@@ -443,11 +445,14 @@ export default function WithdrawModal({
             throw new Error("Transaction failed to execute");
           }
 
-          result = { transactionHash: lastTxResult };
+          const maybeHash = (lastTxResult &&
+            (lastTxResult.hash || lastTxResult)) as string;
+          result = { transactionHash: maybeHash };
 
           toast.loading("Transaction Submitted", {
             id: toastId,
-            description: "Your withdrawal request has been submitted to the network"
+            description:
+              "Your withdrawal request has been submitted to the network",
           });
         } catch (error) {
           throw error;
@@ -540,8 +545,12 @@ export default function WithdrawModal({
           duration: 5000,
           action: {
             label: "View Transaction",
-            onClick: () => window.open(`https://scrollscan.com/tx/${result.transactionHash}`, '_blank')
-          }
+            onClick: () =>
+              window.open(
+                `https://scrollscan.com/tx/${result.transactionHash}`,
+                "_blank"
+              ),
+          },
         });
 
         // Close modal and refresh balance
@@ -566,7 +575,8 @@ export default function WithdrawModal({
             errorDescription = "You rejected the transaction";
           } else if (errorString.includes("insufficient funds")) {
             errorMessage = "Insufficient Funds";
-            errorDescription = "You don't have enough funds for this transaction";
+            errorDescription =
+              "You don't have enough funds for this transaction";
           } else if (
             errorString.includes("0xe273b446") ||
             errorString.includes("AbiErrorSignatureNotFoundError")
@@ -591,7 +601,7 @@ export default function WithdrawModal({
 
         toast.error(errorMessage, {
           id: toastId,
-          description: errorDescription
+          description: errorDescription,
         });
       }
     } catch (error) {
@@ -621,7 +631,7 @@ export default function WithdrawModal({
 
       toast.error(errorMessage, {
         id: toastId,
-        description: errorDescription
+        description: errorDescription,
       });
     } finally {
       setIsSubmitting(false);
@@ -686,12 +696,7 @@ export default function WithdrawModal({
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
-                  <Image
-                    src="/usdc.png"
-                    alt="USDC"
-                    width={24}
-                    height={24}
-                  />
+                  <Image src="/usdc.png" alt="USDC" width={24} height={24} />
                   <span className="font-medium">USDC</span>
                 </div>
               </button>
@@ -715,12 +720,7 @@ export default function WithdrawModal({
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
-                  <Image
-                    src="/usdt.png"
-                    alt="USDT"
-                    width={24}
-                    height={24}
-                  />
+                  <Image src="/usdt.png" alt="USDT" width={24} height={24} />
                   <span className="font-medium">USDT</span>
                 </div>
               </button>
