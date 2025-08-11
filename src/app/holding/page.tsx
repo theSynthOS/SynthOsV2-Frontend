@@ -626,7 +626,7 @@ export default function HoldingPage() {
                   No Positions Available
                 </div>
               ) : (
-                filteredHoldings.slice(0, 1).map((h, idx) => {
+                filteredHoldings.map((h, idx) => {
                   return (
                     <HoldingCard
                       key={idx}
@@ -636,7 +636,7 @@ export default function HoldingPage() {
                       apy={h.apy.toString()}
                       protocolLogo={h.protocolLogo}
                       pnl={h.pnl}
-                      currentAmount={h.initialAmount.toString()}
+                      currentAmount={h.currentAmount.toString()}
                       pool={{
                         name: h.protocolName,
                         apy: h.apy.toFixed(3),
@@ -1015,7 +1015,7 @@ export default function HoldingPage() {
                           apy={h.apy.toString()}
                           protocolLogo={h.protocolLogo}
                           pnl={h.pnl}
-                          currentAmount={h.initialAmount.toString()}
+                          currentAmount={h.currentAmount.toString()}
                           pool={{
                             name: h.protocolName,
                             apy: h.apy.toFixed(3),
