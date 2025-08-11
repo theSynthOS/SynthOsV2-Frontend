@@ -78,6 +78,15 @@ export default function HistoryPanel({
   // Add a ref to track if a request is in progress
   const isFetchingRef = React.useRef(false);
 
+  // Log auth and wallet state changes
+  useEffect(() => {}, [
+    authenticated,
+    user,
+    displayAddress,
+    walletAddress,
+    isOpen,
+  ]);
+
   useEffect(() => {
     if (!walletAddress) {
       setTransactions([]);
@@ -96,9 +105,8 @@ export default function HistoryPanel({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `/api/transactions?address=${walletAddress}`
-        );
+        const url = `/api/transactions?address=${walletAddress}`;
+        const response = await fetch(url);
         const data = await response.json();
         if (data.transactions && data.metadata) {
           setTransactions(data.transactions);
@@ -108,7 +116,7 @@ export default function HistoryPanel({
           setError(data.message || "Failed to fetch transactions");
           setTransactions([]);
         }
-      } catch {
+      } catch (err) {
         setError("Failed to fetch transactions. Please try again.");
         setTransactions([]);
       } finally {

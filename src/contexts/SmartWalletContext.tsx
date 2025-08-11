@@ -40,16 +40,18 @@ export function SmartWalletProvider({ children }: SmartWalletProviderProps) {
   );
   const smartWalletAddress = smartAccount?.address || null;
   const embeddedWalletAddress = user?.wallet?.address || null;
+  // Fallback to any connected EOA wallet address from Privy wallets
+  const eoaWalletAddress = Array.isArray(wallets)
+    ? wallets.find((w: any) => w?.address)?.address || null
+    : null;
 
   // Display address - prefer smart wallet, fallback to embedded
-  const displayAddress = smartWalletAddress || embeddedWalletAddress;
+  const displayAddress =
+    smartWalletAddress || embeddedWalletAddress || eoaWalletAddress;
   const isSmartWalletActive = !!smartWalletAddress;
 
   // Initialize smart wallet immediately after login
   useEffect(() => {
-    if (authenticated && smartWalletClient && !smartWalletAddress) {
-      console.log("Smart wallet will be automatically initialized by Privy");
-    }
     setIsLoading(false);
   }, [authenticated, smartWalletClient, smartWalletAddress]);
 
