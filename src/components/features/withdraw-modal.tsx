@@ -609,7 +609,7 @@ export default function WithdrawModal({
             errorMessage = "Network Error";
             errorDescription = "Please check your internet connection";
           } else {
-            errorMessage = errorString.split(".")[0];
+            errorMessage = "Too many requests, please try a few times";
             errorDescription = "An unexpected error occurred";
           }
         }

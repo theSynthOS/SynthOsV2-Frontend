@@ -19,6 +19,7 @@ export const BackgroundGradientAnimation = ({
   containerClassName?: string;
 }) => {
   const [isSafari, setIsSafari] = useState(false);
+  const [isFirefox, setIsFirefox] = useState(false);
 
   // Memoize the CSS properties to prevent unnecessary updates
   const cssProperties = useMemo(
@@ -39,6 +40,10 @@ export const BackgroundGradientAnimation = ({
 
   useEffect(() => {
     setIsSafari(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
+  }, []);
+
+  useEffect(() => {
+    setIsFirefox(/firefox/i.test(navigator.userAgent));
   }, []);
 
   return (
@@ -65,7 +70,7 @@ export const BackgroundGradientAnimation = ({
 
       <div
         className="absolute inset-0 overflow-hidden"
-        style={{ filter: isSafari ? "blur(60px)" : "url(#gooey-blur)" }}
+        style={{ filter: isSafari || isFirefox ? "blur(60px)" : "url(#gooey-blur)" }}
       >
         {/* Purple ball - bottom left */}
         <div

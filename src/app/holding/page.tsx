@@ -105,6 +105,8 @@ export default function HoldingPage() {
         embeddedWalletAddress !== smartWalletAddress
       )
         addresses.push(embeddedWalletAddress);
+      // Fallback to displayAddress so EOA-only users still fetch holdings
+      if (addresses.length === 0 && displayAddress) addresses.push(displayAddress);
     }
 
     if (addresses.length === 0) return;
@@ -693,7 +695,7 @@ export default function HoldingPage() {
                   No Positions Available
                 </div>
               ) : (
-                filteredHoldings.map((h, idx) => {
+                filteredHoldings.slice(0, 1).map((h, idx) => {
                   return (
                     <HoldingCard
                       key={idx}

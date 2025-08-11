@@ -971,7 +971,8 @@ export default function DepositModal({
           });
 
           if (!updateResponse.ok) {
-            console.error("Failed to update deposit transaction in database");
+            const err = await updateResponse.text();
+            console.error("Failed to update deposit transaction in database:", err);
           }
         } catch (updateError) {
           console.error("Error updating deposit transaction:", updateError);

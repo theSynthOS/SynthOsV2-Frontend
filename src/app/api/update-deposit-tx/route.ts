@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       ["depositId", "transactionHash"], // Required strings
       [], // No addresses
       ["blockNumber"], // Number field
-      [] // Optional (can be null)
+      ["blockNumber"] // Optional (can be null/undefined)
     );
 
     const response = await fetch(apiEndpoints.updateDepositTx(), {
