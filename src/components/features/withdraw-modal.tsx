@@ -424,11 +424,10 @@ export default function WithdrawModal({
 
         let result: { transactionHash: string };
 
+        // Execute transactions
         try {
-          // Execute transactions sequentially using Privy's sendTransaction
           let lastTxResult: any = null;
           let calls: any = [];
-
           for (const tx of orderedTxs) {
             calls.push({
               to: tx.to,
@@ -437,23 +436,33 @@ export default function WithdrawModal({
             });
           }
 
-          lastTxResult = await smartWalletClient.sendTransaction({
-            calls,
-          });
+          if (smartWalletClient) {
+            lastTxResult = await smartWalletClient.sendTransaction({ calls });
+          } else if (wallets?.[0]) {
+            const embeddedWallet = wallets[0];
+            for (const tx of orderedTxs) {
+              const provider = await embeddedWallet.getEthereumProvider();
+              const ethersProvider = new ethers.BrowserProvider(provider);
+              const signer = await ethersProvider.getSigner();
+              lastTxResult = await signer.sendTransaction({
+                to: tx.to,
+                data: tx.data,
+                value: tx.value ? BigInt(tx.value) : BigInt(0),
+              });
+              if (orderedTxs.indexOf(tx) < orderedTxs.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+              }
+            }
+          } else {
+            throw new Error("No wallet available");
+          }
 
           if (!lastTxResult) {
             throw new Error("Transaction failed to execute");
           }
 
-          const maybeHash = (lastTxResult &&
-            (lastTxResult.hash || lastTxResult)) as string;
+          const maybeHash = (lastTxResult && (lastTxResult.hash || lastTxResult)) as string;
           result = { transactionHash: maybeHash };
-
-          toast.loading("Transaction Submitted", {
-            id: toastId,
-            description:
-              "Your withdrawal request has been submitted to the network",
-          });
         } catch (error) {
           throw error;
         }
@@ -560,6 +569,16 @@ export default function WithdrawModal({
             refreshBalance();
           }, 1000);
         }
+
+        // Trigger holdings refresh for the correct address
+        try {
+          const senderAddress = address;
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("refreshHoldings", { detail: { address: senderAddress } })
+            );
+          }
+        } catch {}
 
         // Add a slight delay to make the loading state more visible
         await new Promise((resolve) => setTimeout(resolve, 1500));

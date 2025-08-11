@@ -93,6 +93,7 @@ function HomeContent() {
     if (authenticated && walletAddress) {
       fetchBalance(walletAddress);
     } else {
+      setBalance("0.00");
       setIsLoadingBalance(false);
     }
   }, [authenticated, walletAddress]);

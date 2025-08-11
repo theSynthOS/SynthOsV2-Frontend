@@ -89,11 +89,12 @@ export default function HoldingPage() {
   // Display address is now managed by the context
 
   // TODO: Function to fetch holdings data
-  const fetchHoldings = async () => {
-    if (!account?.address) return;
+  const fetchHoldings = async (overrideAddress?: string) => {
+    const targetAddress = overrideAddress || account?.address;
+    if (!targetAddress) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/holdings?address=${account.address}`); //@note this should be accounts/holdings
+      const res = await fetch(`/api/holdings?address=${targetAddress}`); //@note this should be accounts/holdings
       const data = await res.json();
       setHoldings(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -108,16 +109,29 @@ export default function HoldingPage() {
     fetchHoldings();
   }, [account?.address]);
 
+  // Immediately clear holdings and related UI when user logs out or no address
+  useEffect(() => {
+    if (!authenticated || !account?.address) {
+      setHoldings([]);
+      setIsLoading(false);
+      setReferralAmount(0);
+      setUserReferralCode("");
+      setReferralBy("");
+    }
+  }, [authenticated, account?.address]);
+
   // Listen for holdings refresh events
   useEffect(() => {
-    const handleRefreshHoldings = () => {
-      fetchHoldings();
+    const handleRefreshHoldings = (event: Event) => {
+      const customEvent = event as CustomEvent<{ address?: string }>;
+      const targetAddress = customEvent?.detail?.address;
+      fetchHoldings(targetAddress);
     };
 
-    window.addEventListener("refreshHoldings", handleRefreshHoldings);
+    window.addEventListener("refreshHoldings", handleRefreshHoldings as EventListener);
 
     return () => {
-      window.removeEventListener("refreshHoldings", handleRefreshHoldings);
+      window.removeEventListener("refreshHoldings", handleRefreshHoldings as EventListener);
     };
   }, []);
 
