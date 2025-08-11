@@ -51,8 +51,13 @@ export default function HoldingPage() {
 
   // Use Privy for wallet authentication
   const { user, authenticated, login } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } =
-    useSmartWallet();
+  const {
+    displayAddress,
+    smartWalletClient,
+    isSmartWalletActive,
+    smartWalletAddress,
+    embeddedWalletAddress,
+  } = useSmartWallet();
 
   // Use display address from context
   const account =
@@ -88,15 +93,66 @@ export default function HoldingPage() {
 
   // Display address is now managed by the context
 
-  // TODO: Function to fetch holdings data
+  // Fetch holdings for one or more addresses and merge
   const fetchHoldings = async (overrideAddress?: string) => {
-    const targetAddress = overrideAddress || account?.address;
-    if (!targetAddress) return;
+    const addresses: string[] = [];
+    if (overrideAddress) {
+      addresses.push(overrideAddress);
+    } else {
+      if (smartWalletAddress) addresses.push(smartWalletAddress);
+      if (
+        embeddedWalletAddress &&
+        embeddedWalletAddress !== smartWalletAddress
+      )
+        addresses.push(embeddedWalletAddress);
+    }
+
+    if (addresses.length === 0) return;
+
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/holdings?address=${targetAddress}`); //@note this should be accounts/holdings
-      const data = await res.json();
-      setHoldings(Array.isArray(data) ? data : []);
+      const results = await Promise.all(
+        addresses.map(async (addr) => {
+          const res = await fetch(`/api/holdings?address=${addr}`);
+          try {
+            return await res.json();
+          } catch {
+            return [] as any[];
+          }
+        })
+      );
+
+      // Merge holdings by protocolPairId across addresses (sum amounts)
+      const merged = new Map<string, any>();
+      for (const list of results) {
+        if (Array.isArray(list)) {
+          for (const h of list) {
+            const key = String(h.protocolPairId ?? `${h.protocolName}-${h.pairName}`);
+            const existing = merged.get(key);
+            if (!existing) {
+              merged.set(key, h);
+            } else {
+              merged.set(key, {
+                ...existing,
+                // Sum amounts and pnl across wallets
+                currentAmount:
+                  Number(existing.currentAmount || 0) + Number(h.currentAmount || 0),
+                initialAmount:
+                  Number(existing.initialAmount || 0) + Number(h.initialAmount || 0),
+                pnl: Number(existing.pnl || 0) + Number(h.pnl || 0),
+                // Prefer non-empty protocolLogo/name fields
+                protocolLogo: existing.protocolLogo || h.protocolLogo,
+                protocolName: existing.protocolName || h.protocolName,
+                pairName: existing.pairName || h.pairName,
+                apy: existing.apy ?? h.apy,
+                status: existing.status || h.status,
+                risk: existing.risk || h.risk,
+              });
+            }
+          }
+        }
+      }
+      setHoldings(Array.from(merged.values()));
     } catch (error) {
       setHoldings([]);
     } finally {
@@ -227,13 +283,10 @@ export default function HoldingPage() {
   // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
 
   const filteredHoldings = holdings.filter((h) => {
-    // Exclude holdings where currentAmount is extremely small (scientific notation -10 and below)
-    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-5;
-
-    // Exclude holdings where initialAmount is 0
-    const hasValidInitialAmount = Math.abs(h.initialAmount) >= 1e-5;
-
-    return hasValidInitialAmount && hasVisibleCurrentAmount;
+    // Keep if either current or initial is meaningful
+    const hasVisibleCurrentAmount = Math.abs(h.currentAmount) >= 1e-6;
+    const hasVisibleInitialAmount = Math.abs(h.initialAmount) >= 1e-6;
+    return hasVisibleCurrentAmount || hasVisibleInitialAmount;
   });
 
   // Calculate total holding and pnl using filtered holdings
