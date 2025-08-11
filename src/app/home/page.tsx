@@ -93,6 +93,7 @@ function HomeContent() {
     if (authenticated && walletAddress) {
       fetchBalance(walletAddress);
     } else {
+      setBalance("0.00");
       setIsLoadingBalance(false);
     }
   }, [authenticated, walletAddress]);
@@ -129,7 +130,9 @@ function HomeContent() {
   };
 
   const handleRefreshHoldings = () => {
-    // Refresh holdings
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("refreshHoldings"));
+    }
   };
 
   return (
