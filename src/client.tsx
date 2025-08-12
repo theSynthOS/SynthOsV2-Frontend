@@ -50,7 +50,7 @@ const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         },
         defaultChain: scrollChain,
         supportedChains: [scrollChain],
-        loginMethods: ["email", "wallet", "google", "discord", "apple"],
+        loginMethods: ["email", "twitter", "google", "discord"], //"wallet"
         embeddedWallets: {
           requireUserPasswordOnCreate: false,
           showWalletUIs: false,
