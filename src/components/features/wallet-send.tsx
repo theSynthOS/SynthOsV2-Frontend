@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { usePrivy, useSendTransaction } from "@privy-io/react-auth";
 import Card from "@/components/ui/card";
 import Image from "next/image";
-import { parseUnits, formatUnits } from "viem";
+import { parseUnits, formatUnits, isAddress } from "viem";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { safeHaptic, mediumHaptic, heavyHaptic } from "@/lib/haptic-utils";
@@ -39,7 +39,9 @@ const TOKENS = {
 export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const { theme } = useTheme();
   const [recipient, setRecipient] = useState("");
+  const [recipientError, setRecipientError] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
+  const [amountError, setAmountError] = useState<string | null>(null);
   const { user, authenticated, login } = usePrivy();
   const [balance, setBalance] = useState("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
@@ -53,6 +55,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  
+  // Add a reference to track if modal is closed during processing
+  const modalClosedDuringProcessingRef = useRef(false);
 
   const { sendTransaction } = useSendTransaction();
   const { displayAddress, smartWalletClient, isSmartWalletActive } =
@@ -62,13 +67,64 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
   const account =
     authenticated && displayAddress ? { address: displayAddress } : null;
 
+  // Handle modal close
+  const handleClose = () => {
+    // Only show "in progress" toast if transaction is still processing
+    if (isPending && !txHash && !txError) {
+      // Mark that the modal was closed during processing
+      modalClosedDuringProcessingRef.current = true;
+
+      // Show a toast notification that transaction is still processing
+      toast.info("Transaction in Progress", {
+        description: "Your transfer is still processing in the background",
+      });
+    }
+    
+    // Call the original onClose function
+    onClose();
+  };
+
   // Toggle between USDC and USDT
   const toggleToken = () => {
     const newToken = selectedToken === "USDC" ? "USDT" : "USDC";
     setSelectedToken(newToken);
     setAmount("");
+    setAmountError(null);
     // The useEffect will automatically update the balance for the new token
   };
+
+  // Validate recipient address when it changes
+  useEffect(() => {
+    if (recipient) {
+      if (!recipient.startsWith("0x")) {
+        setRecipientError("Address must start with 0x");
+      } else if (!isAddress(recipient)) {
+        setRecipientError("Invalid Ethereum address format");
+      } else {
+        setRecipientError(null);
+      }
+    } else {
+      setRecipientError(null);
+    }
+  }, [recipient]);
+
+  // Validate amount when it changes
+  useEffect(() => {
+    if (amount) {
+      const amountNum = parseFloat(amount);
+      const balanceNum = parseFloat(balance);
+      
+      if (amountNum <= 0) {
+        setAmountError("Amount must be greater than 0");
+      } else if (amountNum > balanceNum) {
+        setAmountError(`Insufficient balance. Maximum: ${balance}`);
+      } else {
+        setAmountError(null);
+      }
+    } else {
+      setAmountError(null);
+    }
+  }, [amount, balance]);
 
   // Fetch token balance when account changes (like settings panel)
   useEffect(() => {
@@ -224,6 +280,40 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       return;
     }
 
+    // Reset the modalClosedDuringProcessingRef flag when starting a new transaction
+    modalClosedDuringProcessingRef.current = false;
+
+    // Validate recipient address before proceeding
+    if (!recipient.startsWith("0x") || !isAddress(recipient)) {
+      setTxError("Invalid recipient address");
+      safeHaptic("error");
+      toast.error("Invalid recipient address", {
+        description: "Please enter a valid Ethereum address starting with 0x",
+      });
+      return;
+    }
+
+    // Validate amount before proceeding
+    const amountNum = parseFloat(amount);
+    const balanceNum = parseFloat(balance);
+    if (amountNum <= 0) {
+      setTxError("Invalid amount");
+      safeHaptic("error");
+      toast.error("Invalid amount", {
+        description: "Amount must be greater than 0",
+      });
+      return;
+    }
+    
+    if (amountNum > balanceNum) {
+      setTxError("Insufficient balance");
+      safeHaptic("error");
+      toast.error("Insufficient balance", {
+        description: `You only have ${balance} ${selectedToken} available`,
+      });
+      return;
+    }
+
     try {
       setIsPending(true);
       setTxError(null);
@@ -263,14 +353,54 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       // Clear any previous error
       setTxError(null);
 
-      // Set transaction hash for success display
-      setTxHash(result.hash);
+      // Extract and normalize the transaction hash from the result
+      let transactionHash = '';
+      
+      // Handle different result formats
+      if (result) {
+        if (typeof result === 'string') {
+          // If result is directly the hash string
+          transactionHash = result;
+        } else if (result.hash) {
+          // If result has a hash property
+          transactionHash = result.hash;
+        } else if (result.transactionHash) {
+          // Some wallets return transactionHash instead of hash
+          transactionHash = result.transactionHash;
+        }
+      }
+      
+      // Set transaction hash for success display if we have one
+      if (transactionHash) {
+        setTxHash(transactionHash);
+      }
 
       // Success haptic feedback
       safeHaptic("success");
-      toast.success(`Your ${selectedToken} has been sent successfully!`, {
-        description: "Transaction has been submitted to the network",
-      });
+      
+      // Ensure the transaction hash is properly formatted (remove any leading/trailing whitespace)
+      // and handle the case where it might be undefined
+      const formattedHash = transactionHash ? transactionHash.trim() : '';
+      
+      // Show success toast only if the modal wasn't closed during processing
+      if (!modalClosedDuringProcessingRef.current) {
+        toast.success(`Your ${selectedToken} has been sent successfully!`, {
+          description: "Transaction has been submitted to the network",
+          action: transactionHash ? {
+            label: "View Transaction",
+            onClick: () => window.open(`https://scrollscan.com/tx/${formattedHash}`, "_blank"),
+          } : undefined,
+        });
+      } else {
+        // If modal was closed during processing, show a different toast with transaction link
+        toast.success(`${selectedToken} Transfer Complete`, {
+          description: `Your transfer of ${amount} ${selectedToken} was successful`,
+          action: transactionHash ? {
+            label: "View Transaction",
+            onClick: () => window.open(`https://scrollscan.com/tx/${formattedHash}`, "_blank"),
+          } : undefined,
+        });
+      }
 
       // Reset form
       setAmount("");
@@ -302,17 +432,34 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
         } else if (error.message.includes("user rejected")) {
           errorMessage = "Transaction cancelled by user";
           errorDescription = "You cancelled the transaction";
+        } else if (error.message.includes("invalid address")) {
+          errorMessage = "Invalid recipient address";
+          errorDescription = "Please enter a valid Ethereum address";
+        } else if (error.message.includes("execution reverted")) {
+          errorMessage = "Transaction rejected by network";
+          errorDescription = "The network rejected this transaction";
         } else {
-          errorMessage = error.message;
-          errorDescription = "An unexpected error occurred";
+          // Make technical error messages more user-friendly
+          errorMessage = "Transaction failed";
+          errorDescription = "An error occurred while processing your transaction";
+          console.error("Original error:", error.message);
         }
       }
 
       setTxError(errorMessage);
       safeHaptic("error");
-      toast.error(errorMessage, {
-        description: errorDescription,
-      });
+      
+      // Show error toast, considering if the modal was closed
+      if (!modalClosedDuringProcessingRef.current) {
+        toast.error(errorMessage, {
+          description: errorDescription,
+        });
+      } else {
+        // If modal was closed, show a more detailed error toast
+        toast.error("Transfer Failed", {
+          description: errorDescription || "Your transaction could not be completed",
+        });
+      }
     } finally {
       setIsPending(false);
     }
@@ -324,7 +471,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     <>
       <div
         className="fixed inset-0 z-[999] flex items-center justify-center p-4"
-        onClick={onClose}
+        onClick={handleClose}
       >
         {/* Backdrop */}
         <div
@@ -337,7 +484,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
           className="relative z-10 w-full max-w-md"
           onClick={(e) => e.stopPropagation()}
         >
-          <Card title={`Send ${selectedToken}`} onClose={onClose}>
+          <Card title={`Send ${selectedToken}`} onClose={handleClose}>
             <div className="max-h-[60vh]">
               {!account ? (
                 <div
@@ -433,11 +580,14 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                         theme === "dark"
                           ? "bg-gray-800 border-gray-700 text-white"
                           : "bg-white border-gray-300 text-black"
-                      } rounded-lg`}
+                      } ${recipientError ? "border-red-500" : ""} rounded-lg`}
                       value={recipient}
                       onChange={(e) => setRecipient(e.target.value)}
                       disabled={isPending}
                     />
+                    {recipientError && (
+                      <p className="mt-1 text-sm text-red-500">{recipientError}</p>
+                    )}
                   </div>
 
                   {/* Amount */}
@@ -482,7 +632,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                           theme === "dark"
                             ? "bg-gray-800 border-gray-700 text-white"
                             : "bg-white border-gray-300 text-black"
-                        } rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                        } ${amountError ? "border-red-500" : ""} rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         disabled={isPending}
@@ -497,6 +647,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                         </span>
                       </div>
                     </div>
+                    {amountError && (
+                      <p className="mt-1 text-sm text-red-500">{amountError}</p>
+                    )}
                   </div>
 
                   {/* Error Message */}
@@ -525,14 +678,18 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                       !amount ||
                       parseFloat(amount) <= 0 ||
                       isLoadingBalance ||
-                      isPending
+                      isPending ||
+                      !!recipientError ||
+                      !!amountError
                     }
                     className={`w-full mt-4 bg-[#8266E6] dark:bg-[#3C229C] hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors ${
                       !recipient ||
                       !amount ||
                       parseFloat(amount) <= 0 ||
                       isLoadingBalance ||
-                      isPending
+                      isPending ||
+                      !!recipientError ||
+                      !!amountError
                         ? "opacity-50 cursor-not-allowed"
                         : ""
                     }`}
@@ -542,7 +699,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
 
                   {/* Transaction Success */}
                   {txHash && (
-                    <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg">
+                    <div className="mt-4 p-3 bg-purple-100 dark:bg-purple-900/30 text-black-800 dark:text-white rounded-lg">
                       <p className="text-sm">Transaction sent successfully!</p>
                       <a
                         href={`https://scrollscan.com/tx/${txHash}`}
@@ -550,7 +707,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                         rel="noopener noreferrer"
                         className="text-xs mt-1 block"
                       >
-                        <p className="underline">[View on Scroll Explorer]</p>
+                        <p className="underline">[View transaction]</p>
                       </a>
                     </div>
                   )}
