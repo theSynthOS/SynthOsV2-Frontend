@@ -527,7 +527,7 @@ export default function WithdrawModal({
           body: JSON.stringify({
             address: address,
             hash: result.transactionHash,
-            amount: amount,
+            amount: parseFloat(amount).toFixed(3),
             type: "withdraw",
             status: "completed",
           }),
@@ -547,10 +547,13 @@ export default function WithdrawModal({
         // Success haptic feedback
         safeHaptic("success");
 
+        // Format amount to 3 decimal places
+        const formattedAmount = parseFloat(amount).toFixed(3);
+        
         // Show success toast and close modal
         toast.success("Withdrawal Successful", {
           id: toastId,
-          description: `Successfully withdrawn ${amount} ${selectedToken}`,
+          description: `Successfully withdrawn ${formattedAmount} ${selectedToken}`,
           duration: 5000,
           action: {
             label: "View Transaction",

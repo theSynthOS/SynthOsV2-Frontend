@@ -559,9 +559,12 @@ export default function DepositModal({
       if (!modalClosedDuringProcessingRef.current) {
         setShowSuccessModal(true);
       } else {
+        // Format amount to 3 decimal places
+        const formattedAmount = parseFloat(amount).toFixed(3);
+        
         // Then show the success toast
         toast.success("Deposit Successful", {
-          description: `$${amount} deposited into ${pool?.name}`,
+          description: `$${formattedAmount} deposited into ${pool?.name}`,
           duration: 5000,
           action: {
             label: "View Transaction",
