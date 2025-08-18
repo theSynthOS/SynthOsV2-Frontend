@@ -117,7 +117,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       if (amountNum <= 0) {
         setAmountError("Amount must be greater than 0");
       } else if (amountNum > balanceNum) {
-        setAmountError(`Insufficient balance. Maximum: ${balance}`);
+        setAmountError(`Insufficient balance. Maximum: ${parseFloat(balance).toFixed(3)}`);
       } else {
         setAmountError(null);
       }
@@ -308,8 +308,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
     if (amountNum > balanceNum) {
       setTxError("Insufficient balance");
       safeHaptic("error");
+      const formattedBalance = parseFloat(balance).toFixed(3);
       toast.error("Insufficient balance", {
-        description: `You only have ${balance} ${selectedToken} available`,
+        description: `You only have ${formattedBalance} ${selectedToken} available`,
       });
       return;
     }
@@ -382,6 +383,9 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       // and handle the case where it might be undefined
       const formattedHash = transactionHash ? transactionHash.trim() : '';
       
+      // Format amount to 3 decimal places for toast messages
+      const formattedAmount = parseFloat(amount).toFixed(3);
+      
       // Show success toast only if the modal wasn't closed during processing
       if (!modalClosedDuringProcessingRef.current) {
         toast.success(`Your ${selectedToken} has been sent successfully!`, {
@@ -394,7 +398,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
       } else {
         // If modal was closed during processing, show a different toast with transaction link
         toast.success(`${selectedToken} Transfer Complete`, {
-          description: `Your transfer of ${amount} ${selectedToken} was successful`,
+          description: `Your transfer of ${formattedAmount} ${selectedToken} was successful`,
           action: transactionHash ? {
             label: "View Transaction",
             onClick: () => window.open(`https://scrollscan.com/tx/${formattedHash}`, "_blank"),
@@ -557,7 +561,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                           >
                             {isLoadingBalance
                               ? "Loading..."
-                              : `${balance} ${currentToken.symbol}`}
+                              : `${parseFloat(balance).toFixed(3)} ${currentToken.symbol}`}
                           </div>
                         </div>
                       </div>
@@ -606,7 +610,7 @@ export default function SendModal({ isOpen, onClose }: SendModalProps) {
                             theme === "dark" ? "text-gray-400" : "text-gray-500"
                           }`}
                         >
-                          Balance: {balance} {currentToken.symbol}
+                          Balance: {parseFloat(balance).toFixed(3)} {currentToken.symbol}
                         </span>
                         <button
                           className={`text-xs px-2 py-1 rounded ${

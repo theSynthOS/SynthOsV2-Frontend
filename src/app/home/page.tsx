@@ -208,7 +208,7 @@ function HomeContent() {
                         {isLoadingBalance ? (
                           <Skeleton className="w-32 h-7 xl:w-52 xl:h-12 rounded-sm bg-gray-300 dark:bg-gray-800 mx-auto xl:mx-0" />
                         ) : (
-                          `$${parseFloat(balance).toFixed(2)}`
+                          `$${parseFloat(balance).toFixed(3)}`
                         )}
                       </div>
                       {/* Action Buttons-- originally justify-between */}
