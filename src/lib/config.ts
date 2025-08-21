@@ -40,6 +40,7 @@ export const apiEndpoints = {
 
   // Protocol endpoints
   protocolPairs: () => `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs`,
+  
   protocolPairsApy: () =>
     `${config.SYNTHOS_BACKEND_URL}/protocol/protocol-pairs-apy`,
   protocolPairsApySingle: (id: string) =>

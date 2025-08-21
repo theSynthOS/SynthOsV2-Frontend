@@ -10,7 +10,6 @@ import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loading } from "@/components/ui/loading";
 import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
-import { usePoints } from "@/contexts/PointsContext";
 import SendModal from "@/components/features/wallet-send";
 import BuyModal from "@/components/features/wallet-buy";
 import WalletDeposit from "@/components/features/wallet-deposit";
@@ -52,7 +51,6 @@ function SearchParamsHandler({
 function HomeContent() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { refreshPoints } = usePoints();
   const [balance, setBalance] = useState<string>("0.00");
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -77,8 +75,7 @@ function HomeContent() {
       }
       const data = await response.json();
       setBalance(data.totalUsdBalance || "0.00");
-      // Only refresh points when balance actually changes significantly
-      // refreshPoints();
+
       return data.totalUsdBalance || "0.00";
     } catch (error) {
       setBalance("0.00");

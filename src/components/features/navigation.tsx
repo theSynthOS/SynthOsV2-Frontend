@@ -2,23 +2,21 @@
 
 import { Home, Award, Wallet } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
-import { usePoints } from "@/contexts/PointsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { mediumHaptic } from "@/lib/haptic-utils";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = useTheme();
   const { user, authenticated } = usePrivy();
   const { displayAddress, smartWalletClient, isSmartWalletActive } = useSmartWallet();
-  const [totalPoints, setTotalPoints] = useState<number | null>(null);
-  const { lastRefresh } = usePoints();
-  const [isLoadingPoints, setIsLoadingPoints] = useState(false);
 
   // Use display address from context
   const account = authenticated && displayAddress ? { address: displayAddress } : null;
@@ -33,42 +31,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const fetchPoints = async () => {
-      if (!account?.address) return;
-      try {
-        setIsLoadingPoints(true);
-        // TODO: Implement points fetching with API
-        // const params = new URLSearchParams();
-        // if (account.address) params.append("address", account.address);
-        // const res = await fetch(`/api/points?${params.toString()}`);
-        // const data = await res.json();
-        // if (data.user) {
-        //   const u = data.user;
-        //   setTotalPoints(
-        //     (u.pointsLogin || 0) +
-        //       (u.pointsDeposit || 0) +
-        //       (u.pointsFeedback || 0) +
-        //       (u.pointsShareX || 0) +
-        //       (u.pointsTestnetClaim || 0)
-        //   );
-        // } else {
-        //   setTotalPoints(null);
-        // }
-        
-        // Temporary placeholder
-        setTotalPoints(0);
-      } catch (e) {
-        setTotalPoints(null);
-      } finally {
-        setIsLoadingPoints(false);
-      }
-    };
-    fetchPoints();
-  }, [account]);
-
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handlePointsClick = () => {
+    mediumHaptic();
+    router.push("/points");
   };
 
   return (
@@ -108,58 +77,31 @@ export default function Navbar() {
             Home
           </span>
         </Link>
+
         {/* Points */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20">
+        <button
+          onClick={handlePointsClick}
+          className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center z-20 group"
+        >
           <div
-            className={`rounded-full border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2 ${
+            className={`rounded-full border-2 border-[#8266E6] shadow-lg shadow-[#8266E6]/50 flex flex-col items-center justify-center w-24 h-24 p-2 transition-all duration-200 group-hover:border-purple-500 group-hover:shadow-purple-500/50 ${
               theme === "dark" ? "bg-gray-800" : "bg-purple-100"
             }`}
           >
-            <Award className="h-8 w-8 text-[#8266E6]" />
-            {!account?.address ? (
-              <>
-                <span
-                  className={`text-lg font-bold mt-2 ${
-                    theme === "dark" ? "text-purple-300" : "text-[#573faf]"
-                  }`}
-                >
-                  0
-                </span>
-                <span className="text-sm font-semibold text-[#8266E6]">
-                  Pts
-                </span>
-              </>
-            ) : isLoadingPoints || totalPoints === null ? (
-              <div className="flex flex-col items-center mt-2 w-full">
-                <Skeleton
-                  className={`w-12 h-6 rounded mb-2 ${
-                    theme === "dark" ? "bg-gray-700" : "bg-purple-200"
-                  }`}
-                />
-                <span
-                  className={`text-sm font-semibold ${
-                    theme === "dark" ? "text-purple-400" : "text-purple-600"
-                  }`}
-                >
-                  Pts
-                </span>
-              </div>
-            ) : (
-              <>
-                <span
-                  className={`text-lg font-bold mt-2 ${
-                    theme === "dark" ? "text-purple-300" : "text-[#573faf]"
-                  }`}
-                >
-                  {totalPoints}
-                </span>
-                <span className="text-sm font-semibold text-[#8266E6]">
-                  Pts
-                </span>
-              </>
-            )}
+            <Award className="h-8 w-8 text-[#8266E6] group-hover:text-purple-500 transition-colors" />
+            <span
+              className={`text-lg font-bold mt-2 transition-colors ${
+                theme === "dark" ? "text-purple-300" : "text-[#573faf]"
+              } group-hover:text-purple-500`}
+            >
+              0
+            </span>
+            <span className="text-sm font-semibold text-[#8266E6] group-hover:text-purple-500 transition-colors">
+              Pts
+            </span>
           </div>
-        </div>
+        </button>
+
         {/* Holdings */}
         <Link
           href="/holding"

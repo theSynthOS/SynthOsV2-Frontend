@@ -817,8 +817,7 @@ export default function HoldingPage() {
 
                   {/* Skeleton for info text */}
                   <div className="text-xs text-center">
-                    Share your referral code with friends to earn points when
-                    they deposited!
+                    Share your referral code with friends!
                   </div>
                 </div>
               ) : (
@@ -949,8 +948,7 @@ export default function HoldingPage() {
                       theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
                     } text-center`}
                   >
-                    Share your referral code with friends to earn points when
-                    they deposited!
+                    Share your referral code with friends!
                   </div>
                 </div>
               )}

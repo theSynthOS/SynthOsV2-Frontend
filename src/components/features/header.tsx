@@ -1,6 +1,6 @@
 "use client";
 
-import { History, Settings, Moon, Sun } from "lucide-react";
+import { History, Settings, Moon, Sun, Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -9,7 +9,6 @@ import SettingsPanel from "@/components/setting-panel/settings-panel";
 import HistoryPanel from "@/components/features/history-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrivy } from "@privy-io/react-auth";
-import { usePoints } from "@/contexts/PointsContext";
 import { mediumHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
 import { createPortal } from "react-dom";
@@ -24,9 +23,6 @@ export default function Header() {
   const { user, authenticated } = usePrivy();
   const { displayAddress, smartWalletClient, isSmartWalletActive } =
     useSmartWallet();
-  const [totalPoints, setTotalPoints] = useState<number | null>(null);
-  const [isLoadingPoints, setIsLoadingPoints] = useState(false);
-  const { lastRefresh } = usePoints();
 
   // Use display address from context
   const account =
@@ -36,42 +32,6 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    const fetchPoints = async () => {
-      if (!authenticated || !account?.address) return;
-      try {
-        setIsLoadingPoints(true);
-        const params = new URLSearchParams();
-        if (account.address) params.append("address", account.address);
-        const res = await fetch(`/api/points?${params.toString()}`);
-        const data = await res.json();
-        if (data.user) {
-          const u = data.user;
-          setTotalPoints(
-            (u.pointsLogin || 0) +
-              (u.pointsDeposit || 0) +
-              (u.pointsFeedback || 0) +
-              (u.pointsShareX || 0) +
-              (u.pointsTestnetClaim || 0)
-          );
-        } else {
-          setTotalPoints(null);
-        }
-      } catch (e) {
-        setTotalPoints(null);
-      } finally {
-        setIsLoadingPoints(false);
-      }
-    };
-
-    // Add debouncing to prevent rapid successive calls
-    const timeoutId = setTimeout(() => {
-      fetchPoints();
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [authenticated, account?.address, lastRefresh]);
 
   // Toggle theme between dark and light
   const toggleTheme = () => {
@@ -89,6 +49,11 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handlePointsClick = () => {
+    mediumHaptic();
+    router.push("/points");
+  };
 
   return (
     <div
@@ -112,36 +77,21 @@ export default function Header() {
       {/* Action buttons */}
       <div className="flex items-center space-x-2">
         {/* Points Rectangle - only show on XL screens */}
-        <div className="hidden xl:flex items-center ml-2">
-          <div className="flex items-center justify-center w-28 h-12 px-4 rounded-lg border-2 border-[#8266E6] bg-white dark:bg-[#1E1E1E] shadow-sm">
-            {!account?.address ? (
-              <>
-                <span className="text-lg font-bold text-[#8266E6] dark:text-[#FFD659] mr-2">
-                  0
-                </span>
-                <span className="text-xs font-semibold text-[#8266E6]">
-                  Pts
-                </span>
-              </>
-            ) : isLoadingPoints || totalPoints === null ? (
-              <div className="flex items-center w-full">
-                <Skeleton className="w-16 h-6 rounded mr-2 bg-gray-300 dark:bg-gray-700" />
-                <span className="text-xs font-semibold text-[#8266E6]">
-                  Pts
-                </span>
-              </div>
-            ) : (
-              <>
-                <span className="text-lg font-bold text-[#8266E6] dark:text-[#FFD659] mr-2">
-                  {totalPoints}
-                </span>
-                <span className="text-xs font-semibold text-[#8266E6]">
-                  Pts
-                </span>
-              </>
-            )}
+        <button
+          onClick={handlePointsClick}
+          className="hidden xl:flex items-center ml-2 group"
+        >
+          <div className="flex items-center justify-center w-28 h-12 px-4 rounded-lg border-2 border-[#8266E6] bg-white dark:bg-[#1E1E1E] shadow-sm transition-all duration-200 group-hover:border-purple-500 group-hover:shadow-lg">
+            <Award className="h-5 w-5 text-[#8266E6] mr-2 group-hover:text-purple-500 transition-colors" />
+            <span className="text-lg font-bold text-[#8266E6] dark:text-[#FFD659] group-hover:text-purple-500 transition-colors">
+              0
+            </span>
+            <span className="text-xs font-semibold text-[#8266E6] ml-1 group-hover:text-purple-500 transition-colors">
+              Pts
+            </span>
           </div>
-        </div>
+        </button>
+
         {/* Theme toggle button */}
         <button
           onClick={toggleTheme}

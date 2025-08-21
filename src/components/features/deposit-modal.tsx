@@ -597,71 +597,9 @@ export default function DepositModal({
         }
       } catch {}
 
-      // Add 10 points for deposit only if amount >= 10
-      if (parseFloat(amount) >= 10) {
-        fetch("/api/points/deposit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: actualSenderAddress }),
-        })
-          .then((res) => {
-            return res.json();
-          })
-          .then((data) => {
-            // Fetch updated points
-            return fetch(
-              `/api/points?address=${encodeURIComponent(actualSenderAddress ?? "")}`
-            );
-          })
-          .then((res) => {
-            return res.json();
-          })
-          .then((data) => {})
-          .catch(() => {});
 
-        // Add referral points logic
-        fetch("/api/referral-points", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            address: actualSenderAddress,
-            amount: amount,
-          }),
-        })
-          .then((res) => {
-            return res.json();
-          })
-          .then((data) => {
-            if (data.success && data.pointsAdded > 0) {
-              toast.success("Referral Bonus", {
-                description: `You earned ${data.pointsAdded} points!`,
-              });
-            }
-          })
-          .catch(() => {});
-      }
 
-      // Save transaction to database
-      try {
-        const response = await fetch("/api/transactions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            address: actualSenderAddress,
-            hash: txHash,
-            amount: amount,
-            type: "deposit",
-            status: "completed",
-          }),
-        });
 
-        const data = await response.json();
-        if (!data.success) {
-        } else {
-        }
-      } catch (error) {}
     } catch (error) {
       // Error haptic feedback
       safeHaptic("error");

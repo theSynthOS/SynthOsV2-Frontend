@@ -4,7 +4,6 @@ import { ReactNode } from "react";
 // import PullToRefresh from "@/components/features/pull-to-refresh";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
-import { PointsProvider } from "@/contexts/PointsContext";
 import Header from "@/components/features/header";
 import Navbar from "@/components/features/navigation";
 import { ThemeBackground } from "@/components/ui/theme-background";
@@ -32,30 +31,28 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <PointsProvider>
-        <ThemeBackground className="min-h-screen">
-          {/* Only show header on non-landing pages */}
-          {!isLandingPage && (
-            <div className="z-50">
-              <Header />
-            </div>
-          )}
+      <ThemeBackground className="min-h-screen">
+        {/* Only show header on non-landing pages */}
+        {!isLandingPage && (
+          <div className="z-50">
+            <Header />
+          </div>
+        )}
 
-          <main className={`${!isLandingPage ? "pb-24" : ""}`}>
-            {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
-            {children}
-            {/* </PullToRefresh> */}
-          </main>
+        <main className={`${!isLandingPage ? "pb-24" : ""}`}>
+          {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
+          {children}
+          {/* </PullToRefresh> */}
+        </main>
 
-          {/* Only show navbar on non-landing pages */}
-          {!isLandingPage && (
-            <div className="fixed bottom-0 left-0 right-0 z-50">
-              <Navbar />
-            </div>
-          )}
-          <Toaster />
-        </ThemeBackground>
-      </PointsProvider>
+        {/* Only show navbar on non-landing pages */}
+        {!isLandingPage && (
+          <div className="fixed bottom-0 left-0 right-0 z-50">
+            <Navbar />
+          </div>
+        )}
+        <Toaster />
+      </ThemeBackground>
     </ThemeProvider>
   );
 }
