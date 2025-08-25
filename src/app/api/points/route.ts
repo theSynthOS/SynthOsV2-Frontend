@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const address = searchParams.get("address");
+    const countReferrals = searchParams.get("countReferrals");
 
     if (!address) {
       return NextResponse.json(
@@ -94,7 +95,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("GET /api/points - Address:", address);
+    console.log(
+      "GET /api/points - Address:",
+      address,
+      "CountReferrals:",
+      countReferrals
+    );
 
     // Check if environment variables are set
     if (
@@ -111,6 +117,46 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient(cookies());
 
     console.log("Supabase client created successfully");
+
+    // If counting referrals, get the user's referral code first
+    if (countReferrals === "true") {
+      const { data: userData, error: userError } = await supabase
+        .from("points")
+        .select("referralCode")
+        .eq("address", address)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user for referral count:", userError);
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      if (!userData.referralCode) {
+        return NextResponse.json({
+          success: true,
+          referralCount: 0,
+        });
+      }
+
+      // Count how many users have this user's referral code in their referralBy
+      const { count, error: countError } = await supabase
+        .from("points")
+        .select("*", { count: "exact", head: true })
+        .eq("referralBy", userData.referralCode);
+
+      if (countError) {
+        console.error("Error counting referrals:", countError);
+        return NextResponse.json(
+          { error: "Failed to count referrals" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        referralCount: count || 0,
+      });
+    }
 
     // Ensure table exists
     const tableExists = await ensurePointsTableExists(supabase);

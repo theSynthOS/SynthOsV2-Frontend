@@ -97,6 +97,18 @@ export default function PointsPage() {
       })
       .catch(() => {
         // Error handling
+      });
+
+    // Fetch referral count
+    fetch(`/api/points?address=${account.address}&countReferrals=true`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setReferralAmount(data.referralCount || 0);
+        }
+      })
+      .catch(() => {
+        // Error handling
       })
       .finally(() => {
         setIsLoadingReferral(false);
@@ -138,6 +150,15 @@ export default function PointsPage() {
             if (refreshData.success && refreshData.data) {
               setUserReferralCode(refreshData.data.referralCode || "");
               setReferralBy(refreshData.data.referralBy || "");
+            }
+
+            // Refresh referral count
+            const countResponse = await fetch(
+              `/api/points?address=${account.address}&countReferrals=true`
+            );
+            const countData = await countResponse.json();
+            if (countData.success) {
+              setReferralAmount(countData.referralCount || 0);
             }
           } else {
             // Show error toast for URL referral code issues
@@ -263,6 +284,15 @@ export default function PointsPage() {
         if (refreshData.success && refreshData.data) {
           setUserReferralCode(refreshData.data.referralCode || "");
           setReferralBy(refreshData.data.referralBy || "");
+        }
+
+        // Refresh referral count
+        const countResponse = await fetch(
+          `/api/points?address=${account.address}&countReferrals=true`
+        );
+        const countData = await countResponse.json();
+        if (countData.success) {
+          setReferralAmount(countData.referralCount || 0);
         }
       } else {
         // Handle specific error messages
