@@ -56,9 +56,20 @@ export default function PointsPage() {
 
       try {
         setIsLoading(true);
-        // For now, we'll use a placeholder since we removed the points API
-        // You can implement your own points system here
-        setTotalPoints(1250);
+        // Fetch points data from API
+        const response = await fetch(`/api/points?address=${account.address}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          // Calculate total points from all sources
+          const total =
+            (data.data.pointsReferral || 0) +
+            (data.data.pointsX || 0) +
+            (data.data.pointsTG || 0);
+          setTotalPoints(total);
+        } else {
+          setTotalPoints(0);
+        }
       } catch (error) {
         console.error("Error fetching points:", error);
         setTotalPoints(0);

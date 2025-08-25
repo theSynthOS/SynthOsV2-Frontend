@@ -461,7 +461,8 @@ export default function WithdrawModal({
             throw new Error("Transaction failed to execute");
           }
 
-          const maybeHash = (lastTxResult && (lastTxResult.hash || lastTxResult)) as string;
+          const maybeHash = (lastTxResult &&
+            (lastTxResult.hash || lastTxResult)) as string;
           result = { transactionHash: maybeHash };
         } catch (error) {
           throw error;
@@ -549,7 +550,7 @@ export default function WithdrawModal({
 
         // Format amount to 3 decimal places
         const formattedAmount = parseFloat(amount).toFixed(3);
-        
+
         // Show success toast and close modal
         toast.success("Withdrawal Successful", {
           id: toastId,
@@ -578,7 +579,9 @@ export default function WithdrawModal({
           const senderAddress = address;
           if (typeof window !== "undefined") {
             window.dispatchEvent(
-              new CustomEvent("refreshHoldings", { detail: { address: senderAddress } })
+              new CustomEvent("refreshHoldings", {
+                detail: { address: senderAddress },
+              })
             );
           }
         } catch {}

@@ -65,6 +65,54 @@ function HomeContent() {
   // Use display address from context
   const walletAddress = displayAddress;
 
+  // Register user in points system when they log in
+  const registerUser = async (address: string) => {
+    try {
+      // Check if user already exists
+      const checkResponse = await fetch(`/api/points?address=${address}`);
+      const checkData = await checkResponse.json();
+
+      if (checkData.success && checkData.data) {
+        // User already exists, no need to register
+        console.log("User already registered:", checkData.data);
+        return;
+      }
+
+      // Get referral code from URL if present
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralCode = urlParams.get("ref");
+
+      // Register new user
+      const response = await fetch("/api/points", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          address: address,
+          referralCode: referralCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("User registered successfully:", data.data);
+
+        // Clear referral code from URL if it was used
+        if (referralCode) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("ref");
+          window.history.replaceState({}, "", newUrl.toString());
+        }
+      } else {
+        console.error("Failed to register user:", data.error);
+      }
+    } catch (error) {
+      console.error("Error registering user:", error);
+    }
+  };
+
   const fetchBalance = async (walletAddress: string) => {
     try {
       setIsLoadingBalance(true);
@@ -92,6 +140,13 @@ function HomeContent() {
     } else {
       setBalance("0.00");
       setIsLoadingBalance(false);
+    }
+  }, [authenticated, walletAddress]);
+
+  // Register user when they log in
+  useEffect(() => {
+    if (authenticated && walletAddress) {
+      registerUser(walletAddress);
     }
   }, [authenticated, walletAddress]);
 
