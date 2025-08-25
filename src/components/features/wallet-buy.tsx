@@ -3,7 +3,7 @@ import { useTheme } from "next-themes";
 import { usePrivy } from "@privy-io/react-auth";
 import { toast } from "sonner";
 import Card from "@/components/ui/card";
-import { CreditCard, ArrowRight, ExternalLink, Wallet } from "lucide-react";
+import { CreditCard, ArrowRight, ExternalLink, Wallet, AlertCircle } from "lucide-react";
 import { useBalance } from "@/contexts/BalanceContext";
 import { DaimoPayButton } from "@daimo/pay";
 import { scrollUSDC, scrollUSDT } from "@daimo/pay-common";
@@ -42,10 +42,12 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
   const [daimoAmount, setDaimoAmount] = useState(""); // Default amount for Daimo Pay
   const [selectedToken, setSelectedToken] = useState<StablecoinType>("USDC");
   const { refreshBalance, refreshHoldings } = useBalance();
-  const { smartWalletAddress } = useSmartWallet();
+  const { smartWalletAddress, isSmartWalletActive } = useSmartWallet();
 
-  // Get wallet address from Privy user - prioritize smart wallet address if available
-  const walletAddress = smartWalletAddress || user?.wallet?.address;
+  // IMPORTANT: Always use smart wallet address if available, never fallback to embedded wallet
+  const walletAddress = smartWalletAddress;
+  
+  // Only consider account valid if we have a smart wallet address
   const account = authenticated && walletAddress ? { address: walletAddress } : null;
 
   // Set mounted state once hydration is complete
@@ -61,16 +63,17 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
   }, [authenticated, smartWalletAddress, user?.wallet?.address, walletAddress]);
 
   const handleDaimoPaymentStarted = (e: any) => {
+    
     toast.info("Deposit Started", {
-      description: `Depositing to ${account?.address?.substring(0, 8)}...${account?.address?.substring(account?.address.length - 6)}`
+      description: `Depositing to Smart Wallet`
     });
     console.log("Deposit started:", e);
-    console.log("Deposit destination:", account?.address);
+    console.log("Deposit destination:", smartWalletAddress);
   };
 
   const handleDaimoPaymentCompleted = (e: any) => {
     toast.success("Deposit Completed", {
-      description: `Funds have been added to ${account?.address?.substring(0, 8)}...${account?.address?.substring(account?.address.length - 6)}`
+      description: `Funds have been added to your Smart Wallet`
     });
     console.log("Deposit completed:", e);
     
@@ -107,12 +110,8 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
       >
         <Card title="Buy Crypto" onClose={onClose}>
           <div className="max-h-[60vh] p-4">
-            {!account ? (
-              <div
-                className={`${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                } rounded-lg p-6 text-center`}
-              >
+            {!authenticated ? (
+              <div className="text-center">
                 <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p
                   className={`${
@@ -134,60 +133,33 @@ export default function BuyModal({ isOpen, onClose }: BuyModalProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Token Selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-3">
-                    Select Token to Deposit
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(TOKENS).map(([key, token]) => (
-                      <button
-                        key={key}
-                        onClick={() => setSelectedToken(key as StablecoinType)}
-                        className={`flex items-center p-3 rounded-lg border-2 transition-all ${
-                          selectedToken === key
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                        }`}
-                      >
-                        <img
-                          src={token.icon}
-                          alt={token.name}
-                          className="w-6 h-6 mr-2"
-                        />
-                        <span className="font-medium">{token.symbol}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                  
+                
                 {/* Daimo Pay Section */}
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-4 rounded-lg">
+                  <div className="">
                    
-                    <div className="flex items-center space-x-3 mb-4">     
+                    <div className="flex items-center space-x-3 mb-4">   
+                       {/* Display the destination address so users know where funds will go */}
+                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center">
+                      <p className="font-medium">We only accept USDT and USDC on this address</p>
+                      <p className="font-medium">Please check properly the token before depositing</p>
+                    </div>  
                       {account && (
                         <div className="flex-1">
                           {/* Wrap DaimoPayButton in an error boundary to prevent crashes */}
                           <div className="w-full">
                             <DaimoPayButton
-                              appId={process.env.NEXT_PUBLIC_DAIMO_PAY_API || ''} // Use your actual app ID in production
-                              toChain={currentToken.daimoToken.chainId} // Use the selected token's chain ID
+                              appId={process.env.NEXT_PUBLIC_DAIMO_PAY_API || ''} 
+                              toChain={currentToken.daimoToken.chainId}
                               toToken={getAddress(currentToken.daimoToken.token)}
-                              toAddress={getAddress(account.address)}
-                              intent="Deposit"
+                              toAddress={getAddress(smartWalletAddress!)}
+                              intent="Deposit to Smart Wallet"
                               onDepositStarted={handleDaimoPaymentStarted}
                               onDepositCompleted={handleDaimoPaymentCompleted}
                             />
                           </div>
                         </div>
                       )}
-                    </div>
-
-                    {/* Display the destination address so users know where funds will go */}
-                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center">
-                      <p>{smartWalletAddress ? "Funds will be deposited to your smart wallet:" : "Funds will be deposited to your wallet:"}</p>
-                      <p className="font-mono mt-1 truncate">{account?.address}</p>
                     </div>
                   </div>
                 </div>
