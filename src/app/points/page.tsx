@@ -85,12 +85,14 @@ export default function PointsPage() {
   useEffect(() => {
     if (!account?.address) return;
     setIsLoadingReferral(true);
-    fetch(`/api/referral?address=${account.address}`)
+
+    // Fetch points data which includes referral information
+    fetch(`/api/points?address=${account.address}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.user) {
-          setUserReferralCode(data.user.referralCode || "");
-          setReferralBy(data.user.referralBy || "");
+        if (data.success && data.data) {
+          setUserReferralCode(data.data.referralCode || "");
+          setReferralBy(data.data.referralBy || "");
         }
       })
       .catch(() => {
@@ -98,13 +100,6 @@ export default function PointsPage() {
       })
       .finally(() => {
         setIsLoadingReferral(false);
-      });
-    // Fetch referral amount
-    fetch(`/api/referral-amount?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => setReferralAmount(data.referralAmount || 0))
-      .catch(() => {
-        // Error handling
       });
   }, [account?.address]);
 
@@ -117,8 +112,8 @@ export default function PointsPage() {
 
       if (referralCode) {
         try {
-          const response = await fetch("/api/referral", {
-            method: "POST",
+          const response = await fetch("/api/points", {
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },
@@ -135,34 +130,48 @@ export default function PointsPage() {
             newUrl.searchParams.delete("ref");
             window.history.replaceState({}, "", newUrl.toString());
 
+            // Refresh the referral data
             const refreshResponse = await fetch(
-              `/api/referral?address=${account.address}`
+              `/api/points?address=${account.address}`
             );
             const refreshData = await refreshResponse.json();
-            if (refreshData.success && refreshData.user) {
-              setReferralBy(refreshData.user.referralBy || "");
+            if (refreshData.success && refreshData.data) {
+              setUserReferralCode(refreshData.data.referralCode || "");
+              setReferralBy(refreshData.data.referralBy || "");
+            }
+          } else {
+            // Show error toast for URL referral code issues
+            if (data.error === "You cannot refer yourself") {
+              toast.error("Invalid referral code in URL", {
+                description: "You cannot refer yourself",
+              });
+            } else if (data.error === "Invalid referral code") {
+              toast.error("Invalid referral code in URL", {
+                description: "The referral code in the URL is not valid",
+              });
+            } else if (
+              data.error ===
+              "Referral code already applied and cannot be changed"
+            ) {
+              toast.error("Referral code already applied", {
+                description: "You already have a referral code applied",
+              });
             }
           }
         } catch (error) {
-          // Error handling
+          console.error("Error applying URL referral code:", error);
         }
       } else {
         try {
           const response = await fetch(
-            `/api/referral?address=${account.address}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
+            `/api/points?address=${account.address}`
           );
 
           const data = await response.json();
 
-          if (data.success && data.user) {
-            setUserReferralCode(data.user.referralCode || "");
-            setReferralBy(data.user.referralBy || "");
+          if (data.success && data.data) {
+            setUserReferralCode(data.data.referralCode || "");
+            setReferralBy(data.data.referralBy || "");
           }
         } catch (error) {
           // Error handling
@@ -195,19 +204,40 @@ export default function PointsPage() {
   const handleApplyReferralCode = async () => {
     if (!inputReferralCode.trim()) {
       errorHaptic();
+      toast.error("Please enter a referral code");
       return;
     }
+
     if (!account?.address) {
       toast.error("Please connect your wallet", {
         description: "You need to connect your wallet to use referral codes",
       });
       return;
     }
+
+    // Check if user already has a referral
+    if (referralBy) {
+      toast.error("Referral code already applied", {
+        description:
+          "You cannot change your referral code once it's been applied",
+      });
+      return;
+    }
+
+    // Check if user is trying to use their own referral code
+    if (userReferralCode === inputReferralCode.trim()) {
+      toast.error("You cannot refer yourself", {
+        description: "Please use someone else's referral code",
+      });
+      return;
+    }
+
     heavyHaptic();
     setIsApplyingReferral(true);
+
     try {
-      const response = await fetch("/api/referral", {
-        method: "POST",
+      const response = await fetch("/api/points", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -216,6 +246,7 @@ export default function PointsPage() {
           referralCode: inputReferralCode.trim(),
         }),
       });
+
       const data = await response.json();
 
       if (data.success) {
@@ -223,21 +254,36 @@ export default function PointsPage() {
           description: "You can now earn rewards through referrals",
         });
         setInputReferralCode("");
+
+        // Refresh the referral data
         const refreshResponse = await fetch(
-          `/api/referral?address=${account.address}`
+          `/api/points?address=${account.address}`
         );
         const refreshData = await refreshResponse.json();
-        if (refreshData.success && refreshData.user) {
-          setReferralBy(refreshData.user.referralBy || "");
+        if (refreshData.success && refreshData.data) {
+          setUserReferralCode(refreshData.data.referralCode || "");
+          setReferralBy(refreshData.data.referralBy || "");
         }
       } else {
-        if (data.error === "You cannot refer yourself.") {
-          toast.error("You cannot enter your own referral code", {
+        // Handle specific error messages
+        if (data.error === "You cannot refer yourself") {
+          toast.error("You cannot refer yourself", {
             description: "Please use someone else's referral code",
+          });
+        } else if (data.error === "Invalid referral code") {
+          toast.error("Invalid referral code", {
+            description: "Please check the code and try again",
+          });
+        } else if (
+          data.error === "Referral code already applied and cannot be changed"
+        ) {
+          toast.error("Referral code already applied", {
+            description:
+              "You cannot change your referral code once it's been applied",
           });
         } else {
           toast.error(data.error || "Failed to apply referral code", {
-            description: "Please try again or Invalid referral code",
+            description: "Please try again or contact support",
           });
         }
       }
@@ -341,9 +387,9 @@ export default function PointsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-6 p-4">
+      <div className="flex flex-col xl:flex-row gap-6 p-4">
         {/* Left Section - Main Dashboard */}
-        <div className="flex-1">
+        <div className="flex-1 xl:w-[60%]">
           <div
             className={`rounded-2xl border p-6 ${
               theme === "dark"
@@ -472,7 +518,7 @@ export default function PointsPage() {
         </div>
 
         {/* Right Section - Sidebar */}
-        <div className="lg:w-80 space-y-4">
+        <div className="xl:w-[40%] space-y-4">
           {/* Leaderboard */}
           <div
             className={`rounded-2xl border p-4 ${
@@ -500,69 +546,6 @@ export default function PointsPage() {
             </p>
           </div>
 
-          {/* Referral Programme */}
-          <div
-            className={`rounded-2xl border p-4 ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-          >
-            <div className="flex items-center space-x-2 mb-3">
-              <Users className="h-5 w-5 text-blue-500" />
-              <h3
-                className={`font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Referral programme
-              </h3>
-            </div>
-            <div className="space-y-2">
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Special Boost
-              </p>
-              <p
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-green-400" : "text-green-600"
-                }`}
-              >
-                3%
-              </p>
-            </div>
-          </div>
-
-          {/* One Time Points Mission */}
-          <div
-            className={`rounded-2xl border p-4 ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-          >
-            <div className="flex items-center space-x-2 mb-3">
-              <Gift className="h-5 w-5 text-purple-500" />
-              <h3
-                className={`font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                One time points mission
-              </h3>
-            </div>
-            <p
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Complete special missions for bonus points
-            </p>
-          </div>
-
           {/* Referral Program Section */}
           <div
             className={`rounded-2xl border p-4 ${
@@ -581,7 +564,6 @@ export default function PointsPage() {
                 Referral Program
               </h3>
             </div>
-
             {!account?.address ? (
               <div className="text-center py-3">
                 <span
@@ -731,14 +713,12 @@ export default function PointsPage() {
                     </div>
                   </div>
                 )}
-
                 {/* Referral Amount */}
                 <div className="mt-3 flex justify-center">
                   <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-blue-800 dark:text-blue-200 text-xs font-semibold border border-blue-200 dark:border-blue-800 text-center">
                     You have referred <b>{referralAmount}</b> people.
                   </div>
                 </div>
-
                 {/* Referral Info */}
                 <div
                   className={`text-xs text-center ${
@@ -749,6 +729,33 @@ export default function PointsPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* One Time Points Mission */}
+          <div
+            className={`rounded-2xl border p-4 ${
+              theme === "dark"
+                ? "bg-gray-800/50 border-gray-700"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <div className="flex items-center space-x-2 mb-3">
+              <Gift className="h-5 w-5 text-purple-500" />
+              <h3
+                className={`font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                One time points mission
+              </h3>
+            </div>
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Complete special missions for bonus points
+            </p>
           </div>
         </div>
       </div>

@@ -346,3 +346,117 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { address, referralCode } = await request.json();
+
+    if (!address) {
+      return NextResponse.json(
+        { error: "Address is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!referralCode) {
+      return NextResponse.json(
+        { error: "Referral code is required" },
+        { status: 400 }
+      );
+    }
+
+    console.log(
+      "PUT /api/points - Address:",
+      address,
+      "ReferralCode:",
+      referralCode
+    );
+
+    // Check if environment variables are set
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      console.error("Missing Supabase environment variables");
+      return NextResponse.json(
+        { error: "Database configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = await createClient(cookies());
+
+    // Get current user data
+    const { data: currentUser, error: userError } = await supabase
+      .from("points")
+      .select("*")
+      .eq("address", address)
+      .single();
+
+    if (userError) {
+      console.error("Error fetching user:", userError);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if user already has a referralBy (cannot change once set)
+    if (currentUser.referralBy) {
+      return NextResponse.json(
+        { error: "Referral code already applied and cannot be changed" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is trying to use their own referral code
+    if (currentUser.referralCode === referralCode) {
+      return NextResponse.json(
+        { error: "You cannot refer yourself" },
+        { status: 400 }
+      );
+    }
+
+    // Check if the referral code exists
+    const { data: referrer, error: referrerError } = await supabase
+      .from("points")
+      .select("referralCode")
+      .eq("referralCode", referralCode)
+      .single();
+
+    if (referrerError || !referrer) {
+      return NextResponse.json(
+        { error: "Invalid referral code" },
+        { status: 400 }
+      );
+    }
+
+    // Update the user's referralBy
+    const { data: updatedUser, error: updateError } = await supabase
+      .from("points")
+      .update({ referralBy: referralCode })
+      .eq("address", address)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Error updating referral:", updateError);
+      return NextResponse.json(
+        { error: "Failed to update referral code" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updatedUser,
+      message: "Referral code applied successfully",
+    });
+  } catch (error) {
+    console.error("Points PUT error:", error);
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
