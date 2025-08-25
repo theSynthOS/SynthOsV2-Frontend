@@ -6,6 +6,8 @@ import WalletProvider from "@/client";
 import ClientProviders from "@/components/providers/client-providers";
 import { SmartWalletProvider } from "@/contexts/SmartWalletContext";
 import { Toaster } from "@/components/toast-sonner";
+import { DaimoProvider } from "@/components/providers/daimo-provider";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -98,7 +100,9 @@ export default function RootLayout({
         <WalletProvider>
           <SmartWalletProvider>
             <ClientProviders>
-              {children}
+              <DaimoProvider>
+                {children}
+              </DaimoProvider>
               </ClientProviders>
           </SmartWalletProvider>
         </WalletProvider>

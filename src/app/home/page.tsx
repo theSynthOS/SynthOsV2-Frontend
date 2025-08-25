@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loading } from "@/components/ui/loading";
-import { MoveUp, MoveDown, Send, Plus, Copy, Check } from "lucide-react";
+import { MoveUp, MoveDown, Send, Plus, Copy, Check, AlertCircle } from "lucide-react";
 import { usePoints } from "@/contexts/PointsContext";
 import SendModal from "@/components/features/wallet-send";
 import BuyModal from "@/components/features/wallet-buy";
@@ -20,6 +20,9 @@ import { BalanceProvider } from "@/contexts/BalanceContext";
 import { toast } from "sonner";
 import { mediumHaptic } from "@/lib/haptic-utils";
 import { useSmartWallet } from "@/contexts/SmartWalletContext";
+import { DaimoPayButton } from "@daimo/pay";
+import { scrollUSDC } from "@daimo/pay-common";
+import { getAddress } from "viem";
 
 // Component that handles search params
 function SearchParamsHandler({
@@ -58,11 +61,13 @@ function HomeContent() {
   const [copied, setCopied] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const { user, authenticated } = usePrivy();
-  const { displayAddress, smartWalletClient, isSmartWalletActive } =
+  const { displayAddress, smartWalletClient, isSmartWalletActive, smartWalletAddress } =
     useSmartWallet();
   const [showModal, setShowModal] = useState<"deposit" | "send" | "buy" | null>(
     null
   );
+  // Remove the showDaimoPay state variable since we don't need it anymore
+  const [showDepositAlert, setShowDepositAlert] = useState(false);
 
   // Use display address from context
   const walletAddress = displayAddress;
@@ -133,6 +138,42 @@ function HomeContent() {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("refreshHoldings"));
     }
+  };
+
+  // Handle Daimo payment events
+  const handleDaimoPaymentStarted = (e: any) => {
+    
+    toast.info("Deposit Started", {
+      description: `Depositing to Wallet`
+    });
+    console.log("Deposit started");
+    console.log("Deposit destination");
+  };
+
+  const handleDaimoPaymentCompleted = (e: any) => {
+    toast.success("Deposit Completed", {
+      description: `Funds have been added to your Smart Wallet`
+    });
+    console.log("Deposit completed:", e);
+    
+    // Refresh balances after deposit
+    if (authenticated && walletAddress) {
+      fetchBalance(walletAddress);
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("refreshHoldings"));
+    }
+  };
+
+  // Function to open DaimoPay
+  const openDaimoPay = () => {
+    // Find and click the DaimoPay button programmatically
+    setTimeout(() => {
+      const daimoButton = document.querySelector('#daimo-button-container button');
+      if (daimoButton) {
+        (daimoButton as HTMLElement).click();
+      }
+    }, 50);
   };
 
   return (
@@ -303,10 +344,15 @@ function HomeContent() {
                           </span>
                         </button>
 
-                        {/* <button
+                        <button
+                          id="buy-button"
                           onClick={() => {
                             mediumHaptic();
-                            setShowModal("buy");
+                            if (isSmartWalletActive && smartWalletAddress) {
+                              setShowDepositAlert(true);
+                            } else {
+                              setShowModal("buy");
+                            }
                           }}
                           className="flex flex-col items-center xl:flex-row xl:items-center xl:gap-3 group"
                         >
@@ -346,7 +392,22 @@ function HomeContent() {
                           <span className="text-sm font-medium xl:hidden">
                             Buy
                           </span>
-                        </button> */}
+                        </button>
+                        
+                        {/* Hidden DaimoPay Button Container */}
+                        {isSmartWalletActive && smartWalletAddress && (
+                          <div id="daimo-button-container" className="hidden">
+                            <DaimoPayButton
+                              appId={process.env.NEXT_PUBLIC_DAIMO_PAY_API || ''}
+                              toChain={scrollUSDC.chainId}
+                              toToken={getAddress(scrollUSDC.token)}
+                              toAddress={getAddress(smartWalletAddress)}
+                              intent="Deposit to Smart Wallet"
+                              onDepositStarted={handleDaimoPaymentStarted}
+                              onDepositCompleted={handleDaimoPaymentCompleted}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -442,8 +503,73 @@ function HomeContent() {
             <SendModal isOpen={showModal === "send"} onClose={closeModal} />
           )}
 
-          {showModal === "buy" && (
+          {showModal === "buy" && !isSmartWalletActive && (
             <BuyModal isOpen={showModal === "buy"} onClose={closeModal} />
+          )}
+          
+          {/* Deposit Alert Modal */}
+          {showDepositAlert && (
+            <div
+              className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+              onClick={() => setShowDepositAlert(false)}
+            >
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/30 dark:bg-black/70 backdrop-blur-sm"
+                aria-hidden="true"
+              ></div>
+
+              {/* Card Content */}
+              <div
+                className="relative z-10 w-full max-w-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={`${
+                  theme === "dark" ? "bg-[#1E1E1ECC]" : "bg-white"
+                } rounded-2xl shadow-lg p-6 relative`}>
+                  <div className="flex items-center mb-4">
+                    <AlertCircle className="w-6 h-6 text-amber-500 mr-2" />
+                    <h2 className="text-xl font-semibold">Important Notice</h2>
+                  </div>
+                  
+                  <div className="mb-6 space-y-4">
+                    <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                      <p className="text-sm text-gray-800 dark:text-gray-200">
+                        Please note that while you may deposit any supported token,{" "}
+                        <strong>all other tokens will be automatically converted into USDC</strong>{" "}
+                        within our app. Our vaults currently only accept <strong>USDT</strong> and{" "}
+                        <strong>USDC</strong>.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                      <p className="text-sm text-gray-800 dark:text-gray-200">
+                        When using different payment methods such as <em>Pay to address, Pay with wallet & etc</em>, the
+                        recipient address shown may differ from your smart wallet address.{" "}
+                        <strong>This is normal with Daimo Pay</strong>, funds will still be credited
+                        securely to your smart account.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => {
+                        setShowDepositAlert(false);
+                        openDaimoPay();
+                      }}
+                      className={`px-6 py-3 rounded-lg text-white font-medium transition-colors ${
+                        theme === "dark"
+                          ? "bg-[#8266E6] hover:bg-[#7255d5]"
+                          : "bg-[#8266E6] hover:bg-[#7255d5]"
+                      }`}
+                    >
+                      I Understand, Continue to Deposit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* History panel */}
