@@ -44,7 +44,6 @@ export default function HoldingPage() {
   const router = useRouter();
   const controls = useAnimation();
   const [copied, setCopied] = useState(false);
-  const [referralCopied, setReferralCopied] = useState(false);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -62,14 +61,6 @@ export default function HoldingPage() {
   // Use display address from context
   const account =
     authenticated && displayAddress ? { address: displayAddress } : null;
-  // Referral states
-  const [referralCode, setReferralCode] = useState<string>("");
-  const [userReferralCode, setUserReferralCode] = useState<string>("");
-  const [referralBy, setReferralBy] = useState<string>("");
-  const [isLoadingReferral, setIsLoadingReferral] = useState(false);
-  const [inputReferralCode, setInputReferralCode] = useState<string>("");
-  const [isApplyingReferral, setIsApplyingReferral] = useState(false);
-  const [referralAmount, setReferralAmount] = useState<number>(0);
 
   // View All modal state
   const [showViewAllModal, setShowViewAllModal] = useState(false);
@@ -100,13 +91,11 @@ export default function HoldingPage() {
       addresses.push(overrideAddress);
     } else {
       if (smartWalletAddress) addresses.push(smartWalletAddress);
-      if (
-        embeddedWalletAddress &&
-        embeddedWalletAddress !== smartWalletAddress
-      )
+      if (embeddedWalletAddress && embeddedWalletAddress !== smartWalletAddress)
         addresses.push(embeddedWalletAddress);
       // Fallback to displayAddress so EOA-only users still fetch holdings
-      if (addresses.length === 0 && displayAddress) addresses.push(displayAddress);
+      if (addresses.length === 0 && displayAddress)
+        addresses.push(displayAddress);
     }
 
     if (addresses.length === 0) return;
@@ -129,7 +118,9 @@ export default function HoldingPage() {
       for (const list of results) {
         if (Array.isArray(list)) {
           for (const h of list) {
-            const key = String(h.protocolPairId ?? `${h.protocolName}-${h.pairName}`);
+            const key = String(
+              h.protocolPairId ?? `${h.protocolName}-${h.pairName}`
+            );
             const existing = merged.get(key);
             if (!existing) {
               merged.set(key, h);
@@ -138,9 +129,11 @@ export default function HoldingPage() {
                 ...existing,
                 // Sum amounts and pnl across wallets
                 currentAmount:
-                  Number(existing.currentAmount || 0) + Number(h.currentAmount || 0),
+                  Number(existing.currentAmount || 0) +
+                  Number(h.currentAmount || 0),
                 initialAmount:
-                  Number(existing.initialAmount || 0) + Number(h.initialAmount || 0),
+                  Number(existing.initialAmount || 0) +
+                  Number(h.initialAmount || 0),
                 pnl: Number(existing.pnl || 0) + Number(h.pnl || 0),
                 // Prefer non-empty protocolLogo/name fields
                 protocolLogo: existing.protocolLogo || h.protocolLogo,
@@ -172,9 +165,6 @@ export default function HoldingPage() {
     if (!authenticated || !account?.address) {
       setHoldings([]);
       setIsLoading(false);
-      setReferralAmount(0);
-      setUserReferralCode("");
-      setReferralBy("");
     }
   }, [authenticated, account?.address]);
 
@@ -186,102 +176,19 @@ export default function HoldingPage() {
       fetchHoldings(targetAddress);
     };
 
-    window.addEventListener("refreshHoldings", handleRefreshHoldings as EventListener);
+    window.addEventListener(
+      "refreshHoldings",
+      handleRefreshHoldings as EventListener
+    );
 
     return () => {
-      window.removeEventListener("refreshHoldings", handleRefreshHoldings as EventListener);
+      window.removeEventListener(
+        "refreshHoldings",
+        handleRefreshHoldings as EventListener
+      );
     };
   }, []);
 
-  useEffect(() => {
-    if (!account?.address) return;
-    setIsLoadingReferral(true);
-    fetch(`/api/referral?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.user) {
-          setUserReferralCode(data.user.referralCode || "");
-          setReferralBy(data.user.referralBy || "");
-        }
-      })
-      .catch(() => {
-        // Error handling
-      })
-      .finally(() => {
-        setIsLoadingReferral(false);
-      });
-    // Fetch referral amount
-    fetch(`/api/referral-amount?address=${account.address}`)
-      .then((res) => res.json())
-      .then((data) => setReferralAmount(data.referralAmount || 0))
-      .catch(() => {
-        // Error handling
-      });
-  }, [account?.address]);
-
-  useEffect(() => {
-    const handleReferralCode = async () => {
-      if (!account?.address) return;
-      const urlParams = new URLSearchParams(window.location.search);
-      const referralCode = urlParams.get("ref");
-
-      if (referralCode) {
-        try {
-          const response = await fetch("/api/referral", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              address: account.address,
-              referralCode: referralCode,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("ref");
-            window.history.replaceState({}, "", newUrl.toString());
-
-            const refreshResponse = await fetch(
-              `/api/referral?address=${account.address}`
-            );
-            const refreshData = await refreshResponse.json();
-            if (refreshData.success && refreshData.user) {
-              setReferralBy(refreshData.user.referralBy || "");
-            }
-          }
-        } catch (error) {
-          // Error handling
-        }
-      } else {
-        try {
-          const response = await fetch(
-            `/api/referral?address=${account.address}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          const data = await response.json();
-
-          if (data.success && data.user) {
-            setUserReferralCode(data.user.referralCode || "");
-            setReferralBy(data.user.referralBy || "");
-          }
-        } catch (error) {
-          // Error handling
-        }
-      }
-    };
-
-    handleReferralCode();
-  }, [account?.address]);
   // Filter out holdings with extremely small balances (1e-10 and smaller) and zero initial amounts
 
   const filteredHoldings = holdings.filter((h) => {
@@ -343,97 +250,6 @@ export default function HoldingPage() {
           // Copy action haptic feedback
           safeHaptic("copy");
           toast("Wallet address copied to clipboard");
-        })
-        .catch((err) => {
-          // Error handling
-        });
-    }
-  };
-
-  const handleApplyReferralCode = async () => {
-    console.log("handleApplyReferralCode called");
-    console.log("inputReferralCode:", inputReferralCode);
-    console.log("account:", account);
-    console.log("displayAddress:", displayAddress);
-    console.log("authenticated:", authenticated);
-
-    if (!inputReferralCode.trim()) {
-      console.log("No referral code entered");
-      errorHaptic();
-      return;
-    }
-    if (!account?.address) {
-      console.log("No account address available");
-      toast.error("Please connect your wallet", {
-        description: "You need to connect your wallet to use referral codes"
-      });
-      return;
-    }
-    heavyHaptic();
-    setIsApplyingReferral(true);
-    try {
-      console.log("Making API request with:", {
-        address: account.address,
-        referralCode: inputReferralCode.trim(),
-      });
-
-      const response = await fetch("/api/referral", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          address: account.address,
-          referralCode: inputReferralCode.trim(),
-        }),
-      });
-      const data = await response.json();
-      console.log("API response:", data);
-
-      if (data.success) {
-        toast.success("Referral code applied successfully!", {
-          description: "You can now earn rewards through referrals"
-        });
-        setInputReferralCode("");
-        const refreshResponse = await fetch(
-          `/api/referral?address=${account.address}`
-        );
-        const refreshData = await refreshResponse.json();
-        if (refreshData.success && refreshData.user) {
-          setReferralBy(refreshData.user.referralBy || "");
-        }
-      } else {
-        if (data.error === "You cannot refer yourself.") {
-          toast.error("You cannot enter your own referral code", {
-            description: "Please use someone else's referral code"
-          });
-        } else {
-          toast.error(data.error || "Failed to apply referral code", {
-            description: "Please try again or Invalid referral code"
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error in handleApplyReferralCode:", error);
-      toast.error("Failed to apply referral code", {
-        description: "Please try again or contact support if the issue persists"
-      });
-    } finally {
-      setIsApplyingReferral(false);
-    }
-  };
-
-  const handleCopyReferralCode = () => {
-    if (userReferralCode) {
-      navigator.clipboard
-        .writeText(userReferralCode)
-        .then(() => {
-          setReferralCopied(true);
-          setTimeout(() => setReferralCopied(false), 2000);
-          safeHaptic("copy");
-          toast.info("Your referral code has been copied to clipboard", {
-            description: "Share it with friends to earn rewards"
-          });
         })
         .catch((err) => {
           // Error handling
@@ -739,218 +555,6 @@ export default function HoldingPage() {
                     />
                   );
                 })
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Section 3: Referral */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div
-            className={`${
-              theme === "dark" ? "bg-[#1E1E1E]/80" : "bg-[#FFFFFF]/65 shadow-sm"
-            } rounded-2xl p-5 mb-3`}
-          >
-            <div className="flex flex-col items-center">
-              <div className="flex justify-between items-center w-full text-sm xl:text-lg mb-4">
-                <span
-                  className={`tracking-widest font-medium ${
-                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                  }`}
-                >
-                  REFERRAL PROGRAM
-                </span>
-                <Gift
-                  className={`h-5 w-5 ${
-                    theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                  }`}
-                />
-              </div>
-
-              {!account?.address ? (
-                <div className="w-full space-y-4">
-                  <div className="text-center py-3">
-                    <span
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      Please connect wallet to view referral program
-                    </span>
-                  </div>
-                </div>
-              ) : isLoadingReferral ? (
-                <div className="w-full space-y-4">
-                  {/* Skeleton for Your Referral Code */}
-                  <div className="space-y-2">
-                    <label
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                      }`}
-                    >
-                      Your Referral Code
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
-                      <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
-                    </div>
-                  </div>
-
-                  {/* Skeleton for Apply Referral Code */}
-                  <div className="space-y-2">
-                    <label
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                      }`}
-                    >
-                      Referred By
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <Skeleton className="flex-1 h-12 bg-gray-300 dark:bg-gray-700" />
-                      <Skeleton className="w-12 h-12 bg-gray-300 dark:bg-gray-700" />
-                    </div>
-                  </div>
-
-                  {/* Skeleton for info text */}
-                  <div className="text-xs text-center">
-                    Share your referral code with friends!
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full space-y-4">
-                  {/* Your Referral Code */}
-                  <div className="space-y-2">
-                    <label
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                      }`}
-                    >
-                      Your Referral Code
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className={`flex-1 p-3 rounded-lg border ${
-                          theme === "dark"
-                            ? "bg-[#2A2A2A] border-gray-700 text-white"
-                            : "bg-white border-gray-200 text-black"
-                        } font-mono text-sm`}
-                      >
-                        {userReferralCode || (
-                          <Skeleton className="w-20 h-8 bg-gray-300 dark:bg-gray-700" />
-                        )}
-                      </div>
-                      <button
-                        onClick={handleCopyReferralCode}
-                        disabled={!userReferralCode}
-                        className={`p-3 rounded-lg border transition-colors ${
-                          theme === "dark"
-                            ? "border-gray-700 hover:bg-gray-700/70"
-                            : "border-gray-200 hover:bg-gray-100"
-                        } ${
-                          !userReferralCode
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
-                        aria-label="Copy referral code"
-                      >
-                        {referralCopied ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Referred By */}
-                  {referralBy && (
-                    <div className="space-y-2">
-                      <label
-                        className={`text-sm font-medium ${
-                          theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                        }`}
-                      >
-                        Referred By
-                      </label>
-                      <div
-                        className={`p-3 rounded-lg border ${
-                          theme === "dark"
-                            ? "bg-[#2A2A2A] border-gray-700 text-white"
-                            : "bg-white border-gray-200 text-black"
-                        } font-mono text-sm`}
-                      >
-                        {referralBy}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Apply Referral Code */}
-                  {!referralBy && (
-                    <div className="space-y-2">
-                      <label
-                        className={`text-sm font-medium ${
-                          theme === "dark" ? "text-[#A1A1A1]" : "text-[#727272]"
-                        }`}
-                      >
-                        Apply Referral Code
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={inputReferralCode}
-                          onChange={(e) => setInputReferralCode(e.target.value)}
-                          placeholder="Enter referral code"
-                          className={`flex-1 p-3 rounded-lg border ${
-                            theme === "dark"
-                              ? "bg-[#2A2A2A] border-gray-700 text-white placeholder-gray-400"
-                              : "bg-white border-gray-200 text-black placeholder-gray-500"
-                          } font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#8266E6]`}
-                          maxLength={8}
-                        />
-                        <button
-                          onClick={handleApplyReferralCode}
-                          disabled={
-                            !inputReferralCode.trim() || isApplyingReferral
-                          }
-                          className={`px-4 py-3 rounded-lg border transition-colors ${
-                            theme === "dark"
-                              ? "border-gray-700 hover:bg-gray-700/70"
-                              : "border-gray-200 hover:bg-gray-100"
-                          } ${
-                            !inputReferralCode.trim() || isApplyingReferral
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                          }`}
-                        >
-                          {isApplyingReferral ? (
-                            <div className="w-4 h-4 border-2 border-gray-300 border-t-[#8266E6] rounded-full animate-spin" />
-                          ) : (
-                            <Users className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {/* Referral Amount */}
-                  <div className="mt-3 flex justify-center">
-                    <div className="rounded-lg bg-purple-50 dark:bg-[#2a1a4d] px-4 py-3 text-purple-800 dark:text-purple-200 text-sm font-semibold shadow-sm border border-purple-200 dark:border-[#3a2566] min-w-[220px] text-center">
-                      You have referred <b>{referralAmount}</b> people.
-                    </div>
-                  </div>
-
-                  {/* Referral Info */}
-                  <div
-                    className={`text-xs ${
-                      theme === "dark" ? "text-[#727272]" : "text-[#A1A1A1]"
-                    } text-center`}
-                  >
-                    Share your referral code with friends!
-                  </div>
-                </div>
               )}
             </div>
           </div>
