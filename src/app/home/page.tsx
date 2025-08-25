@@ -303,7 +303,7 @@ function HomeContent() {
                           </span>
                         </button>
 
-                        {/* <button
+                        <button
                           onClick={() => {
                             mediumHaptic();
                             setShowModal("buy");
@@ -346,7 +346,7 @@ function HomeContent() {
                           <span className="text-sm font-medium xl:hidden">
                             Buy
                           </span>
-                        </button> */}
+                        </button>
                       </div>
                     </div>
 

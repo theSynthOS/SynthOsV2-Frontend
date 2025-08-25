@@ -42,9 +42,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
           )}
 
           <main className={`${!isLandingPage ? "pb-24" : ""}`}>
-            {/* <PullToRefresh onRefresh={handleGlobalRefresh}> */}
             {children}
-            {/* </PullToRefresh> */}
           </main>
 
           {/* Only show navbar on non-landing pages */}
